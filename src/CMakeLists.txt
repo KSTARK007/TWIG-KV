@@ -7,7 +7,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 include(FetchContent)
 
 # General
-option(LDC_BUILD_EXAMPLES         "block cache: build examples"                                 ON)
+option(LDC_BUILD_EXAMPLES         "block cache: build examples"                                 OFF)
 option(LDC_BUILD_SHARED_LIBRARY   "block cache: build as a shared library"                      OFF)
 option(LDC_STATIC                 "block cache: static link libraries"                          OFF)
 option(LDC_NATIVE                 "block cache: enable -march=native flag"                      OFF)
@@ -185,7 +185,7 @@ add_dependency(parallel_hashmap https://github.com/greg7mdp/parallel-hashmap v1.
 set(EXPECTED_BUILD_TESTS OFF)
 add_dependency(tl_expected https://github.com/TartanLlama/expected v1.1.0 TRUE)
 
-add_library(ldc ${LDC_LIBRARY_BUILD}
+add_executable(ldc
             ldc.cpp
             ldc.h)
 
@@ -208,8 +208,13 @@ target_link_libraries(ldc PUBLIC
     spdlog
     nlohmann_json
     magic_enum
-    parallel_hashmap
-    expected
+    phmap
+    #expected
+    glog
+    #core
+    machnet_shim
+    rt
+    ${LIBDPDK_LIBRARIES}
 )
 
 if (MSVC)
@@ -222,8 +227,4 @@ endif()
 if (LDC_BUILD_SHARED_LIBRARY)
     set_target_properties(ldc PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_definitions(ldc PRIVATE LDC_SHARED LDC_BUILD)
-endif()
-
-if (LDC_BUILD_EXAMPLES)
-    add_subdirectory(examples)
 endif()
