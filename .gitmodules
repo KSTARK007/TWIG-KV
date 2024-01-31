@@ -1,6 +1,3 @@
-[submodule "machnet"]
-	path = machnet
-	url = https://github.com/microsoft/machnet
 [submodule "third_party/machnet"]
 	path = third_party/machnet
 	url = https://github.com/microsoft/machnet
