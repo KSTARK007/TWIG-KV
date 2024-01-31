@@ -4,3 +4,7 @@
 [submodule "third_party/machnet"]
 	path = third_party/machnet
 	url = https://github.com/microsoft/machnet
+[submodule "third_party/blkcache"]
+	path = third_party/blkcache
+	url = git@github.com:dassl-uiuc/blkcache.git
+	branch = replicated
