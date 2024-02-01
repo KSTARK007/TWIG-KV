@@ -9,8 +9,8 @@ DEFINE_string(local, "", "Local IP address");
 DEFINE_string(remote, "", "Remote IP address");
 DEFINE_string(config, "", "JSON config");
 DEFINE_string(dataset, "", "Path to dataset");
-DEFINE_int64(server_index, -1, "Index of server");
-DEFINE_int64(threads, -1, "Number of threads");
+DEFINE_int64(server_index, 0, "Index of server");
+DEFINE_int64(threads, 1, "Number of threads");
 
 // assert with message
 void assert_with_msg(bool cond, const char *msg) {
@@ -24,52 +24,57 @@ std::atomic<bool> g_stop{false};
 
 void client_worker(BlockCacheConfig config, int64_t server_index,
                    int thread_index) {
-  void *channel = machnet_attach();
-  assert_with_msg(channel != nullptr, "machnet_attach() failed");
-
   auto remote_machine_config = config.remote_machine_configs[server_index];
-  auto base_port = remote_machine_config.port;
+  auto base_port = static_cast<int>(remote_machine_config.port);
   // Set this thread's port to be an offset to base port
   auto port = base_port + thread_index;
 
-  ret = machnet_listen(channel, FLAGS_local.c_str(), kPort);
+  info("Client [{}] {}:{}", thread_index, FLAGS_local, port);
+
+  void *channel = machnet_attach();
+  assert_with_msg(channel != nullptr, "machnet_attach() failed");
+
+  auto ret = machnet_listen(channel, FLAGS_local.c_str(), port);
   assert_with_msg(ret == 0, "machnet_listen() failed");
 
-  printf("Listening on %s:%d\n", FLAGS_local.c_str(), kPort);
+  printf("Listening on %s:%d\n", FLAGS_local.c_str(), port);
 
-  printf("Sending message to %s:%d\n", FLAGS_remote.c_str(), kPort);
+  printf("Sending message to %s:%d\n", FLAGS_remote.c_str(), port);
   MachnetFlow flow;
   std::string msg = "Hello World!";
-  ret = machnet_connect(channel, FLAGS_local.c_str(), FLAGS_remote.c_str(),
-                        kPort, &flow);
-  assert_with_msg(ret == 0, "machnet_connect() failed");
+  assert_with_msg(machnet_connect(channel, FLAGS_local.c_str(),
+                                  FLAGS_remote.c_str(), port, &flow),
+                  "machnet_connect() failed");
 
-  const int ret = machnet_send(channel, flow, msg.data(), msg.size());
+  ret = machnet_send(channel, flow, msg.data(), msg.size());
   if (ret == -1)
     printf("machnet_send() failed\n");
 }
 
 void server_worker(BlockCacheConfig config, int64_t server_index,
                    int thread_index) {
+  auto remote_machine_config = config.remote_machine_configs[server_index];
+  auto base_port = static_cast<int>(remote_machine_config.port);
+  // Set this thread's port to be an offset to base port
+  auto port = base_port + thread_index;
+
+  info("Server [{}] {}:{}", thread_index, FLAGS_local, port);
+
   void *channel = machnet_attach();
   assert_with_msg(channel != nullptr, "machnet_attach() failed");
 
-  auto remote_machine_config = config.remote_machine_configs[server_index];
-  auto base_port = remote_machine_config.port;
-  // Set this thread's port to be an offset to base port
-  auto port = base_port + thread_index;
-  ret = machnet_listen(channel, FLAGS_local.c_str(), kPort);
+  auto ret = machnet_listen(channel, FLAGS_local.c_str(), port);
   assert_with_msg(ret == 0, "machnet_listen() failed");
 
-  printf("Listening on %s:%d\n", FLAGS_local.c_str(), kPort);
+  printf("Listening on %s:%d\n", FLAGS_local.c_str(), port);
 
   printf("Waiting for message from client\n");
   size_t count = 0;
 
-  while (true) {
+  while (!g_stop) {
     std::array<char, 1024> buf;
     MachnetFlow flow;
-    const ssize_t ret = machnet_recv(channel, buf.data(), buf.size(), &flow);
+    ret = machnet_recv(channel, buf.data(), buf.size(), &flow);
     assert_with_msg(ret >= 0, "machnet_recvmsg() failed");
     if (ret == 0) {
       usleep(10);
@@ -108,6 +113,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::thread> worker_threads;
   for (auto i = 0; i < FLAGS_threads; i++) {
+    info("Running {} thread {}", "client" ? FLAGS_remote : "client", i);
     if (FLAGS_remote.empty()) {
       std::thread t(server_worker, config, FLAGS_server_index, i);
       worker_threads.emplace_back(std::move(t));
@@ -117,8 +123,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  for (auto& t : worker_threads)
-  {
+  for (auto &t : worker_threads) {
     t.join();
   }
 
