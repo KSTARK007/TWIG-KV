@@ -1,0 +1,23 @@
+# Makefile for benchmark.cpp
+
+# Compiler
+CXX = g++
+
+# Compiler flags
+CXXFLAGS = -std=c++11 -Wall
+
+# Source file
+SOURCE = bench_generator.cpp
+
+# Output executable
+OUTPUT = benchmark
+
+all: $(OUTPUT)
+
+$(OUTPUT): $(SOURCE)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+clean:
+	rm -f $(OUTPUT)
+
+.PHONY: all clean
