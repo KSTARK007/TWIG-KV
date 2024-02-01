@@ -6,3 +6,5 @@
 #include <block_cache.h>
 
 #include <gflags/gflags.h>
+
+#include <csignal>
