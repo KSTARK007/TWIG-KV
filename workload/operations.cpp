@@ -10,6 +10,7 @@ std::vector<std::pair<std::string, int>> generateRandomOperationSet(const std::v
         operationSet.push_back(std::make_pair(key, randomNode));
     }
 
+    dumpOperationSetToFile(operationSet);
     return operationSet;
 }
 
@@ -21,10 +22,11 @@ std::vector<std::pair<std::string, int>> generatePartitionedOperationSet(const s
 
     for (int i = 0; i < totalOps; i++) {
         const std::string& key = keys[i % keys.size()];
-        int node = static_cast<int>(std::ceil(static_cast<double>(std::stoi(key)) / keysPerNode));
+        int node = (static_cast<int>(std::floor(static_cast<double>(std::stoi(key)) / keysPerNode))) % numNodes + 1;
         operationSet.push_back(std::make_pair(key, node));
     }
-
+    
+    dumpOperationSetToFile(operationSet);
     return operationSet;
 }
 
@@ -58,10 +60,11 @@ std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::
         }
 
         const std::string& key = keys[randomIndex];
-        int randomNode = rand() % numNodes + 1; // Node numbers start from 1
+        int randomNode = rand() % numNodes + 1;
         operationSet.push_back(std::make_pair(key, randomNode));
     }
 
+    dumpOperationSetToFile(operationSet);
     return operationSet;
 }
 
@@ -94,12 +97,60 @@ std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(
             randomIndex = keyOrder[numHotKeys + rand() % numColdKeys];
         }
         const std::string& key = keys[randomIndex];
-        int node = static_cast<int>(std::ceil(static_cast<double>(std::stoi(key)) / keysPerNode));
+        int node = (static_cast<int>(std::floor(static_cast<double>(std::stoi(key)) / keysPerNode))) % numNodes + 1;
         operationSet.push_back(std::make_pair(key, node));
     }
 
+    dumpOperationSetToFile(operationSet);
     return operationSet;
 }
+
+std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<std::string>& keys, int totalOps, int numNodes) {
+    std::vector<std::pair<std::string, int>> operationSet;
+    int numKeys = keys.size();
+
+    // Divide the given keyset into 3 parts and select the middle part as the new keyset
+    int startIdx = numKeys / 3;
+    int endIdx = 2 * numKeys / 3;
+    std::vector<std::string> newKeySet(keys.begin() + startIdx, keys.begin() + endIdx);
+
+    // Calculate the number of hot keys and cold keys based on the percentages
+    int numHotKeys = static_cast<int>(HOT_KEY_PERCENTAGE * newKeySet.size());
+    int numColdKeys = numKeys - numHotKeys;
+
+    // Create a key order where newKeySet comes first, followed by the remaining keys from the original keyset
+    std::vector<std::string> keyOrder;
+    keyOrder.reserve(numKeys);
+    keyOrder.insert(keyOrder.end(), newKeySet.begin(), newKeySet.end());  // New keyset
+    for (int i = 0; i < numKeys; i++) {
+        if (i < startIdx || i >= endIdx) {
+            keyOrder.push_back(keys[i]);  // Old keyset, not in newKeySet
+        }
+    }
+
+    int hotKeyOps = static_cast<int>(HOT_KEY_ACCESS_PERCENTAGE * totalOps);
+
+    for (int i = 0; i < totalOps; i++) {
+        int randomIndex;
+
+        // Determine if the access is for a hot key or cold key
+        if (i < hotKeyOps) {
+            randomIndex = rand() % (numHotKeys);
+        } else {
+            randomIndex = numHotKeys + rand() % numColdKeys;
+        }
+        const std::string& key = keyOrder[randomIndex];
+
+        // std::cout << "rand() \% numHotKeys: " << (rand() % numHotKeys) << "  randomIndex: " << randomIndex << "\n";
+
+        int randomNode = rand() % numNodes + 1;
+        operationSet.push_back(std::make_pair(key, randomNode));
+    }
+
+    dumpOperationSetToFile(operationSet);
+    return operationSet;
+}
+
 
 // Function to execute the operation set
 void executeOperations(const std::vector<std::pair<std::string, int>>& operationSet) {
@@ -115,4 +166,18 @@ void executeOperations(const std::vector<std::pair<std::string, int>>& operation
 
         operationNumber++;
     }
+}
+
+void dumpOperationSetToFile(const std::vector<std::pair<std::string, int>>& operationSet) {
+    std::ofstream file(OP_FILE);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open operation set file: " << OP_FILE << std::endl;
+        return;
+    }
+
+    for (const auto& operation : operationSet) {
+        file << operation.first << ' ' << operation.second << '\n';
+    }
+
+    file.close();
 }
