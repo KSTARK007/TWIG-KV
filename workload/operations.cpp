@@ -2,12 +2,6 @@
 
 #include "common.h"
 
-// Function to simulate send() call to a node
-void send(int node, const std::string& key) {
-    // Your send() implementation here
-    std::cout << "Sending key=" << key << " to Node " << node << std::endl;
-}
-
 // Function to generate the operation set
 std::vector<std::pair<std::string, int>> generateOperationSetAndDumpToFile(const std::vector<std::string>& keys, int totalOps, int numNodes, const std::string& operationSetFile) {
     std::vector<std::pair<std::string, int>> operationSet;
