@@ -41,7 +41,7 @@ void createAndWriteDataset(const std::string& datasetFile, int numberOfKeys, int
         value += static_cast<char>(rand() % 26 + 'A'); // Random uppercase letters
     }
 
-    for (int i = 0; i < numberOfKeys; i++) {
+    for (int i = 1; i < numberOfKeys+1; i++) {
         // Generate a sequential key and a random value
         std::string key = std::to_string(i);
         file << key << ' ' << value << '\n'; // Write key and value to the dataset file

@@ -1,13 +1,24 @@
+# Compiler and flags
 CC = g++
-CFLAGS = -std=c++11 -Wall
+CFLAGS = -std=c++11 -Wall -I.
 LDFLAGS = -o
 
+# Source files
+SOURCES = main.cpp operations.cpp dataset.cpp sendIO.cpp
+HEADERS = common.h
+
+# Target executable
+TARGET = main
+
+# Configuration
 include config.mk
+DEFINES = -DDATASET_FILE=$(DATASET_FILE) -DNUM_KEY_VALUE_PAIRS=$(NUM_KEY_VALUE_PAIRS) -DKEY_SIZE=$(KEY_SIZE) -DVALUE_SIZE=$(VALUE_SIZE) -DTOTAL_OPERATIONS=$(TOTAL_OPERATIONS) -DNUM_NODES=$(NUM_NODES) -DHOT_KEY_PERCENTAGE=$(HOT_KEY_PERCENTAGE) -DHOT_KEY_ACCESS_PERCENTAGE=$(HOT_KEY_ACCESS_PERCENTAGE) -DDISTRIBUTION_TYPE=$(DISTRIBUTION_TYPE)
 
-all: main
+# Build rules
+all: $(TARGET)
 
-main: main.cpp operations.cpp dataset.cpp common.h
-	$(CC) $(CFLAGS) -DOP_FILE=$(OP_FILE) -DDATASET_FILE=$(DATASET_FILE) -DNUM_KEY_VALUE_PAIRS=$(NUM_KEY_VALUE_PAIRS) -DNUM_NODES=$(NUM_NODES) -DKEY_SIZE=$(KEY_SIZE) -DVALUE_SIZE=$(VALUE_SIZE) -DTOTAL_OPERATIONS=$(TOTAL_OPERATIONS) $(LDFLAGS) main main.cpp operations.cpp dataset.cpp sendIO.cpp
+$(TARGET): $(SOURCES) $(HEADERS)
+	$(CC) $(CFLAGS) $(DEFINES) $(LDFLAGS) $(TARGET) $(SOURCES)
 
 clean:
-	rm -f main
+	rm -f $(TARGET)
