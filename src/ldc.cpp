@@ -42,11 +42,19 @@ void client_worker(BlockCacheConfig config, int64_t server_index,
   printf("Sending message to %s:%d\n", FLAGS_remote.c_str(), port);
   MachnetFlow flow;
   std::string msg = "Hello World!";
+  
   assert_with_msg(machnet_connect(channel, FLAGS_local.c_str(),
                                   FLAGS_remote.c_str(), port, &flow),
                   "machnet_connect() failed");
 
-  ret = machnet_send(channel, flow, msg.data(), msg.size());
+  // ret = machnet_send(channel, flow, msg.data(), msg.size());
+  ::capnp::MallocMessageBuilder message;
+  PutRequest::Builder put_request = message.initRoot<PutRequest>();
+  put_request.setKey("key");
+  put_request.setValue("value");
+  auto p = messageToFlatArray(message).asBytes();
+
+  ret = machnet_send(channel, flow, p.begin(), p.size());
   if (ret == -1)
     printf("machnet_send() failed\n");
 }
@@ -80,6 +88,8 @@ void server_worker(BlockCacheConfig config, int64_t server_index,
       usleep(10);
       continue;
     }
+    auto received_array = kj::ArrayPtr<capnp::word>(reinterpret_cast<capnp::word*>(buf.data()), ret);
+    capnp::FlatArrayMessageReader message(received_array);
 
     std::string msg(buf.data(), ret);
     printf("Received message: %s, count = %zu\n", msg.c_str(), count++);
