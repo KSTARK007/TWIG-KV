@@ -186,8 +186,11 @@ set(EXPECTED_BUILD_TESTS OFF)
 add_dependency(tl_expected https://github.com/TartanLlama/expected v1.1.0 TRUE)
 
 add_executable(ldc
-            ldc.cpp
-            ldc.h)
+                ldc.cpp
+                ldc.h
+                dataset.cpp
+                operations.cpp
+                operations.h)
 
 target_include_directories(ldc PUBLIC
     .

@@ -5,7 +5,7 @@ LDFLAGS = -o
 
 # Source files
 SOURCES = main.cpp operations.cpp dataset.cpp sendIO.cpp
-HEADERS = common.h
+HEADERS = operations.h
 
 # Target executable
 TARGET = main

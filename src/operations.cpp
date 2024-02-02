@@ -1,7 +1,7 @@
 #include "operations.h"
 
 // Function to generate the operation set
-std::vector<std::pair<std::string, int>> generateRandomOperationSet(const std::vector<std::string>& keys, int totalOps, int numNodes) {
+std::vector<std::pair<std::string, int>> generateRandomOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes) {
     std::vector<std::pair<std::string, int>> operationSet;
 
     for (int i = 0; i < totalOps; i++) {
@@ -15,7 +15,7 @@ std::vector<std::pair<std::string, int>> generateRandomOperationSet(const std::v
 }
 
 // Function to generate a partitioned operation set
-std::vector<std::pair<std::string, int>> generatePartitionedOperationSet(const std::vector<std::string>& keys, int totalOps, int numNodes) {
+std::vector<std::pair<std::string, int>> generatePartitionedOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes) {
     std::vector<std::pair<std::string, int>> operationSet;
 
     int keysPerNode = keys.size() / numNodes; // Number of keys per node
@@ -32,12 +32,12 @@ std::vector<std::pair<std::string, int>> generatePartitionedOperationSet(const s
 
 
 // Function to generate a Zipfian-distributed operation set
-std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::vector<std::string>& keys, int totalOps, int numNodes) {
+std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes) {
     std::vector<std::pair<std::string, int>> operationSet;
     int numKeys = keys.size();
 
     // Calculate the number of hot keys and cold keys based on the percentages
-    int numHotKeys = static_cast<int>(HOT_KEY_PERCENTAGE * numKeys);
+    int numHotKeys = static_cast<int>(config.HOT_KEY_PERCENTAGE * numKeys);
     int numColdKeys = numKeys - numHotKeys;
 
     // Generate a random order of keys, where hot keys come first and then cold keys
@@ -47,7 +47,7 @@ std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::
     }
     std::random_shuffle(keyOrder.begin(), keyOrder.end());
 
-    int hotKeyOps = static_cast<int>(HOT_KEY_ACCESS_PERCENTAGE * totalOps);
+    int hotKeyOps = static_cast<int>(config.HOT_KEY_ACCESS_PERCENTAGE * totalOps);
 
     for (int i = 0; i < totalOps; i++) {
         int randomIndex;
@@ -69,12 +69,12 @@ std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::
 }
 
 // Function to generate a Zipfian-distributed partitioned operation set
-std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(const std::vector<std::string>& keys, int totalOps, int numNodes) {
+std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes) {
     std::vector<std::pair<std::string, int>> operationSet;
     int numKeys = keys.size();
 
     // Calculate the number of hot keys and cold keys based on the percentages
-    int numHotKeys = static_cast<int>(HOT_KEY_PERCENTAGE * numKeys);
+    int numHotKeys = static_cast<int>(config.HOT_KEY_PERCENTAGE * numKeys);
     int numColdKeys = numKeys - numHotKeys;
     int keysPerNode = keys.size() / numNodes;
 
@@ -85,7 +85,7 @@ std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(
     }
     std::random_shuffle(keyOrder.begin(), keyOrder.end());
 
-    int hotKeyOps = static_cast<int>(HOT_KEY_ACCESS_PERCENTAGE * totalOps);
+    int hotKeyOps = static_cast<int>(config.HOT_KEY_ACCESS_PERCENTAGE * totalOps);
 
     for (int i = 0; i < totalOps; i++) {
         int randomIndex;
@@ -105,7 +105,7 @@ std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(
     return operationSet;
 }
 
-std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<std::string>& keys, int totalOps, int numNodes) {
+std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes) {
     std::vector<std::pair<std::string, int>> operationSet;
     int numKeys = keys.size();
 
@@ -115,7 +115,7 @@ std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<
     std::vector<std::string> newKeySet(keys.begin() + startIdx, keys.begin() + endIdx);
 
     // Calculate the number of hot keys and cold keys based on the percentages
-    int numHotKeys = static_cast<int>(HOT_KEY_PERCENTAGE * newKeySet.size());
+    int numHotKeys = static_cast<int>(config.HOT_KEY_PERCENTAGE * newKeySet.size());
     int numColdKeys = numKeys - numHotKeys;
 
     // Create a key order where newKeySet comes first, followed by the remaining keys from the original keyset
@@ -128,7 +128,7 @@ std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<
         }
     }
 
-    int hotKeyOps = static_cast<int>(HOT_KEY_ACCESS_PERCENTAGE * totalOps);
+    int hotKeyOps = static_cast<int>(config.HOT_KEY_ACCESS_PERCENTAGE * totalOps);
 
     for (int i = 0; i < totalOps; i++) {
         int randomIndex;
@@ -162,7 +162,7 @@ void executeOperations(const std::vector<std::pair<std::string, int>>& operation
 
         std::cout << "Operation " << operationNumber << ": Sending key=" << key << " to Node " << randomNode << std::endl;
 
-        send(randomNode, key);
+        // send(randomNode, key);
 
         operationNumber++;
     }

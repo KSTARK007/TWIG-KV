@@ -2,15 +2,18 @@
 
 #include <array>
 #include <iostream>
+#include "operations.h"
 
 static constexpr uint16_t kPort = 31580;
 
 DEFINE_string(local, "", "Local IP address");
 DEFINE_string(remote, "", "Remote IP address");
 DEFINE_string(config, "", "JSON config");
+DEFINE_string(dataset_config, "", "JSON config for operation parameter for caching");
 DEFINE_string(dataset, "", "Path to dataset");
 DEFINE_int64(server_index, 0, "Index of server");
 DEFINE_int64(threads, 1, "Number of threads");
+
 
 // assert with message
 void assert_with_msg(bool cond, const char *msg) {
@@ -42,9 +45,9 @@ void client_worker(BlockCacheConfig config, int64_t server_index,
   printf("Sending message to %s:%d\n", FLAGS_remote.c_str(), port);
   MachnetFlow flow;
   std::string msg = "Hello World!";
-  assert_with_msg(machnet_connect(channel, FLAGS_local.c_str(),
-                                  FLAGS_remote.c_str(), port, &flow),
-                  "machnet_connect() failed");
+  ret = machnet_connect(channel, FLAGS_local.c_str(),
+                                  FLAGS_remote.c_str(), port, &flow);
+  assert_with_msg(ret == 0, "machnet_connect() failed");
 
   ret = machnet_send(channel, flow, msg.data(), msg.size());
   if (ret == -1)
@@ -89,6 +92,9 @@ void server_worker(BlockCacheConfig config, int64_t server_index,
 int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
+  Configuration ops_config = parseConfigFile(FLAGS_dataset_config);
+  createAndWriteDataset(ops_config.DATASET_FILE, ops_config.NUM_KEY_VALUE_PAIRS, ops_config.KEY_SIZE, ops_config.VALUE_SIZE);
+
   signal(SIGINT, [](int) { g_stop.store(true); });
 
   // Cache & DB
@@ -99,7 +105,7 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<BlockDB> db = block_cache.get_db();
   auto config = block_cache.get_config();
 
-  auto dataset_path = fs::path(FLAGS_dataset);
+  auto dataset_path = fs::path(ops_config.DATASET_FILE);
   if (fs::exists(dataset_path)) {
     // TODO: read dataset and run workload
   }
