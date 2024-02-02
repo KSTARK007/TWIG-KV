@@ -28,6 +28,9 @@ CAPNP_DECLARE_SCHEMA(eea585a8e0273b7b);
 CAPNP_DECLARE_SCHEMA(e49824f5cff34d68);
 CAPNP_DECLARE_SCHEMA(a51a80a5d0621603);
 CAPNP_DECLARE_SCHEMA(9c293df3f2a02a07);
+CAPNP_DECLARE_SCHEMA(b36ecfe36db7d4ef);
+CAPNP_DECLARE_SCHEMA(a9a1635b25f07a7b);
+CAPNP_DECLARE_SCHEMA(9cc4c008dd1d858e);
 
 }  // namespace schemas
 }  // namespace capnp
@@ -89,6 +92,58 @@ struct GetResponse {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(9c293df3f2a02a07, 1, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Packet {
+  Packet() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+  struct Data;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(b36ecfe36db7d4ef, 1, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Packet::Data {
+  Data() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+  enum Which: uint16_t {
+    PUT_REQUEST,
+    PUT_RESPONSE,
+    GET_REQUEST,
+    GET_RESPONSE,
+  };
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(a9a1635b25f07a7b, 1, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Packets {
+  Packets() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(9cc4c008dd1d858e, 0, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -431,6 +486,285 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class Packet::Reader {
+public:
+  typedef Packet Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline typename Data::Reader getData() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Packet::Builder {
+public:
+  typedef Packet Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline typename Data::Builder getData();
+  inline typename Data::Builder initData();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Packet::Pipeline {
+public:
+  typedef Packet Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline typename Data::Pipeline getData();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Packet::Data::Reader {
+public:
+  typedef Data Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline Which which() const;
+  inline bool isPutRequest() const;
+  inline bool hasPutRequest() const;
+  inline  ::PutRequest::Reader getPutRequest() const;
+
+  inline bool isPutResponse() const;
+  inline bool hasPutResponse() const;
+  inline  ::PutResponse::Reader getPutResponse() const;
+
+  inline bool isGetRequest() const;
+  inline bool hasGetRequest() const;
+  inline  ::GetRequest::Reader getGetRequest() const;
+
+  inline bool isGetResponse() const;
+  inline bool hasGetResponse() const;
+  inline  ::GetResponse::Reader getGetResponse() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Packet::Data::Builder {
+public:
+  typedef Data Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline Which which();
+  inline bool isPutRequest();
+  inline bool hasPutRequest();
+  inline  ::PutRequest::Builder getPutRequest();
+  inline void setPutRequest( ::PutRequest::Reader value);
+  inline  ::PutRequest::Builder initPutRequest();
+  inline void adoptPutRequest(::capnp::Orphan< ::PutRequest>&& value);
+  inline ::capnp::Orphan< ::PutRequest> disownPutRequest();
+
+  inline bool isPutResponse();
+  inline bool hasPutResponse();
+  inline  ::PutResponse::Builder getPutResponse();
+  inline void setPutResponse( ::PutResponse::Reader value);
+  inline  ::PutResponse::Builder initPutResponse();
+  inline void adoptPutResponse(::capnp::Orphan< ::PutResponse>&& value);
+  inline ::capnp::Orphan< ::PutResponse> disownPutResponse();
+
+  inline bool isGetRequest();
+  inline bool hasGetRequest();
+  inline  ::GetRequest::Builder getGetRequest();
+  inline void setGetRequest( ::GetRequest::Reader value);
+  inline  ::GetRequest::Builder initGetRequest();
+  inline void adoptGetRequest(::capnp::Orphan< ::GetRequest>&& value);
+  inline ::capnp::Orphan< ::GetRequest> disownGetRequest();
+
+  inline bool isGetResponse();
+  inline bool hasGetResponse();
+  inline  ::GetResponse::Builder getGetResponse();
+  inline void setGetResponse( ::GetResponse::Reader value);
+  inline  ::GetResponse::Builder initGetResponse();
+  inline void adoptGetResponse(::capnp::Orphan< ::GetResponse>&& value);
+  inline ::capnp::Orphan< ::GetResponse> disownGetResponse();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Packet::Data::Pipeline {
+public:
+  typedef Data Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Packets::Reader {
+public:
+  typedef Packets Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasPackets() const;
+  inline  ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Reader getPackets() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Packets::Builder {
+public:
+  typedef Packets Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasPackets();
+  inline  ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Builder getPackets();
+  inline void setPackets( ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Builder initPackets(unsigned int size);
+  inline void adoptPackets(::capnp::Orphan< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>> disownPackets();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Packets::Pipeline {
+public:
+  typedef Packets Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 // =======================================================================================
 
 inline bool PutRequest::Reader::hasKey() const {
@@ -594,6 +928,281 @@ inline void GetResponse::Builder::adoptValue(
 }
 inline ::capnp::Orphan< ::capnp::Text> GetResponse::Builder::disownValue() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline typename Packet::Data::Reader Packet::Reader::getData() const {
+  return typename Packet::Data::Reader(_reader);
+}
+inline typename Packet::Data::Builder Packet::Builder::getData() {
+  return typename Packet::Data::Builder(_builder);
+}
+#if !CAPNP_LITE
+inline typename Packet::Data::Pipeline Packet::Pipeline::getData() {
+  return typename Packet::Data::Pipeline(_typeless.noop());
+}
+#endif  // !CAPNP_LITE
+inline typename Packet::Data::Builder Packet::Builder::initData() {
+  _builder.setDataField< ::uint16_t>(::capnp::bounded<0>() * ::capnp::ELEMENTS, 0);
+  _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS).clear();
+  return typename Packet::Data::Builder(_builder);
+}
+inline  ::Packet::Data::Which Packet::Data::Reader::which() const {
+  return _reader.getDataField<Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline  ::Packet::Data::Which Packet::Data::Builder::which() {
+  return _builder.getDataField<Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline bool Packet::Data::Reader::isPutRequest() const {
+  return which() == Packet::Data::PUT_REQUEST;
+}
+inline bool Packet::Data::Builder::isPutRequest() {
+  return which() == Packet::Data::PUT_REQUEST;
+}
+inline bool Packet::Data::Reader::hasPutRequest() const {
+  if (which() != Packet::Data::PUT_REQUEST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasPutRequest() {
+  if (which() != Packet::Data::PUT_REQUEST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::PutRequest::Reader Packet::Data::Reader::getPutRequest() const {
+  KJ_IREQUIRE((which() == Packet::Data::PUT_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::PutRequest>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::PutRequest::Builder Packet::Data::Builder::getPutRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::PUT_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::PutRequest>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setPutRequest( ::PutRequest::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::PUT_REQUEST);
+  ::capnp::_::PointerHelpers< ::PutRequest>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::PutRequest::Builder Packet::Data::Builder::initPutRequest() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::PUT_REQUEST);
+  return ::capnp::_::PointerHelpers< ::PutRequest>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptPutRequest(
+    ::capnp::Orphan< ::PutRequest>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::PUT_REQUEST);
+  ::capnp::_::PointerHelpers< ::PutRequest>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::PutRequest> Packet::Data::Builder::disownPutRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::PUT_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::PutRequest>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isPutResponse() const {
+  return which() == Packet::Data::PUT_RESPONSE;
+}
+inline bool Packet::Data::Builder::isPutResponse() {
+  return which() == Packet::Data::PUT_RESPONSE;
+}
+inline bool Packet::Data::Reader::hasPutResponse() const {
+  if (which() != Packet::Data::PUT_RESPONSE) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasPutResponse() {
+  if (which() != Packet::Data::PUT_RESPONSE) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::PutResponse::Reader Packet::Data::Reader::getPutResponse() const {
+  KJ_IREQUIRE((which() == Packet::Data::PUT_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::PutResponse>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::PutResponse::Builder Packet::Data::Builder::getPutResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::PUT_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::PutResponse>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setPutResponse( ::PutResponse::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::PUT_RESPONSE);
+  ::capnp::_::PointerHelpers< ::PutResponse>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::PutResponse::Builder Packet::Data::Builder::initPutResponse() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::PUT_RESPONSE);
+  return ::capnp::_::PointerHelpers< ::PutResponse>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptPutResponse(
+    ::capnp::Orphan< ::PutResponse>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::PUT_RESPONSE);
+  ::capnp::_::PointerHelpers< ::PutResponse>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::PutResponse> Packet::Data::Builder::disownPutResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::PUT_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::PutResponse>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isGetRequest() const {
+  return which() == Packet::Data::GET_REQUEST;
+}
+inline bool Packet::Data::Builder::isGetRequest() {
+  return which() == Packet::Data::GET_REQUEST;
+}
+inline bool Packet::Data::Reader::hasGetRequest() const {
+  if (which() != Packet::Data::GET_REQUEST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasGetRequest() {
+  if (which() != Packet::Data::GET_REQUEST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::GetRequest::Reader Packet::Data::Reader::getGetRequest() const {
+  KJ_IREQUIRE((which() == Packet::Data::GET_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::GetRequest>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::GetRequest::Builder Packet::Data::Builder::getGetRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::GET_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::GetRequest>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setGetRequest( ::GetRequest::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::GET_REQUEST);
+  ::capnp::_::PointerHelpers< ::GetRequest>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::GetRequest::Builder Packet::Data::Builder::initGetRequest() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::GET_REQUEST);
+  return ::capnp::_::PointerHelpers< ::GetRequest>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptGetRequest(
+    ::capnp::Orphan< ::GetRequest>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::GET_REQUEST);
+  ::capnp::_::PointerHelpers< ::GetRequest>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::GetRequest> Packet::Data::Builder::disownGetRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::GET_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::GetRequest>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isGetResponse() const {
+  return which() == Packet::Data::GET_RESPONSE;
+}
+inline bool Packet::Data::Builder::isGetResponse() {
+  return which() == Packet::Data::GET_RESPONSE;
+}
+inline bool Packet::Data::Reader::hasGetResponse() const {
+  if (which() != Packet::Data::GET_RESPONSE) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasGetResponse() {
+  if (which() != Packet::Data::GET_RESPONSE) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::GetResponse::Reader Packet::Data::Reader::getGetResponse() const {
+  KJ_IREQUIRE((which() == Packet::Data::GET_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::GetResponse>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::GetResponse::Builder Packet::Data::Builder::getGetResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::GET_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::GetResponse>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setGetResponse( ::GetResponse::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::GET_RESPONSE);
+  ::capnp::_::PointerHelpers< ::GetResponse>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::GetResponse::Builder Packet::Data::Builder::initGetResponse() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::GET_RESPONSE);
+  return ::capnp::_::PointerHelpers< ::GetResponse>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptGetResponse(
+    ::capnp::Orphan< ::GetResponse>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::GET_RESPONSE);
+  ::capnp::_::PointerHelpers< ::GetResponse>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::GetResponse> Packet::Data::Builder::disownGetResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::GET_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::GetResponse>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packets::Reader::hasPackets() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packets::Builder::hasPackets() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Reader Packets::Reader::getPackets() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Builder Packets::Builder::getPackets() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packets::Builder::setPackets( ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>::Builder Packets::Builder::initPackets(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void Packets::Builder::adoptPackets(
+    ::capnp::Orphan< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>> Packets::Builder::disownPackets() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Packet,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

@@ -22,3 +22,16 @@ struct GetResponse {
   response @0 :ResponseType;
   value @1: Text;
 }
+
+struct Packet {
+  data :union {
+    putRequest @0 :PutRequest;
+    putResponse @1 :PutResponse;
+    getRequest @2 :GetRequest;
+    getResponse @3 :GetResponse;
+  }
+}
+
+struct Packets {
+  packets @0 :List(Packet);
+}
