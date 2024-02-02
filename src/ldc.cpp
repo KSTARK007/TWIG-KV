@@ -111,11 +111,9 @@ int main(int argc, char *argv[]) {
     std::cout << "Dataset exists \n";
   }
   
-  load_database(ops_config, db);
+  std::vector<std::string> keys = load_database(ops_config, db);
 
-  if (auto err = db->put("23123", "DATA"); err != DBError::None) {
-    panic("Error writing: {}", magic_enum::enum_name(err));
-  }
+
 
   int ret = machnet_init();
   assert_with_msg(ret == 0, "machnet_init() failed");

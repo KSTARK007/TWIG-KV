@@ -42,21 +42,21 @@ struct Configuration {
 
 std::ostream& operator<<(std::ostream& os, const Configuration& config);
 
-int load_database(Configuration &ops_config, std::shared_ptr<BlockDB> &db);
+std::vector<std::string> load_database(Configuration &ops_config, std::shared_ptr<BlockDB> &db);
 
 Configuration parseConfigFile(const std::string& configFile);
 
 void createAndWriteDataset(const std::string& datasetFile, int numKeyValue, int keySize, int valueSize);
 
-std::vector<std::pair<std::string, int>> generateRandomOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes);
+std::vector<std::pair<std::string, int>> generateRandomOperationSet(const std::vector<std::string>& keys, Configuration& config);
 
-std::vector<std::pair<std::string, int>> generatePartitionedOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes);
+std::vector<std::pair<std::string, int>> generatePartitionedOperationSet(const std::vector<std::string>& keys, Configuration& config);
 
-std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes);
+std::vector<std::pair<std::string, int>> generateZipfianOperationSet(const std::vector<std::string>& keys, Configuration& config);
 
-std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes);
+std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(const std::vector<std::string>& keys, Configuration& config);
 
-std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<std::string>& keys, Configuration& config, int totalOps, int numNodes);
+std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<std::string>& keys, Configuration& config);
 
 void executeOperations(const std::vector<std::pair<std::string, int>>& operationSet);
 

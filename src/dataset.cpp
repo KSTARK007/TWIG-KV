@@ -52,7 +52,7 @@ void createAndWriteDataset(const std::string& datasetFile, int numberOfKeys, int
     file.close();
 }
 
-int load_database(Configuration &ops_config, std::shared_ptr<BlockDB> &db) {
+std::vector<std::string> load_database(Configuration &ops_config, std::shared_ptr<BlockDB> &db) {
   createAndWriteDataset(ops_config.DATASET_FILE, ops_config.NUM_KEY_VALUE_PAIRS, ops_config.KEY_SIZE, ops_config.VALUE_SIZE);
   std::vector<std::string> keys = readKeysFromFile(ops_config.DATASET_FILE);
 
@@ -69,8 +69,33 @@ int load_database(Configuration &ops_config, std::shared_ptr<BlockDB> &db) {
     }
     
 
-    return 1;
+    return keys;
 
+}
+
+int issueOps(Configuration &ops_config, std::vector<std::string>& keys){
+    std::vector<std::pair<std::string, int>> operationSet;
+    switch (ops_config.DISTRIBUTION_TYPE) {
+        case RANDOM_DISTRIBUTION:
+            operationSet = generateRandomOperationSet(keys, ops_config);
+            break;
+        case PARTITIONED_DISTRIBUTION:
+            operationSet = generatePartitionedOperationSet(keys, ops_config);
+            break;
+        case ZIPFIAN_DISTRIBUTION:
+            operationSet = generateZipfianOperationSet(keys, ops_config);
+            break;
+        case ZIPFIAN_PARTITIONED_DISTRIBUTION:
+            operationSet = generateZipfianPartitionedOperationSet(keys, ops_config);
+            break;
+        case SINGLE_NODE_HOT_KEYS:
+            operationSet = singleNodeHotSetData(keys, ops_config);
+            break;
+        default:
+            std::cerr << "Invalid distribution type selected." << std::endl;
+            return 1;
+    }
+    return 0;
 }
 
 std::ostream& operator<<(std::ostream& os, const Configuration& config) {
@@ -109,6 +134,7 @@ Configuration parseConfigFile(const std::string& configFile) {
 
     // Map JSON string to enum
     std::string distributionTypeStr = jsonData["DISTRIBUTION_TYPE"];
+    
     if (distributionTypeStr == "RANDOM_DISTRIBUTION") {
         config.DISTRIBUTION_TYPE = RANDOM_DISTRIBUTION;
     } else if (distributionTypeStr == "PARTITIONED_DISTRIBUTION") {
