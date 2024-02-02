@@ -1,535 +1,544 @@
 <rspec xmlns="http://www.geni.net/resources/rspec/3" xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" xmlns:tour="http://www.protogeni.net/resources/rspec/ext/apt-tour/1" xmlns:jacks="http://www.protogeni.net/resources/rspec/ext/jacks/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.geni.net/resources/rspec/3    http://www.geni.net/resources/rspec/3/request.xsd" type="request">
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node0" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp116" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667612">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node0" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp106" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670237">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node0:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp116:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667616" mac_address="9cdc715d1601">
+    <interface client_id="node0:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp106:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670247" mac_address="9cdc7156bf35">
       <ip address="10.10.1.1" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp116" hardware_type="xl170"/>
-    <host name="node0.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.155"/>
+    <emulab:blockstore name="node0-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp106" hardware_type="xl170"/>
+    <host name="node0.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.145"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp116.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp106.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node1" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp115" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667608">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node1" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp096" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670244">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node1:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp115:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667617" mac_address="9cdc715cafc1">
+    <interface client_id="node1:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp096:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670248" mac_address="9cdc7149a871">
       <ip address="10.10.1.2" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp115" hardware_type="xl170"/>
-    <host name="node1.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.154"/>
+    <emulab:blockstore name="node1-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp096" hardware_type="xl170"/>
+    <host name="node1.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.135"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp115.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp096.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node2" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp101" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667611">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node2" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp190" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670241">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node2:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp101:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667618" mac_address="9cdc7149b8c1">
+    <interface client_id="node2:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp190:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670249" mac_address="9cdc715dd571">
       <ip address="10.10.1.3" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp101" hardware_type="xl170"/>
-    <host name="node2.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.140"/>
+    <emulab:blockstore name="node2-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp190" hardware_type="xl170"/>
+    <host name="node2.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.229"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp101.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp190.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node3" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp120" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667609">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node3" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp081" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670239">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node3:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp120:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667619" mac_address="9cdc715d0121">
+    <interface client_id="node3:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp081:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670250" mac_address="9cdc715dd5f1">
       <ip address="10.10.1.4" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp120" hardware_type="xl170"/>
-    <host name="node3.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.159"/>
+    <emulab:blockstore name="node3-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp081" hardware_type="xl170"/>
+    <host name="node3.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.120"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp120.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp081.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node4" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp088" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667607">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node4" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp086" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670238">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node4:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp088:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667620" mac_address="9cdc715b22d1">
+    <interface client_id="node4:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp086:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670251" mac_address="9cdc715b3241">
       <ip address="10.10.1.5" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp088" hardware_type="xl170"/>
-    <host name="node4.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.127"/>
+    <emulab:blockstore name="node4-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp086" hardware_type="xl170"/>
+    <host name="node4.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.125"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp088.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp086.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node5" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp108" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667606">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node5" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp118" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670242">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node5:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp108:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667621" mac_address="9cdc7156bf15">
+    <interface client_id="node5:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp118:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670252" mac_address="9cdc7149a8b1">
       <ip address="10.10.1.6" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp108" hardware_type="xl170"/>
-    <host name="node5.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.147"/>
+    <emulab:blockstore name="node5-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp118" hardware_type="xl170"/>
+    <host name="node5.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.157"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp108.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp118.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node6" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp083" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667610">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node6" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp082" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670243">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node6:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp083:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667622" mac_address="9cdc715dd5e1">
+    <interface client_id="node6:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp082:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670253" mac_address="9cdc715de521">
       <ip address="10.10.1.7" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp083" hardware_type="xl170"/>
-    <host name="node6.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.122"/>
+    <emulab:blockstore name="node6-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp082" hardware_type="xl170"/>
+    <host name="node6.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.121"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp083.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp082.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node7" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp105" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667613">
+  <node xmlns:emulab="http://www.protogeni.net/resources/rspec/ext/emulab/1" client_id="node7" exclusive="true" component_manager_id="urn:publicid:IDN+utah.cloudlab.us+authority+cm" component_id="urn:publicid:IDN+utah.cloudlab.us+node+hp090" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670240">
     <sliver_type name="raw-pc">
       <disk_image name="urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU22-64-STD"/>
     </sliver_type>
     <hardware_type name="xl170"/>
-    <interface client_id="node7:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp105:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667623" mac_address="9cdc714b8371">
+    <interface client_id="node7:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp090:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670254" mac_address="9cdc7156ed15">
       <ip address="10.10.1.8" type="ipv4" netmask="255.255.255.0"/>
     </interface>
-    <emulab:vnode name="hp105" hardware_type="xl170"/>
-    <host name="node7.mongodb7.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.144"/>
+    <emulab:blockstore name="node7-bs" mountpoint="/mydata" class="local" placement="any"/>
+    <emulab:vnode name="hp090" hardware_type="xl170"/>
+    <host name="node7.Khombal2-189106.rasl-PG0.utah.cloudlab.us" ipv4="128.110.218.129"/>
     <services>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="maleeham"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="cbb1996"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="y4xu"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="ramn"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="sarthakm"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="makneee"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="rshivapr"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Prajwal"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="dkg11"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="yimingl"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="aganesn2"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="lavanya5"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="justinxu"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="jeet"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="changxu6"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="luoxh"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="shengya4"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="borisli"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="jiujiup"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Ramya"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="btran33"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="karnapp2"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="xieyt"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="kfadilla"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="jasysj"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Hanlin"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="joymelon"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="sjain1"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="jerrykou"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="viviana"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Json"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="ak5hatha"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="yangt2"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="YXS"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Yiteng"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="JasonWu"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="JiWu"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="haowenp2"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="AbhiW"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Akulg3"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="JiyuHu23"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Khombal2"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="sgbhat3"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="ssaqib"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="neilk3"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="Yukang30"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="amaanmk2"/>
-      <login authentication="ssh-keys" hostname="hp105.utah.cloudlab.us" port="22" username="khoadp"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="maleeham"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="cbb1996"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="y4xu"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="ramn"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="sarthakm"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="makneee"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="rshivapr"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Prajwal"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="dkg11"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="yimingl"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="aganesn2"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="lavanya5"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="justinxu"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="jeet"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="changxu6"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="luoxh"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="shengya4"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="borisli"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="jiujiup"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Ramya"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="btran33"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="karnapp2"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="xieyt"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="kfadilla"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="jasysj"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Hanlin"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="joymelon"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="sjain1"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="jerrykou"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="viviana"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Json"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="ak5hatha"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="yangt2"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="YXS"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Yiteng"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="JasonWu"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="JiWu"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="haowenp2"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="AbhiW"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Akulg3"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="JiyuHu23"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Khombal2"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="sgbhat3"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="ssaqib"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="neilk3"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="Yukang30"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="amaanmk2"/>
+      <login authentication="ssh-keys" hostname="hp090.utah.cloudlab.us" port="22" username="khoadp"/>
       <emulab:console server="boss.utah.cloudlab.us"/>
       <emulab:recovery available="true"/>
       <emulab:powercycle available="true"/>
       <emulab:imageable available="true"/>
     </services>
   </node>
-  <link client_id="link-1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667615" vlantag="384">
-    <interface_ref client_id="node0:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp116:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667616"/>
-    <interface_ref client_id="node1:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp115:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667617"/>
-    <interface_ref client_id="node2:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp101:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667618"/>
-    <interface_ref client_id="node3:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp120:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667619"/>
-    <interface_ref client_id="node4:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp088:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667620"/>
-    <interface_ref client_id="node5:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp108:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667621"/>
-    <interface_ref client_id="node6:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp083:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667622"/>
-    <interface_ref client_id="node7:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp105:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1667623"/>
+  <link client_id="link-1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670246" vlantag="263">
+    <interface_ref client_id="node0:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp106:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670247"/>
+    <interface_ref client_id="node1:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp096:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670248"/>
+    <interface_ref client_id="node2:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp190:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670249"/>
+    <interface_ref client_id="node3:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp081:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670250"/>
+    <interface_ref client_id="node4:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp086:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670251"/>
+    <interface_ref client_id="node5:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp118:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670252"/>
+    <interface_ref client_id="node6:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp082:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670253"/>
+    <interface_ref client_id="node7:eth1" component_id="urn:publicid:IDN+utah.cloudlab.us+interface+hp090:eth1" sliver_id="urn:publicid:IDN+utah.cloudlab.us+sliver+1670254"/>
     <link_type name="lan"/>
     <component_manager name="urn:publicid:IDN+utah.cloudlab.us+authority+cm"/>
+    <emulab:switchpath>ms-mellanox0:ms-mellanox5 ms-mellanox0:ms-mellanox3</emulab:switchpath>
   </link>
   <rspec_tour xmlns="http://www.protogeni.net/resources/rspec/ext/apt-tour/1">
     <description type="markdown">Variable number of nodes in a lan. You have the option of picking from one
@@ -545,7 +554,7 @@ Use `sudo` to run root commands.
     <data_item name="emulab.net.parameter.linkSpeed">0</data_item>
     <data_item name="emulab.net.parameter.tempFileSystemSize">0</data_item>
     <data_item name="emulab.net.parameter.useVMs">False</data_item>
-    <data_item name="emulab.net.parameter.tempFileSystemMax">False</data_item>
+    <data_item name="emulab.net.parameter.tempFileSystemMax">True</data_item>
     <data_item name="emulab.net.parameter.tempFileSystemMount">/mydata</data_item>
     <data_item name="emulab.net.parameter.bestEffort">False</data_item>
     <data_item name="emulab.net.parameter.phystype">xl170</data_item>
@@ -554,7 +563,7 @@ Use `sudo` to run root commands.
     <data_item name="emulab.net.parameter.nodeCount">8</data_item>
     <data_item name="emulab.net.parameter.startVNC">False</data_item>
   </data_set>
-  <emulab:portal name="cloudlab" url="https://www.cloudlab.us/status.php?uuid=a8047422-bf9a-11ee-9f39-e4434b2381fc" project="RASL" experiment="mongodb7" sequence="1706638151"/>
+  <emulab:portal name="cloudlab" url="https://www.cloudlab.us/status.php?uuid=be1ef046-c14d-11ee-9f39-e4434b2381fc" project="RASL" experiment="Khombal2-189106" sequence="1706825019"/>
   <rs:site_info xmlns:rs="http://www.protogeni.net/resources/rspec/ext/site-info/1">
     <rs:location country="US" latitude="40.750714" longitude="-111.893288"/>
   </rs:site_info>
