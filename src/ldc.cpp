@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 
   Configuration ops_config = parseConfigFile(FLAGS_dataset_config);
   
-  std::cout << ops_config;
+  std::cout << ops_config << std::endl;
 
   signal(SIGINT, [](int) { g_stop.store(true); });
 

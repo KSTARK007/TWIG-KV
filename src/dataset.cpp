@@ -50,6 +50,20 @@ void createAndWriteDataset(const std::string& datasetFile, int numberOfKeys, int
     file.close();
 }
 
+std::ostream& operator<<(std::ostream& os, const Configuration& config) {
+    os << "NUM_KEY_VALUE_PAIRS: " << config.NUM_KEY_VALUE_PAIRS << std::endl;
+    os << "NUM_NODES: " << config.NUM_NODES << std::endl;
+    os << "KEY_SIZE: " << config.KEY_SIZE << std::endl;
+    os << "VALUE_SIZE: " << config.VALUE_SIZE << std::endl;
+    os << "TOTAL_OPERATIONS: " << config.TOTAL_OPERATIONS << std::endl;
+    os << "OP_FILE: " << config.OP_FILE << std::endl;
+    os << "DATASET_FILE: " << config.DATASET_FILE << std::endl;
+    os << "DISTRIBUTION_TYPE: " << config.DISTRIBUTION_TYPE << std::endl;
+    os << "HOT_KEY_PERCENTAGE: " << config.HOT_KEY_PERCENTAGE << std::endl;
+    os << "HOT_KEY_ACCESS_PERCENTAGE: " << config.HOT_KEY_ACCESS_PERCENTAGE << std::endl;
+    return os;
+}
+
 Configuration parseConfigFile(const std::string& configFile) {
     
     Configuration config;
