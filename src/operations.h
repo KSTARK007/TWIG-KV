@@ -14,6 +14,7 @@
 #include <cmath>
 #include <gflags/gflags.h>
 #include <atomic>
+#include <nlohmann/json.hpp>
 
 // using namespace gflags;
 
