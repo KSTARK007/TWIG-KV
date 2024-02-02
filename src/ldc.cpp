@@ -93,7 +93,8 @@ int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   Configuration ops_config = parseConfigFile(FLAGS_dataset_config);
-  createAndWriteDataset(ops_config.DATASET_FILE, ops_config.NUM_KEY_VALUE_PAIRS, ops_config.KEY_SIZE, ops_config.VALUE_SIZE);
+  
+  std::cout << ops_config;
 
   signal(SIGINT, [](int) { g_stop.store(true); });
 
@@ -108,6 +109,8 @@ int main(int argc, char *argv[]) {
   auto dataset_path = fs::path(ops_config.DATASET_FILE);
   if (fs::exists(dataset_path)) {
     // TODO: read dataset and run workload
+  } else {
+    createAndWriteDataset(ops_config.DATASET_FILE, ops_config.NUM_KEY_VALUE_PAIRS, ops_config.KEY_SIZE, ops_config.VALUE_SIZE);
   }
 
   if (auto err = db->put("23123", "DATA"); err != DBError::None) {
