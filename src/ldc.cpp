@@ -43,9 +43,8 @@ void client_worker(BlockCacheConfig config, int64_t server_index,
   MachnetFlow flow;
   std::string msg = "Hello World!";
   
-  assert_with_msg(machnet_connect(channel, FLAGS_local.c_str(),
-                                  FLAGS_remote.c_str(), port, &flow),
-                  "machnet_connect() failed");
+  ret = machnet_connect(channel, FLAGS_local.c_str(), FLAGS_remote.c_str(), port, &flow);
+  assert_with_msg(ret, "machnet_connect() failed");
 
   // ret = machnet_send(channel, flow, msg.data(), msg.size());
   ::capnp::MallocMessageBuilder message;
