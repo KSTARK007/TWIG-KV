@@ -108,10 +108,10 @@ int main(int argc, char *argv[]) {
 
   auto dataset_path = fs::path(ops_config.DATASET_FILE);
   if (fs::exists(dataset_path)) {
-    // TODO: read dataset and run workload
-  } else {
-    createAndWriteDataset(ops_config.DATASET_FILE, ops_config.NUM_KEY_VALUE_PAIRS, ops_config.KEY_SIZE, ops_config.VALUE_SIZE);
+    std::cout << "Dataset exists \n";
   }
+  
+  load_database(ops_config, db);
 
   if (auto err = db->put("23123", "DATA"); err != DBError::None) {
     panic("Error writing: {}", magic_enum::enum_name(err));

@@ -42,6 +42,8 @@ struct Configuration {
 
 std::ostream& operator<<(std::ostream& os, const Configuration& config);
 
+int load_database(Configuration &ops_config, std::shared_ptr<BlockDB> &db);
+
 Configuration parseConfigFile(const std::string& configFile);
 
 void createAndWriteDataset(const std::string& datasetFile, int numKeyValue, int keySize, int valueSize);
