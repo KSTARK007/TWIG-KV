@@ -11,5 +11,6 @@
 #include "packet.capnp.h"
 
 #include <gflags/gflags.h>
-
 #include <csignal>
+
+#include "unordered_dense.h"
