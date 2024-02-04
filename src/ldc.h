@@ -4,6 +4,7 @@
 
 #undef PAGE_SIZE // both define PAGE_SIZE
 #include <block_cache.h>
+#include <operations.h>
 
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>

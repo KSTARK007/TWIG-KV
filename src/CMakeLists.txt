@@ -192,7 +192,11 @@ add_executable(ldc
             ldc.h
             
             packet.capnp.c++
-            packet.capnp.h)
+            packet.capnp.h
+            
+            dataset.cpp
+            operations.cpp
+            operations.h)
 
 target_include_directories(ldc PUBLIC
     .

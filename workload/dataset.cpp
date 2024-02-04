@@ -1,6 +1,6 @@
 // dataset.cpp
 
-#include "common.h"
+#include "operations.h"
 
 // Function to read keys from the dataset file
 std::vector<std::string> readKeysFromFile(const std::string& datasetFile) {
@@ -34,6 +34,7 @@ void createAndWriteDataset(const std::string& datasetFile, int numberOfKeys, int
         std::cerr << "Failed to open dataset file: " << datasetFile << std::endl;
         return;
     }
+    std::cout << "writing to the file" << datasetFile << std::endl; 
 
     std::string value;
 

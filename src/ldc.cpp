@@ -2,14 +2,17 @@
 
 #include <array>
 #include <iostream>
+#include "operations.h"
 
 static constexpr uint16_t kPort = 31580;
 
 DEFINE_int64(client, 1, "Running as client");
 DEFINE_string(config, "", "JSON config");
+DEFINE_string(dataset_config, "", "JSON config for operation parameter for caching");
 DEFINE_string(dataset, "", "Path to dataset");
 DEFINE_int64(machine_index, 0, "Index of machine");
 DEFINE_int64(threads, 1, "Number of threads");
+
 
 // assert with message
 void assert_with_msg(bool cond, const char *msg) {
@@ -464,6 +467,10 @@ void server_worker(
 
 int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
+
+  Configuration ops_config = parseConfigFile(FLAGS_dataset_config);
+  
+  std::cout << ops_config << std::endl;
 
   signal(SIGINT, [](int) { g_stop.store(true); });
 
