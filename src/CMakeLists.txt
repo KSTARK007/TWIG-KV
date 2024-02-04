@@ -185,24 +185,30 @@ add_dependency(parallel_hashmap https://github.com/greg7mdp/parallel-hashmap v1.
 set(EXPECTED_BUILD_TESTS OFF)
 add_dependency(tl_expected https://github.com/TartanLlama/expected v1.1.0 TRUE)
 
+add_dependency(capnproto https://github.com/capnproto/capnproto v1.0.2 TRUE)
+
 add_executable(ldc
-                ldc.cpp
-                ldc.h
-                dataset.cpp
-                operations.cpp
-                operations.h)
+            ldc.cpp
+            ldc.h
+            
+            packet.capnp.c++
+            packet.capnp.h
+            
+            dataset.cpp
+            operations.cpp
+            operations.h)
 
 target_include_directories(ldc PUBLIC
     .
 
     ${fmt_SOURCE_DIR}
-    ${unordered_dense_SOURCE_DIR}
+    ${unordered_dense_SOURCE_DIR}/include/ankerl
     ${spdlog_SOURCE_DIR}
     ${nlohmann_json_SOURCE_DIR}
     ${magic_enum_SOURCE_DIR}/include
     ${parallel_hashmap_SOURCE_DIR}
     ${tl_expected_SOURCE_DIR}/include/tl
-
+    ${capnproto_SOURCE_DIR}/c++/src/
 )
 
 target_link_libraries(ldc PUBLIC
@@ -213,6 +219,8 @@ target_link_libraries(ldc PUBLIC
     magic_enum
     phmap
     #expected
+    capnp
+
     glog
     #core
     machnet_shim

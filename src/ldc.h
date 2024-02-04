@@ -6,6 +6,16 @@
 #include <block_cache.h>
 #include <operations.h>
 
-#include <gflags/gflags.h>
+#include <capnp/message.h>
+#include <capnp/serialize-packed.h>
+
+#include "packet.capnp.h"
 
 #include <csignal>
+#include <gflags/gflags.h>
+
+#include "unordered_dense.h"
+
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
