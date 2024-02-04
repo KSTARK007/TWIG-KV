@@ -465,12 +465,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // std::shared_ptr<BlockDB> db = block_cache.get_db();
-  // if (auto err = db->put("23123", "DATA"); err != DBError::None) {
-  //   panic("Error writing: {}", magic_enum::enum_name(err));
-  // }
-  block_cache->put("2", "A");
-
   int ret = machnet_init();
   assert_with_msg(ret == 0, "machnet_init() failed");
 
