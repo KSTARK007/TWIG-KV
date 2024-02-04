@@ -83,25 +83,30 @@ struct Connection {
     auto port = use_next_port();
 
     auto remote_machine_config = config.remote_machine_configs[remote_index];
+    auto remote_port = remote_machine_config.port;
 
     auto connection_data = ConnectionData{};
     auto &[channel, flow] = connection_data;
     channel = machnet_attach();
     assert_with_msg(channel != nullptr, "machnet_attach() failed");
 
+    info("Listening on {} {}", ip, port);
+
     auto ret = machnet_listen(channel, ip.c_str(), port);
     assert_with_msg(ret == 0, "machnet_listen() failed");
 
-    printf("Listening on %s:%d\n", ip.c_str(), port);
-
-    // printf("Sending message to %s:%d\n", ip.c_str(), port);
-    // std::string msg = "Hello World!";
-
+    info("Connecting to {} {}", ip, port);
     ret = machnet_connect(channel, ip.c_str(), remote_machine_config.ip.c_str(),
-                          port, &flow);
+                          remote_port, &flow);
     assert_with_msg(ret == 0, "machnet_connect() failed");
 
+    info("Connected to {} {}", ip, port);
+
     machine_index_to_connection[remote_index] = connection_data;
+
+    // TODO: this is for a hack with client, need unique for each connection
+    // (this only works with 1 server conn)
+    machine_index_to_connection[machine_index] = connection_data;
   }
 
   void listen() {
@@ -142,10 +147,24 @@ struct Connection {
     auto m = capnp::messageToFlatArray(message);
     auto p = m.asChars();
 
-    debug("PUT [{}]", kj::str(message.getRoot<Packets>()).cStr());
+    info("PUT [{}]", kj::str(message.getRoot<Packets>()).cStr());
 
-    // ret = machnet_send(channel, flow, p.begin(), p.size());
     send(index, std::string_view(p.begin(), p.end()));
+
+    poll_receive([&](auto remote_index, MachnetFlow &tx_flow, auto &&data) {
+      if (data.isPutRequest()) {
+        auto p = data.getPutRequest();
+        printf("Received put request: key = %s, value = %s\n",
+               p.getKey().cStr(), p.getValue().cStr());
+      } else if (data.isPutResponse()) {
+        auto p = data.getPutResponse();
+      } else if (data.isGetRequest()) {
+        auto p = data.getGetRequest();
+      } else if (data.isGetResponse()) {
+        auto p = data.getGetResponse();
+        value = p.getValue().cStr();
+      }
+    });
   }
 
   std::string get(int index, std::string_view key) {
@@ -160,7 +179,6 @@ struct Connection {
 
     debug("GET [{}]", kj::str(message.getRoot<Packets>()).cStr());
 
-    // ret = machnet_send(channel, flow, p.begin(), p.size());
     send(index, std::string_view(p.begin(), p.end()));
 
     std::string value;
@@ -209,7 +227,7 @@ struct Connection {
     Packets::Reader packets = message.getRoot<Packets>();
     for (Packet::Reader packet : packets.getPackets()) {
       auto data = packet.getData();
-      debug("Received [{}]", kj::str(data).cStr());
+      info("Received [{}]", kj::str(data).cStr());
 
       MachnetFlow tx_flow;
       tx_flow.dst_ip = rx_flow.src_ip;
@@ -217,7 +235,9 @@ struct Connection {
       tx_flow.dst_port = rx_flow.src_port;
       tx_flow.src_port = rx_flow.dst_port;
 
-      auto remote_index = dst_ip_to_machine_index[rx_flow.dst_ip];
+      auto remote_index = dst_ip_to_machine_index[rx_flow.src_ip];
+      machine_index_to_connection[remote_index].channel = channel;
+      machine_index_to_connection[remote_index].flow = tx_flow;
       handler(remote_index, tx_flow, data);
     }
     return true;
@@ -275,9 +295,11 @@ struct Server : public Connection {
     auto m = capnp::messageToFlatArray(message);
     auto p = m.asChars();
 
-    debug("PUT RESPONSE [{}]", kj::str(message.getRoot<Packets>()).cStr());
+    info("PUT RESPONSE {} [{}]", index,
+         kj::str(message.getRoot<Packets>()).cStr());
 
     send(index, std::string_view(p.begin(), p.end()));
+    info("PUT RESPONSE SENT {}", index);
   }
 
   void get_response(int index, ResponseType response_type,
@@ -339,7 +361,9 @@ void client_worker(BlockCacheConfig config, int machine_index,
   //   printf("machnet_send() failed\n");
 
   Client client(config, machine_index, thread_index);
+  info("Sending put");
   client.put(1, "key", "value");
+  info("Sending get");
   auto v = client.get(1, "key");
   if (v != "value") {
     panic("Expected value to be 'value' but got '{}'", v);
