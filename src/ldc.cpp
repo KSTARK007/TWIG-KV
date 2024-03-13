@@ -136,6 +136,10 @@ void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Con
   auto ops_chunk = get_chunk(ops, FLAGS_threads * FLAGS_clients_per_threads, (thread_index * client_index_per_thread) + thread_index);
   info("[{}] [{}] Client executing ops {}", machine_index, (thread_index * client_index_per_thread) + thread_index, ops_chunk.size());
 
+  auto total_cores = std::thread::hardware_concurrency();
+  auto bind_to_core = ((thread_index * client_index_per_thread) + thread_index) % total_cores;
+  bind_this_thread_to_core(bind_to_core);
+
   execute_operations(client, ops_chunk, start_client_index - 1, config, ops_config, client_index_per_thread, machine_index, thread_index);
 }
 
