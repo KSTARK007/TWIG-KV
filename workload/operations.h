@@ -35,9 +35,14 @@ std::vector<std::pair<std::string, int>> generateZipfianPartitionedOperationSet(
 
 std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<std::string>& keys, int totalOps, int numNodes);
 
-void executeOperations(const std::vector<std::pair<std::string, int>>& operationSet);
+std::vector<std::pair<std::string, int>> singleNodeHotSetDataToSecondNodeOnly(const std::vector<std::string>& keys, int totalOps, int numNodes);
+
+std::vector<std::pair<std::string, int>> singleNodeHotSetDataTo80SecondNode20Other(const std::vector<std::string>& keys, int totalOps, int numNodes);
+
+void executeOperations(BlockCacheConfig config, const std::vector<std::pair<std::string, int>>& operationSet);
 
 void dumpOperationSetToFile(const std::vector<std::pair<std::string, int>>& operationSet);
+std::vector<std::pair<std::string, int>> loadOperationSetFromFile();
 
 std::vector<std::string> readKeysFromFile(const std::string& datasetFile);
 

@@ -181,23 +181,38 @@ add_dependency(spdlog https://github.com/gabime/spdlog v1.11.0 TRUE)
 add_dependency(nlohmann_json https://github.com/nlohmann/json v3.11.2 TRUE)
 add_dependency(magic_enum https://github.com/Neargye/magic_enum v0.9.3 TRUE)
 add_dependency(parallel_hashmap https://github.com/greg7mdp/parallel-hashmap v1.3.12 TRUE)
+add_dependency(concurrentqueue https://github.com/cameron314/concurrentqueue v1.0.4 TRUE)
 
 set(EXPECTED_BUILD_TESTS OFF)
 add_dependency(tl_expected https://github.com/TartanLlama/expected v1.1.0 TRUE)
 
 add_dependency(capnproto https://github.com/capnproto/capnproto v1.0.2 TRUE)
+add_dependency(tlru https://github.com/tstarling/thread-safe-lru df7b21c FALSE)
+add_dependency(hdr_histogram https://github.com/HdrHistogram/HdrHistogram_c c818722 FALSE)
+
+include(FindPkgConfig)
+pkg_search_module(TBB REQUIRED tbb)
 
 add_executable(ldc
             ldc.cpp
             ldc.h
+
+            connection.cpp
+            connection.h
             
             packet.capnp.c++
             packet.capnp.h
             
             dataset.cpp
             operations.cpp
-            operations.h)
-
+            operations.h
+            
+            async_rdma.h
+            async_rdma.cpp
+            
+            rdma_reads.cpp
+            rdma_server.cpp)
+            
 target_include_directories(ldc PUBLIC
     .
 
@@ -209,6 +224,11 @@ target_include_directories(ldc PUBLIC
     ${parallel_hashmap_SOURCE_DIR}
     ${tl_expected_SOURCE_DIR}/include/tl
     ${capnproto_SOURCE_DIR}/c++/src/
+    ${concurrentqueue_SOURCE_DIR}
+    ${tlru_SOURCE_DIR}
+    ${hdr_histogram_SOURCE_DIR}
+
+    ${TBB_INCLUDE_DIRS}
 )
 
 target_link_libraries(ldc PUBLIC
@@ -218,6 +238,7 @@ target_link_libraries(ldc PUBLIC
     nlohmann_json
     magic_enum
     phmap
+    concurrentqueue
     #expected
     capnp
 
@@ -225,7 +246,11 @@ target_link_libraries(ldc PUBLIC
     #core
     machnet_shim
     rt
+    infinity
+    hdr_histogram
     ${LIBDPDK_LIBRARIES}
+
+    ${TBB_LIBRARIES}
 )
 
 if (MSVC)

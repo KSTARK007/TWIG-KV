@@ -6,7 +6,10 @@ include_directories(SYSTEM third_party/machnet/src)
 
 add_subdirectory(third_party/blkcache)
 include_directories(SYSTEM third_party/blkcache)
-include_directories(SYSTEM third_party/blkcache/RDMA/src)
+
+add_subdirectory(third_party/RDMA)
+include_directories(SYSTEM third_party/RDMA)
+include_directories(SYSTEM third_party/RDMA/src)
 
 add_subdirectory(src)
 

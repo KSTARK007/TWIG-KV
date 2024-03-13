@@ -1,518 +1,456 @@
 #include "ldc.h"
 
-#include <array>
-#include <iostream>
-#include "operations.h"
-
-static constexpr uint16_t kPort = 31580;
-
-DEFINE_int64(client, 1, "Running as client");
 DEFINE_string(config, "", "JSON config");
-DEFINE_string(dataset_config, "", "JSON config for operation parameter for caching");
-DEFINE_string(dataset, "", "Path to dataset");
+DEFINE_string(dataset_config, "",
+              "JSON config for operation parameter for caching");
 DEFINE_int64(machine_index, 0, "Index of machine");
 DEFINE_int64(threads, 1, "Number of threads");
+DEFINE_int64(clients_per_threads, 1, "Number of clients per threads");
+DEFINE_string(metrics_path, "metrics.json", "Path to store metrics");
+DEFINE_string(cache_dump_path, "cache_dump.txt", "Path to store cache dump");
+DEFINE_string(cache_metrics_path, "cache_metrics.json",
+              "Path to store cache metrics");
+DEFINE_bool(dump_operations, false, "This is to dump the operations");
+DEFINE_string(load_dataset, "", "Load dataset from path into store");
 
+inline static std::string default_value;
 
-// assert with message
-void assert_with_msg(bool cond, const char *msg) {
-  if (!cond) {
-    printf("%s\n", msg);
-    exit(-1);
+// Background log for total amount of logs executed
+std::atomic<uint64_t> total_ops_executed;
+
+void exec(std::string command, bool print_output = true)
+{
+  // set up file redirection
+  std::filesystem::path redirection = std::filesystem::absolute(".output.temp");
+  // command.append(" &> \"" + redirection.string() + "\" 2>&1");
+  command.append(" > /dev/null 2>&1");
+
+  // execute command
+  auto status = std::system(command.c_str());
+}
+
+struct MachnetSync
+{
+  std::mutex m;
+  std::condition_variable cv;
+  bool ready = false;
+} machnet_sync;
+
+void exec_machnet(const char *cmd)
+{
+  std::array<char, 128> buffer;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  if (!pipe)
+  {
+    throw std::runtime_error("popen() failed!");
+  }
+  auto found_status = false;
+  while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) !=
+         nullptr)
+  {
+    std::string_view s(buffer.data(), buffer.size());
+
+    if (!found_status && s.find("Machnet Engine Status") != std::string::npos)
+    {
+      std::lock_guard lk(machnet_sync.m);
+      machnet_sync.ready = true;
+      machnet_sync.cv.notify_one();
+      found_status = true;
+    }
   }
 }
 
-std::atomic<bool> g_stop{false};
+template <typename T>
+std::vector<T> get_chunk(std::vector<T> const &vec, std::size_t n, std::size_t i)
+{
+  assert(i < n);
+  std::size_t const q = vec.size() / n;
+  std::size_t const r = vec.size() % n;
 
-// struct Connection
-// {
-//   Connection(BlockCacheConfig config_, int local_machine_index_, int
-//   remote_machine_index_) : config(config_),
-//   local_machine_index_(local_machine_index),
-//   remote_machine_index(remote_machine_index_)
-//   {
-//     void *channel = machnet_attach();
-//     assert_with_msg(channel != nullptr, "machnet_attach() failed");
+  auto begin = vec.begin() + i * q + std::min(i, r);
+  auto end = vec.begin() + (i + 1) * q + std::min(i + 1, r);
 
-//     auto ret = machnet_listen(channel, FLAGS_local.c_str(), port);
-//     assert_with_msg(ret == 0, "machnet_listen() failed");
-//   }
+  return std::vector<T>(begin, end);
+}
 
-//   BlockCacheConfig config;
-//   int local_machine_index;
-//   int remote_machine_index;
-// };
-
-template <typename T, typename T2>
-using HashMap = ankerl::unordered_dense::map<T, T2>;
-
-struct ConnectionData {
-  void *channel;
-  MachnetFlow flow;
-};
-
-// hash for MachnetFlow
-namespace std {
-template <> struct hash<MachnetFlow> {
-  std::size_t operator()(const MachnetFlow &flow) const {
-    return std::hash<int>{}(flow.src_ip) ^ std::hash<int>{}(flow.dst_ip) ^
-           std::hash<int>{}(flow.src_port) ^ std::hash<int>{}(flow.dst_port);
+void execute_operations(Client &client, const std::vector<std::pair<std::string, int>> &operation_set, int client_start_index, BlockCacheConfig config, Configuration &ops_config,
+                        int client_index_per_thread, int machine_index, int thread_index)
+{
+  int wrong_value = 0;
+  std::string value;
+  std::vector<long long> timeStamps;
+  for (int j = 0; j < ops_config.VALUE_SIZE; j++)
+  {
+    value += static_cast<char>('A');
   }
-};
-} // namespace std
-
-struct Connection {
-  Connection(BlockCacheConfig config_, int machine_index_, int thread_index_)
-      : config(config_), machine_index(machine_index_),
-        thread_index(thread_index_) {
-    auto my_machine_config = config.remote_machine_configs[machine_index];
-    auto ip = my_machine_config.ip;
-    current_port = static_cast<int>(my_machine_config.port);
-    // Set this thread's port to be an offset to base port
-    auto port = use_next_port();
-
-    info("Connection [{}] {}:{}", thread_index, ip.c_str(), port);
-
-    for (auto i = 0; i < config.remote_machine_configs.size(); i++) {
-      const auto &remote_machine_config = config.remote_machine_configs[i];
-      dst_ip_to_machine_index[ntohl(
-          inet_addr(remote_machine_config.ip.c_str()))] = i;
-    }
-  }
-
-  void connect_to_remote_machine(int remote_index) {
-    auto my_machine_config = config.remote_machine_configs[machine_index];
-    auto ip = my_machine_config.ip;
-    auto port = use_next_port();
-
-    auto remote_machine_config = config.remote_machine_configs[remote_index];
-    auto remote_port = remote_machine_config.port;
-
-    auto connection_data = ConnectionData{};
-    auto &[channel, flow] = connection_data;
-    channel = machnet_attach();
-    assert_with_msg(channel != nullptr, "machnet_attach() failed");
-
-    info("Listening on {} {}", ip, port);
-
-    auto ret = machnet_listen(channel, ip.c_str(), port);
-    assert_with_msg(ret == 0, "machnet_listen() failed");
-
-    info("Connecting to {} {}", ip, port);
-    ret = machnet_connect(channel, ip.c_str(), remote_machine_config.ip.c_str(),
-                          remote_port, &flow);
-    assert_with_msg(ret == 0, "machnet_connect() failed");
-
-    info("Connected to {} {}", ip, port);
-
-    machine_index_to_connection[remote_index] = connection_data;
-
-    // TODO: this is for a hack with client, need unique for each connection
-    // (this only works with 1 server conn)
-    machine_index_to_connection[machine_index] = connection_data;
-  }
-
-  void listen() {
-    auto my_machine_config = config.remote_machine_configs[machine_index];
-    auto ip = my_machine_config.ip;
-    auto port = my_machine_config.port;
-
-    auto connection_data = ConnectionData{};
-    auto &[channel, flow] = connection_data;
-    channel = machnet_attach();
-    assert_with_msg(channel != nullptr, "machnet_attach() failed");
-
-    auto ret = machnet_listen(channel, ip.c_str(), port);
-    assert_with_msg(ret == 0, "machnet_listen() failed");
-
-    info("Listening on {}:{}", ip, port);
-
-    machine_index_to_connection[machine_index] = connection_data;
-  }
-
-  void send(int index, std::string_view data) {
-    auto &connection_data = machine_index_to_connection[index];
-    auto &[channel, flow] = connection_data;
-    auto ret = machnet_send(channel, flow, data.data(), data.size());
-    if (ret == -1) {
-      panic("machnet_send() failed");
-    }
-  }
-
-  void put(int index, std::string_view key, std::string_view value) {
-    ::capnp::MallocMessageBuilder message;
-    Packets::Builder packets = message.initRoot<Packets>();
-    ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
-    Packet::Data::Builder data = packet[0].initData();
-    PutRequest::Builder put_request = data.initPutRequest();
-    put_request.setKey(std::string(key));
-    put_request.setValue(std::string(value));
-    auto m = capnp::messageToFlatArray(message);
-    auto p = m.asChars();
-
-    info("PUT [{}]", kj::str(message.getRoot<Packets>()).cStr());
-
-    send(index, std::string_view(p.begin(), p.end()));
-
-    poll_receive([&](auto remote_index, MachnetFlow &tx_flow, auto &&data) {
-      if (data.isPutRequest()) {
-        auto p = data.getPutRequest();
-        printf("Received put request: key = %s, value = %s\n",
-               p.getKey().cStr(), p.getValue().cStr());
-      } else if (data.isPutResponse()) {
-        auto p = data.getPutResponse();
-      } else if (data.isGetRequest()) {
-        auto p = data.getGetRequest();
-      } else if (data.isGetResponse()) {
-        auto p = data.getGetResponse();
-        value = p.getValue().cStr();
+  long long run_time = 0;
+  auto op_start = std::chrono::high_resolution_clock::now();
+  do
+  {
+    auto io_start = std::chrono::high_resolution_clock::now();
+    for (const auto &operation : operation_set)
+    {
+      io_start = std::chrono::high_resolution_clock::now();
+      const std::string &key = operation.first;
+      int index = operation.second;
+      if (index > ops_config.NUM_NODES)
+      {
+        panic("Invalid node number {}", index);
       }
-    });
-  }
-
-  std::string get(int index, std::string_view key) {
-    ::capnp::MallocMessageBuilder message;
-    Packets::Builder packets = message.initRoot<Packets>();
-    ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
-    Packet::Data::Builder data = packet[0].initData();
-    GetRequest::Builder get_request = data.initGetRequest();
-    get_request.setKey(std::string(key));
-    auto m = capnp::messageToFlatArray(message);
-    auto p = m.asChars();
-
-    debug("GET [{}]", kj::str(message.getRoot<Packets>()).cStr());
-
-    send(index, std::string_view(p.begin(), p.end()));
-
-    std::string value;
-    poll_receive([&](auto remote_index, MachnetFlow &tx_flow, auto &&data) {
-      if (data.isPutRequest()) {
-        auto p = data.getPutRequest();
-        printf("Received put request: key = %s, value = %s\n",
-               p.getKey().cStr(), p.getValue().cStr());
-      } else if (data.isPutResponse()) {
-        auto p = data.getPutResponse();
-      } else if (data.isGetRequest()) {
-        auto p = data.getGetRequest();
-      } else if (data.isGetResponse()) {
-        auto p = data.getGetResponse();
-        value = p.getValue().cStr();
+      std::string v = client.get(index + client_start_index, key);
+      if (v != value)
+      {
+        wrong_value++;
+        LOG_STATE("[{}] unexpected data {} {} for key {} wrong_values till now {}", index, v, value, key, wrong_value);
       }
-    });
-    return value;
-  }
-
-  void poll_receive(auto &&handler) {
-    bool received_data = false;
-    while (!received_data) {
-      received_data = receive(handler);
-      if (g_stop) {
-        break;
-      }
+      auto elapsed = std::chrono::high_resolution_clock::now() - io_start;
+      long long nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count();
+      timeStamps.push_back(nanoseconds);
+      total_ops_executed.fetch_add(1, std::memory_order::relaxed);
     }
-  }
+    auto op_end = std::chrono::high_resolution_clock::now() - op_start;
+    run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
+  } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
+  dump_per_thread_latency_to_file(timeStamps, client_index_per_thread, machine_index, thread_index);
+  LOG_STATE("wrong_values till now {}", wrong_value);
+}
 
-  bool receive(auto &&handler) {
-    std::array<char, 1024> buf;
+void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Configuration ops_config,
+                   int machine_index, int thread_index, std::vector<std::pair<std::string, int>> ops,
+                   int client_index_per_thread)
+{
+  auto &client = *client_;
 
-    auto &connection_data = machine_index_to_connection[machine_index];
-    auto &channel = connection_data.channel;
-    MachnetFlow rx_flow;
-    auto ret = machnet_recv(channel, buf.data(), buf.size(), &rx_flow);
-    assert_with_msg(ret >= 0, "machnet_recvmsg() failed");
-    if (ret == 0) {
-      return false;
+  // Find the client index to start from
+  auto start_client_index = 0;
+  for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+  {
+    auto remote_machine_config = config.remote_machine_configs[i];
+    if (remote_machine_config.server)
+    {
+      break;
     }
-
-    auto *word = reinterpret_cast<capnp::word *>(buf.data());
-    auto received_array = kj::ArrayPtr<capnp::word>(word, word + ret);
-    capnp::FlatArrayMessageReader message(received_array);
-    Packets::Reader packets = message.getRoot<Packets>();
-    for (Packet::Reader packet : packets.getPackets()) {
-      auto data = packet.getData();
-      info("Received [{}]", kj::str(data).cStr());
-
-      MachnetFlow tx_flow;
-      tx_flow.dst_ip = rx_flow.src_ip;
-      tx_flow.src_ip = rx_flow.dst_ip;
-      tx_flow.dst_port = rx_flow.src_port;
-      tx_flow.src_port = rx_flow.dst_port;
-
-      auto remote_index = dst_ip_to_machine_index[rx_flow.src_ip];
-      machine_index_to_connection[remote_index].channel = channel;
-      machine_index_to_connection[remote_index].flow = tx_flow;
-      handler(remote_index, tx_flow, data);
-    }
-    return true;
+    start_client_index++;
   }
 
-  int use_next_port() { return current_port++; }
+  auto ops_chunk = get_chunk(ops, FLAGS_threads * FLAGS_clients_per_threads, (thread_index * client_index_per_thread) + thread_index);
+  info("[{}] [{}] Client executing ops {}", machine_index, (thread_index * client_index_per_thread) + thread_index, ops_chunk.size());
 
-  // The config
-  BlockCacheConfig config;
-
-  // This machine's index corresponding to the one in the config
-  int machine_index;
-
-  // Thread index
-  int thread_index;
-
-  // Mapping from remote machine index to flow (for sending)
-  HashMap<int, ConnectionData> machine_index_to_connection;
-  // HashMap<MachnetFlow, int> flow_to_machine_index;
-  HashMap<int, int> dst_ip_to_machine_index;
-
-  // Latest port, increments based on each connection to another machine
-  int current_port;
-};
-
-struct Client : public Connection {
-  Client(BlockCacheConfig config, int machine_index, int thread_index)
-      : Connection(config, machine_index, thread_index) {
-    for (auto i = 0; i < config.remote_machine_configs.size(); i++) {
-      if (i != machine_index) {
-        connect_to_remote_machine(i);
-      }
-    }
-  }
-};
-
-struct ResponseData {
-  std::array<char, 1024> buf;
-  MachnetFlow rx_flow;
-};
-
-struct Server : public Connection {
-  Server(BlockCacheConfig config, int machine_index, int thread_index)
-      : Connection(config, machine_index, thread_index) {
-    listen();
-  }
-
-  void put_response(int index, ResponseType response_type) {
-    ::capnp::MallocMessageBuilder message;
-    Packets::Builder packets = message.initRoot<Packets>();
-    ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
-    Packet::Data::Builder data = packet[0].initData();
-    PutResponse::Builder put_response = data.initPutResponse();
-    put_response.setResponse(response_type);
-    auto m = capnp::messageToFlatArray(message);
-    auto p = m.asChars();
-
-    info("PUT RESPONSE {} [{}]", index,
-         kj::str(message.getRoot<Packets>()).cStr());
-
-    send(index, std::string_view(p.begin(), p.end()));
-    info("PUT RESPONSE SENT {}", index);
-  }
-
-  void get_response(int index, ResponseType response_type,
-                    std::string_view value) {
-    ::capnp::MallocMessageBuilder message;
-    Packets::Builder packets = message.initRoot<Packets>();
-    ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
-    Packet::Data::Builder data = packet[0].initData();
-    GetResponse::Builder get_response = data.initGetResponse();
-    get_response.setResponse(response_type);
-    get_response.setValue(std::string(value));
-    auto m = capnp::messageToFlatArray(message);
-    auto p = m.asChars();
-
-    debug("GET RESPONSE [{}]", kj::str(message.getRoot<Packets>()).cStr());
-
-    send(index, std::string_view(p.begin(), p.end()));
-  }
-};
-
-void client_worker(BlockCacheConfig config, int machine_index,
-                   int thread_index) {
-  // auto remote_machine_config = config.remote_machine_configs[0];
-  // auto base_port = static_cast<int>(remote_machine_config.port);
-  // // Set this thread's port to be an offset to base port
-  // auto port = base_port + thread_index;
-
-  // info("Client [{}] {}:{}", thread_index, FLAGS_local, port);
-
-  // void *channel = machnet_attach();
-  // assert_with_msg(channel != nullptr, "machnet_attach() failed");
-
-  // auto ret = machnet_listen(channel, FLAGS_local.c_str(), port);
-  // assert_with_msg(ret == 0, "machnet_listen() failed");
-
-  // printf("Listening on %s:%d\n", FLAGS_local.c_str(), port);
-
-  // printf("Sending message to %s:%d\n", FLAGS_remote.c_str(), port);
-  // MachnetFlow flow;
-  // std::string msg = "Hello World!";
-
-  // ret = machnet_connect(channel, FLAGS_local.c_str(), FLAGS_remote.c_str(),
-  // port, &flow); assert_with_msg(ret == 0, "machnet_connect() failed");
-
-  // // ret = machnet_send(channel, flow, msg.data(), msg.size());
-  // ::capnp::MallocMessageBuilder message;
-  // Packets::Builder packets = message.initRoot<Packets>();
-  // ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
-  // Packet::Data::Builder data = packet[0].initData();
-  // PutRequest::Builder put_request = data.initPutRequest();
-  // put_request.setKey("key");
-  // put_request.setValue("value");
-  // auto m = capnp::messageToFlatArray(message);
-  // auto p = m.asChars();
-  // info("SS {}", p.size());
-
-  // ret = machnet_send(channel, flow, p.begin(), p.size());
-  // if (ret == -1)
-  //   printf("machnet_send() failed\n");
-
-  Client client(config, machine_index, thread_index);
-  info("Sending put");
-  client.put(1, "key", "value");
-  info("Sending get");
-  auto v = client.get(1, "key");
-  if (v != "value") {
-    panic("Expected value to be 'value' but got '{}'", v);
-  }
+  execute_operations(client, ops_chunk, start_client_index - 1, config, ops_config, client_index_per_thread, machine_index, thread_index);
 }
 
 void server_worker(
-    BlockCacheConfig config, int machine_index, int thread_index,
-    std::shared_ptr<BlockCache<std::string, std::string>> block_cache) {
-  // auto remote_machine_config = config.remote_machine_configs[machine_index];
-  // auto base_port = static_cast<int>(remote_machine_config.port);
-  // // Set this thread's port to be an offset to base port
-  // auto port = base_port + thread_index;
+    std::shared_ptr<Server> server_, BlockCacheConfig config, Configuration ops_config, int machine_index,
+    int thread_index,
+    std::shared_ptr<BlockCache<std::string, std::string>> block_cache,
+    HashMap<uint64_t, RDMA_connect> rdma_nodes)
+{
+  auto &server = *server_;
 
-  // info("Server [{}] {}:{}", thread_index, FLAGS_local, port);
+  void *read_buffer = malloc(BLKSZ);
 
-  // void *channel = machnet_attach();
-  // assert_with_msg(channel != nullptr, "machnet_attach() failed");
-
-  // auto ret = machnet_listen(channel, FLAGS_local.c_str(), port);
-  // assert_with_msg(ret == 0, "machnet_listen() failed");
-
-  // printf("Listening on %s:%d\n", FLAGS_local.c_str(), port);
-
-  // printf("Waiting for message from client\n");
-  // size_t count = 0;
-
-  // while (!g_stop) {
-  //   std::array<char, 1024> buf;
-  //   MachnetFlow flow;
-  //   ret = machnet_recv(channel, buf.data(), buf.size(), &flow);
-  //   assert_with_msg(ret >= 0, "machnet_recvmsg() failed");
-  //   if (ret == 0) {
-  //     usleep(10);
-  //     continue;
-  //   }
-
-  //   if (ret % sizeof(capnp::word) != 0)
-  //   {
-  //     panic("Received message is not aligned to word size {} != {}", ret,
-  //     sizeof(capnp::word));
-  //   }
-
-  //   auto* word = reinterpret_cast<capnp::word*>(buf.data());
-  //   auto received_array = kj::ArrayPtr<capnp::word>(word, word + ret);
-  //   capnp::FlatArrayMessageReader message(received_array);
-  //   Packets::Reader packets = message.getRoot<Packets>();
-  //   for (Packet::Reader packet : packets.getPackets())
-  //   {
-  //     auto data = packet.getData();
-
-  //     if (data.isPutRequest())
-  //     {
-  //       auto p = data.getPutRequest();
-
-  //       printf("Received put request: key = %s, value = %s\n",
-  //       p.getKey().cStr(), p.getValue().cStr());
-
-  //     }
-  //     else if (data.isPutResponse())
-  //     {
-  //       auto p = data.getPutResponse();
-  //     }
-  //     else if (data.isGetRequest())
-  //     {
-  //       auto p = data.getGetRequest();
-  //     }
-  //     else if (data.isGetResponse())
-  //     {
-  //       auto p = data.getGetResponse();
-  //     }
-  //   }
-
-  //   info("AA  {} {}", kj::str(message.getRoot<Packets>()).cStr(), 1);
-
-  //   std::string msg(buf.data(), ret);
-  //   printf("Received message: %s, count = %zu\n", msg.c_str(), count++);
-  // }
-  Server server(config, machine_index, thread_index);
-  while (!g_stop) {
-    server.poll_receive(
-        [&](auto remote_index, MachnetFlow &tx_flow, auto &&data) {
-          if (data.isPutRequest()) {
+  int server_start_index;
+  for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+  {
+    // std::cout <<"i " << i << " config.remote_machine_configs[i].index " << config.remote_machine_configs[i].index << std::endl;
+    if (config.remote_machine_configs[i].server)
+    {
+      server_start_index = config.remote_machine_configs[i].index;
+      break;
+    }
+  }
+  while (!g_stop)
+  {
+    server.loop(
+        [&](auto remote_index, MachnetFlow &tx_flow, auto &&data)
+        {
+          // server.get_perf_monitor().report_stats();
+          if (data.isPutRequest())
+          {
             auto p = data.getPutRequest();
-            printf("Received put request: key = %s, value = %s\n",
-                   p.getKey().cStr(), p.getValue().cStr());
             block_cache->put(p.getKey().cStr(), p.getValue().cStr());
 
             server.put_response(remote_index, ResponseType::OK);
-          } else if (data.isGetRequest()) {
+          }
+          else if (data.isGetRequest())
+          {
             auto p = data.getGetRequest();
-            server.get_response(remote_index, ResponseType::OK,
-                                block_cache->get(p.getKey().cStr()));
+
+            auto key_ = p.getKey();
+            auto key = key_.cStr();
+            auto exists_in_cache = block_cache->exists_in_cache(key);
+            if (exists_in_cache)
+            {
+              // Return the correct key in local cache
+              server.get_response(remote_index, ResponseType::OK,
+                                  block_cache->get(key, false, exists_in_cache));
+            }
+            else
+            {
+              // Otherwise, if RDMA is renabled, read from the correct node
+              bool found_in_rdma = false;
+              if (config.baseline.one_sided_rdma_enabled)
+              {
+                if (!config.ingest_block_index)
+                {
+                  panic("Supports only ingest_block_index being enabled!");
+                }
+
+                auto key_index = std::stoi(key);
+                auto division_of_key_value_pairs = static_cast<int>(
+                    static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / 3);
+                auto remote_machine_index_to_rdma = static_cast<int>(
+                    static_cast<float>(key_index) / division_of_key_value_pairs);
+
+                LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
+                if (remote_machine_index_to_rdma != machine_index)
+                {
+                  read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index);
+                  found_in_rdma = true;
+                }
+              }
+              if (!found_in_rdma)
+              {
+                auto value = block_cache->get(key);
+                LOG_STATE("Fetching from cache/disk {} {}", key, value);
+                server.get_response(remote_index, ResponseType::OK, value);
+              }
+            }
+          }
+          else if (data.isRdmaSetupRequest())
+          {
+            auto p = data.getRdmaSetupRequest();
+            auto machine_index = p.getMachineIndex();
+            auto start_address = p.getStartAddress();
+            auto size = p.getSize();
+            server.rdma_setup_response(remote_index, ResponseType::OK);
+          }
+          else if (data.isRdmaSetupResponse())
+          {
+            auto p = data.getRdmaSetupResponse();
+            info("RDMA setup response [reponse_type = {}]",
+                 magic_enum::enum_name(p.getResponse()));
           }
         });
   }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   Configuration ops_config = parseConfigFile(FLAGS_dataset_config);
-  
-  std::cout << ops_config << std::endl;
 
-  signal(SIGINT, [](int) { g_stop.store(true); });
+  signal(SIGINT, [](int)
+         { g_stop.store(true); });
 
   // Cache & DB
   auto config_path = fs::path(FLAGS_config);
   std::ifstream ifs(config_path);
-  if (!ifs) {
+  if (!ifs)
+  {
     panic("Initializing config from '{}' does not exist", config_path.string());
   }
   json j = json::parse(ifs);
   auto config = j.template get<BlockCacheConfig>();
+  printBlockCacheConfig(config);
+  int machine_index = FLAGS_machine_index;
+  auto machine_config = config.remote_machine_configs[machine_index];
+  auto is_server = machine_config.server;
+
+  if (FLAGS_dump_operations)
+  {
+    generateDatabaseAndOperationSet(ops_config);
+    return 0;
+  }
+
+  // Kill machnet
+  exec("sudo pkill -9 machnet");
 
   std::shared_ptr<BlockCache<std::string, std::string>> block_cache = nullptr;
-  if (!FLAGS_client) {
-    info("Running server");
+  HashMap<uint64_t, RDMA_connect> rdma_nodes;
+  if (is_server)
+  {
     block_cache =
         std::make_shared<BlockCache<std::string, std::string>>(config);
-  } else {
-    info("Running client");
-    auto dataset_path = fs::path(FLAGS_dataset);
-    if (fs::exists(dataset_path)) {
-      // TODO: read dataset and run workload
+
+    // Load the database and operations
+    // load the cache with part of database
+    auto start_client_index = 0;
+    for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+    {
+      auto remote_machine_config = config.remote_machine_configs[i];
+      if (remote_machine_config.server)
+      {
+        break;
+      }
+      start_client_index++;
     }
+    auto server_index = FLAGS_machine_index - start_client_index;
+    auto start_keys = server_index * (static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / ops_config.NUM_NODES);
+    auto end_keys = (server_index + 1) * (static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / ops_config.NUM_NODES);
+
+    LOG_STATE("[{}] Loading database for server index {} starting at key {} and ending at {}", machine_index, server_index, start_keys, end_keys);
+    std::vector<std::string> keys = readKeysFromFile(ops_config.DATASET_FILE);
+    if (keys.empty())
+    {
+      panic("Dataset keys are empty");
+    }
+    default_value = std::string(ops_config.VALUE_SIZE, 'A');
+    auto value = default_value;
+    for (const auto &k : keys)
+    {
+      auto key_index = std::stoi(k);
+      if (key_index >= start_keys && key_index < end_keys)
+      {
+        block_cache->put(k, value);
+      }
+      else
+      {
+        block_cache->get_db()->put(k, value);
+      }
+    }
+
+    // Connect to one sided RDMA
+    if (config.baseline.one_sided_rdma_enabled)
+    {
+      int server_start_index;
+      for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+      {
+        if (config.remote_machine_configs[i].server)
+        {
+          server_start_index = config.remote_machine_configs[i].index;
+          break;
+        }
+      }
+      auto result = std::async(std::launch::async, RDMA_Server_Init, RDMA_PORT, 1 * GB_TO_BYTES, FLAGS_machine_index);
+
+      sleep(10);
+
+      rdma_nodes = connect_to_servers(config, FLAGS_machine_index, ops_config.VALUE_SIZE);
+      void *local_memory = result.get();
+
+      rdma_nodes[machine_index].local_memory_region = local_memory;
+
+      for (auto &t : rdma_nodes)
+      {
+        printRDMAConnect(t.second);
+      }
+
+      // Fill in each buffer with value
+      std::array<uint8_t, BLKSZ> write_buffer;
+      std::fill(write_buffer.begin(), write_buffer.end(), 0);
+      std::copy(value.begin(), value.end(), write_buffer.begin());
+
+      // write the value into buffer
+      info("writing keys");
+      for (const auto &k : keys)
+      {
+        auto key_index = std::stoi(k);
+        if (key_index >= start_keys && key_index < end_keys)
+        {
+          write_correct_node(ops_config, rdma_nodes, server_start_index, key_index, write_buffer);
+        }
+      }
+    }
+    info("Running server");
+  }
+  else
+  {
+    info("Running client");
   }
 
-  int ret = machnet_init();
+  // Launch machnet now
+  std::thread machnet_thread(exec_machnet, "cd ../third_party/machnet/ && echo \"y\" | ./machnet.sh 2>&1");
+  machnet_thread.detach();
+
+  // Wait for machnet to start
+  std::unique_lock lk(machnet_sync.m);
+  machnet_sync.cv.wait(lk, []
+                       { return machnet_sync.ready; });
+  lk.unlock();
+
+  // Connect to machnet
+  auto ret = machnet_init();
   assert_with_msg(ret == 0, "machnet_init() failed");
 
+  std::vector<std::pair<std::string, int>> ops = loadOperationSetFromFile(ops_config.OP_FILE);
+
   std::vector<std::thread> worker_threads;
-  for (auto i = 0; i < FLAGS_threads; i++) {
+  std::vector<std::thread> RDMA_Server_threads;
+  std::vector<std::shared_ptr<Client>> clients;
+  std::vector<std::shared_ptr<Server>> servers;
+
+  if (is_server)
+  {
+    for (auto i = 0; i < FLAGS_threads; i++)
+    {
+      auto server = std::make_shared<Server>(config, ops_config, FLAGS_machine_index, i);
+      servers.emplace_back(server);
+    }
+    info("Setup server done");
+  }
+  else
+  {
+    static std::thread background_monitoring_thread([&]()
+    {
+      uint64_t last_ops_executed = 0;
+      while (!g_stop)
+      {
+        auto current_ops_executed = total_ops_executed.load(std::memory_order::relaxed);
+        auto diff_ops_executed = current_ops_executed - last_ops_executed;
+        info("Ops executed [{}] +[{}]", current_ops_executed, diff_ops_executed);
+        last_ops_executed = current_ops_executed;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+    });
+    background_monitoring_thread.detach();
+    for (auto i = 0; i < FLAGS_threads; i++)
+    {
+      for (auto j = 0; j < FLAGS_clients_per_threads; j++)
+      {
+        auto client = std::make_shared<Client>(config, ops_config, FLAGS_machine_index, i);
+        clients.emplace_back(client);
+      }
+    }
+    info("Setup client done");
+  }
+
+  for (auto i = 0; i < FLAGS_threads; i++)
+  {
     info("Running {} thread {}", i, i);
-    if (!FLAGS_client) {
-      std::thread t(server_worker, config, FLAGS_machine_index, i, block_cache);
+    if (is_server)
+    {
+      auto server = servers[i];
+      std::thread t(server_worker, server, config, ops_config, machine_index, i,
+                    block_cache, rdma_nodes);
       worker_threads.emplace_back(std::move(t));
-    } else {
-      std::thread t(client_worker, config, FLAGS_machine_index, i);
-      worker_threads.emplace_back(std::move(t));
+    }
+    else
+    {
+      for (auto j = 0; j < FLAGS_clients_per_threads; j++)
+      {
+        auto client = clients[i * FLAGS_clients_per_threads + j];
+        std::thread t(client_worker, client, config, ops_config, FLAGS_machine_index, i, ops, j);
+        worker_threads.emplace_back(std::move(t));
+      }
     }
   }
 
-  for (auto &t : worker_threads) {
+  for (auto &t : worker_threads)
+  {
     t.join();
+  }
+
+  for (auto &t : pollingThread)
+  {
+    t.join();
+  }
+
+  if (block_cache)
+  {
+    block_cache->dump_cache(FLAGS_cache_dump_path);
+    block_cache->dump_cache_info(FLAGS_cache_metrics_path);
   }
 
   return 0;

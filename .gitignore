@@ -30,6 +30,17 @@
 *.exe
 *.out
 *.app
+ldc
 
+# Make files
+*.cmake
+CMakeCache.txt
+
+# build Dirs
 build
 .vscode
+CMakeFiles
+_deps
+# third_party
+rdma_testing.json
+compile_commands.json

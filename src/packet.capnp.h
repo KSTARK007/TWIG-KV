@@ -28,6 +28,8 @@ CAPNP_DECLARE_SCHEMA(eea585a8e0273b7b);
 CAPNP_DECLARE_SCHEMA(e49824f5cff34d68);
 CAPNP_DECLARE_SCHEMA(a51a80a5d0621603);
 CAPNP_DECLARE_SCHEMA(9c293df3f2a02a07);
+CAPNP_DECLARE_SCHEMA(eb67a0eae928bb61);
+CAPNP_DECLARE_SCHEMA(d8f2d86285d59919);
 CAPNP_DECLARE_SCHEMA(b36ecfe36db7d4ef);
 CAPNP_DECLARE_SCHEMA(a9a1635b25f07a7b);
 CAPNP_DECLARE_SCHEMA(9cc4c008dd1d858e);
@@ -98,6 +100,36 @@ struct GetResponse {
   };
 };
 
+struct RdmaSetupRequest {
+  RdmaSetupRequest() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(eb67a0eae928bb61, 3, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct RdmaSetupResponse {
+  RdmaSetupResponse() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d8f2d86285d59919, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct Packet {
   Packet() = delete;
 
@@ -125,6 +157,8 @@ struct Packet::Data {
     PUT_RESPONSE,
     GET_REQUEST,
     GET_RESPONSE,
+    RDMA_SETUP_REQUEST,
+    RDMA_SETUP_RESPONSE,
   };
 
   struct _capnpPrivate {
@@ -486,6 +520,168 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class RdmaSetupRequest::Reader {
+public:
+  typedef RdmaSetupRequest Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint64_t getMachineIndex() const;
+
+  inline  ::uint64_t getStartAddress() const;
+
+  inline  ::uint64_t getSize() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class RdmaSetupRequest::Builder {
+public:
+  typedef RdmaSetupRequest Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint64_t getMachineIndex();
+  inline void setMachineIndex( ::uint64_t value);
+
+  inline  ::uint64_t getStartAddress();
+  inline void setStartAddress( ::uint64_t value);
+
+  inline  ::uint64_t getSize();
+  inline void setSize( ::uint64_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class RdmaSetupRequest::Pipeline {
+public:
+  typedef RdmaSetupRequest Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class RdmaSetupResponse::Reader {
+public:
+  typedef RdmaSetupResponse Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::ResponseType getResponse() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class RdmaSetupResponse::Builder {
+public:
+  typedef RdmaSetupResponse Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::ResponseType getResponse();
+  inline void setResponse( ::ResponseType value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class RdmaSetupResponse::Pipeline {
+public:
+  typedef RdmaSetupResponse Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Packet::Reader {
 public:
   typedef Packet Reads;
@@ -597,6 +793,14 @@ public:
   inline bool hasGetResponse() const;
   inline  ::GetResponse::Reader getGetResponse() const;
 
+  inline bool isRdmaSetupRequest() const;
+  inline bool hasRdmaSetupRequest() const;
+  inline  ::RdmaSetupRequest::Reader getRdmaSetupRequest() const;
+
+  inline bool isRdmaSetupResponse() const;
+  inline bool hasRdmaSetupResponse() const;
+  inline  ::RdmaSetupResponse::Reader getRdmaSetupResponse() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -657,6 +861,22 @@ public:
   inline  ::GetResponse::Builder initGetResponse();
   inline void adoptGetResponse(::capnp::Orphan< ::GetResponse>&& value);
   inline ::capnp::Orphan< ::GetResponse> disownGetResponse();
+
+  inline bool isRdmaSetupRequest();
+  inline bool hasRdmaSetupRequest();
+  inline  ::RdmaSetupRequest::Builder getRdmaSetupRequest();
+  inline void setRdmaSetupRequest( ::RdmaSetupRequest::Reader value);
+  inline  ::RdmaSetupRequest::Builder initRdmaSetupRequest();
+  inline void adoptRdmaSetupRequest(::capnp::Orphan< ::RdmaSetupRequest>&& value);
+  inline ::capnp::Orphan< ::RdmaSetupRequest> disownRdmaSetupRequest();
+
+  inline bool isRdmaSetupResponse();
+  inline bool hasRdmaSetupResponse();
+  inline  ::RdmaSetupResponse::Builder getRdmaSetupResponse();
+  inline void setRdmaSetupResponse( ::RdmaSetupResponse::Reader value);
+  inline  ::RdmaSetupResponse::Builder initRdmaSetupResponse();
+  inline void adoptRdmaSetupResponse(::capnp::Orphan< ::RdmaSetupResponse>&& value);
+  inline ::capnp::Orphan< ::RdmaSetupResponse> disownRdmaSetupResponse();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -931,6 +1151,62 @@ inline ::capnp::Orphan< ::capnp::Text> GetResponse::Builder::disownValue() {
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
+inline  ::uint64_t RdmaSetupRequest::Reader::getMachineIndex() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t RdmaSetupRequest::Builder::getMachineIndex() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void RdmaSetupRequest::Builder::setMachineIndex( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint64_t RdmaSetupRequest::Reader::getStartAddress() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t RdmaSetupRequest::Builder::getStartAddress() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void RdmaSetupRequest::Builder::setStartAddress( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint64_t RdmaSetupRequest::Reader::getSize() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t RdmaSetupRequest::Builder::getSize() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void RdmaSetupRequest::Builder::setSize( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::ResponseType RdmaSetupResponse::Reader::getResponse() const {
+  return _reader.getDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::ResponseType RdmaSetupResponse::Builder::getResponse() {
+  return _builder.getDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void RdmaSetupResponse::Builder::setResponse( ::ResponseType value) {
+  _builder.setDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
 inline typename Packet::Data::Reader Packet::Reader::getData() const {
   return typename Packet::Data::Reader(_reader);
 }
@@ -1169,6 +1445,114 @@ inline ::capnp::Orphan< ::GetResponse> Packet::Data::Builder::disownGetResponse(
   KJ_IREQUIRE((which() == Packet::Data::GET_RESPONSE),
               "Must check which() before get()ing a union member.");
   return ::capnp::_::PointerHelpers< ::GetResponse>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isRdmaSetupRequest() const {
+  return which() == Packet::Data::RDMA_SETUP_REQUEST;
+}
+inline bool Packet::Data::Builder::isRdmaSetupRequest() {
+  return which() == Packet::Data::RDMA_SETUP_REQUEST;
+}
+inline bool Packet::Data::Reader::hasRdmaSetupRequest() const {
+  if (which() != Packet::Data::RDMA_SETUP_REQUEST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasRdmaSetupRequest() {
+  if (which() != Packet::Data::RDMA_SETUP_REQUEST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::RdmaSetupRequest::Reader Packet::Data::Reader::getRdmaSetupRequest() const {
+  KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::RdmaSetupRequest>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::RdmaSetupRequest::Builder Packet::Data::Builder::getRdmaSetupRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::RdmaSetupRequest>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setRdmaSetupRequest( ::RdmaSetupRequest::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::RDMA_SETUP_REQUEST);
+  ::capnp::_::PointerHelpers< ::RdmaSetupRequest>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::RdmaSetupRequest::Builder Packet::Data::Builder::initRdmaSetupRequest() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::RDMA_SETUP_REQUEST);
+  return ::capnp::_::PointerHelpers< ::RdmaSetupRequest>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptRdmaSetupRequest(
+    ::capnp::Orphan< ::RdmaSetupRequest>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::RDMA_SETUP_REQUEST);
+  ::capnp::_::PointerHelpers< ::RdmaSetupRequest>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::RdmaSetupRequest> Packet::Data::Builder::disownRdmaSetupRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::RdmaSetupRequest>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isRdmaSetupResponse() const {
+  return which() == Packet::Data::RDMA_SETUP_RESPONSE;
+}
+inline bool Packet::Data::Builder::isRdmaSetupResponse() {
+  return which() == Packet::Data::RDMA_SETUP_RESPONSE;
+}
+inline bool Packet::Data::Reader::hasRdmaSetupResponse() const {
+  if (which() != Packet::Data::RDMA_SETUP_RESPONSE) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasRdmaSetupResponse() {
+  if (which() != Packet::Data::RDMA_SETUP_RESPONSE) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::RdmaSetupResponse::Reader Packet::Data::Reader::getRdmaSetupResponse() const {
+  KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::RdmaSetupResponse::Builder Packet::Data::Builder::getRdmaSetupResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setRdmaSetupResponse( ::RdmaSetupResponse::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::RDMA_SETUP_RESPONSE);
+  ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::RdmaSetupResponse::Builder Packet::Data::Builder::initRdmaSetupResponse() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::RDMA_SETUP_RESPONSE);
+  return ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptRdmaSetupResponse(
+    ::capnp::Orphan< ::RdmaSetupResponse>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::RDMA_SETUP_RESPONSE);
+  ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::RdmaSetupResponse> Packet::Data::Builder::disownRdmaSetupResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

@@ -23,12 +23,24 @@ struct GetResponse {
   value @1: Text;
 }
 
+struct RdmaSetupRequest {
+  machineIndex @0: UInt64;
+  startAddress @1: UInt64;
+  size @2: UInt64;
+}
+
+struct RdmaSetupResponse {
+  response @0 :ResponseType;
+}
+
 struct Packet {
   data :union {
     putRequest @0 :PutRequest;
     putResponse @1 :PutResponse;
     getRequest @2 :GetRequest;
     getResponse @3 :GetResponse;
+    rdmaSetupRequest @4: RdmaSetupRequest;
+    rdmaSetupResponse @5: RdmaSetupResponse;
   }
 }
 

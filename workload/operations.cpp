@@ -153,7 +153,7 @@ std::vector<std::pair<std::string, int>> singleNodeHotSetData(const std::vector<
 
 
 // Function to execute the operation set
-void executeOperations(const std::vector<std::pair<std::string, int>>& operationSet) {
+void executeOperations(BlockCacheConfig config, const std::vector<std::pair<std::string, int>>& operationSet) {
     int operationNumber = 1;
 
     for (const auto& operation : operationSet) {
