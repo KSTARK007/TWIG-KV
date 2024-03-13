@@ -64,3 +64,16 @@ inline void assert_with_msg(bool cond, const char *msg)
         exit(-1);
     }
 }
+
+[[maybe_unused]] inline bool bind_this_thread_to_core(uint8_t core) {
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);       // Clear all CPUs
+  CPU_SET(core, &cpuset);  // Set the requested core
+
+  pthread_t current_thread = pthread_self();
+  if (pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset) != 0) {
+    perror("Could not set thread to specified core");
+    return false;
+  }
+  return true;
+}
