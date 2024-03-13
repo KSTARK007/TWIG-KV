@@ -145,6 +145,7 @@ void server_worker(
     std::shared_ptr<BlockCache<std::string, std::string>> block_cache,
     HashMap<uint64_t, RDMA_connect> rdma_nodes)
 {
+  bind_this_thread_to_core(thread_index);
   auto &server = *server_;
 
   void *read_buffer = malloc(BLKSZ);
