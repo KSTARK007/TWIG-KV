@@ -78,9 +78,9 @@ std::vector<std::string> load_database(Configuration &ops_config,
 
   for (const std::string &key : keys)
   {
-    client.put(1, key, value);
-    client.put(2, key, value);
-    client.put(3, key, value);
+    client.put(1, 0, key, value);
+    client.put(2, 0, key, value);
+    client.put(3, 0, key, value);
   }
 
   return keys;
@@ -233,5 +233,8 @@ Configuration parseConfigFile(const std::string &configFile)
   config.HOT_KEY_ACCESS_PERCENTAGE = jsonData["HOT_KEY_ACCESS_PERCENTAGE"];
   config.TOTAL_RUNTIME_IN_SECONDS = jsonData["TOTAL_RUNTIME_IN_SECONDS"];
   config.RDMA_ASYNC = jsonData["RDMA_ASYNC"];
+  config.infinity_bound_nic = jsonData["infinity_bound_nic"];
+  config.infinity_bound_device_port = jsonData["infinity_bound_device_port"];
+  config.operations_pollute_cache = jsonData["operations_pollute_cache"];
   return config;
 }

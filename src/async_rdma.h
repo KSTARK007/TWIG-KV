@@ -262,6 +262,7 @@ struct AsyncRdmaOp
     uint64_t offset;
     Server *server;
     int remoteIndex;
+    int remote_port;
     bool isAvailable;
 
     // Constructor is now removed and its functionality is handled by AsyncRdmaOpCircularBuffer
@@ -276,7 +277,7 @@ class AsyncRdmaOpCircularBuffer
 public:
     AsyncRdmaOpCircularBuffer(int bufferSize, int valuesize, infinity::core::Context *context) : size(bufferSize), value_size(valuesize)
     {
-        info("Initing the buffers");
+        info("AsyncRdmaOpCircularBuffer: Initing {} entries", size);
         for (int i = 0; i < size; ++i)
         {
             auto op = AsyncRdmaOp();
@@ -289,8 +290,6 @@ public:
             op.isAvailable = true;
 
             free_queue.enqueue(op);
-
-            info("Added buffers for {}", i);
         }
         std::thread localPollingThread(&AsyncRdmaOpCircularBuffer::pollRdmaOperations, this);
         pollingThread.emplace_back(std::move(localPollingThread));
@@ -323,7 +322,7 @@ public:
                 {
                     LOG_STATE("[{}] Background thread finished RDMA request for remote index", op.server->get_machine_index(), op.remoteIndex);
                     std::string_view value(reinterpret_cast<char *>(op.buffer->getData()), value_size);
-                    op.server->append_to_rdma_get_response_queue(op.remoteIndex, ResponseType::OK, value);
+                    op.server->append_to_rdma_get_response_queue(op.remoteIndex, op.remote_port, ResponseType::OK, value);
                     // op.server->get_response(op.remoteIndex, ResponseType::OK, value);
                     op.request_token->reset();
                     free_queue.enqueue(async_rdma_op);

@@ -43,6 +43,8 @@ struct Configuration
   int RDMA_THREAD;
   float TOTAL_RUNTIME_IN_SECONDS;
   bool RDMA_ASYNC;
+  std::string infinity_bound_nic;
+  int infinity_bound_device_port;
 };
 
 std::ostream &operator<<(std::ostream &os, const Configuration &config);

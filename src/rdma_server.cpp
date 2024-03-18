@@ -10,20 +10,12 @@
 #include "ldc.h"
 #include <infinity/infinity.h>
 
-// #include <infinity/core/Context.h>
-// #include <infinity/queues/QueuePairFactory.h>
-// #include <infinity/queues/QueuePair.h>
-// #include <infinity/memory/Buffer.h>
-// #include <infinity/memory/RegionToken.h>
-// #include <infinity/requests/RequestToken.h>
-
 size_t buffer_size = size_t(6) * 1024 * 1024 * 1024;
 std::mutex m;
 std::condition_variable cv;
 bool ready = false;
 
-constexpr auto RDMA_DEVICE_PORT = 0x1;
-std::tuple<std::string, int> find_first_nic()
+std::optional<std::string> find_nic_containing(std::string_view s)
 {
     int32_t numberOfInstalledDevices = 0;
     ibv_device **ibvDeviceList = ibv_get_device_list(&numberOfInstalledDevices);
@@ -32,21 +24,26 @@ std::tuple<std::string, int> find_first_nic()
     for (int dev_i = 0; dev_i < numberOfInstalledDevices; dev_i++) {
         ibv_device *dev = ibvDeviceList[dev_i];
         const char *name = ibv_get_device_name(dev);
-        if (dev_i > 0) {
-            return {name, RDMA_DEVICE_PORT};
+        if (std::string_view(name).find(s) != std::string::npos)
+        {
+            return name;
         }
     }
-    return {"", -1};
+    return std::nullopt;
 }
 
-void * RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index)
+void * RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index, Configuration ops_config)
 {
     std::cout << "[RDMA SERVER] RDMA SERVER INIT";
 	std::cout << "[server]: serverport = " << serverport << std::endl;
     std::cout << "[server]: buffer_size = " << buffer_size << std::endl;
 
-    auto [device_name, device_port] = find_first_nic();
-	infinity::core::Context *context = new infinity::core::Context(device_name, device_port);
+    auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
+    if (!device_name.has_value())
+    {
+        panic("No device found with name: {}", ops_config.infinity_bound_nic);
+    }
+	infinity::core::Context *context = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
 	infinity::queues::QueuePairFactory *qp_factory = new infinity::queues::QueuePairFactory(context);
 	infinity::queues::QueuePair *qp1;
     infinity::queues::QueuePair *qp2;
@@ -93,7 +90,7 @@ void * RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index)
 }
 
 HashMap<uint64_t, RDMA_connect>  connect_to_servers(
-    BlockCacheConfig config, int machine_index, int value_size)
+    BlockCacheConfig config, int machine_index, int value_size, Configuration ops_config)
 {
     std::unique_lock lk(m);
     cv.wait(lk, []{ return ready; });
@@ -113,8 +110,12 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
     //     cache_size = config.cache.paged.cache_size;
     // if (config.baseline.selected == "rdma")
     //     cache_size = config.cache.rdma.cache_size;
-    auto [device_name, device_port] = find_first_nic();
-    auto *context = new infinity::core::Context(device_name, device_port);
+    auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
+    if (!device_name.has_value())
+    {
+        panic("No device found with name: {}", ops_config.infinity_bound_nic);
+    }
+    auto *context = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
     auto *qpf = new infinity::queues::QueuePairFactory(context);
     for(auto &t : config.remote_machine_configs) {
         std::cout << "adding node "<< t.ip<< std::endl; 

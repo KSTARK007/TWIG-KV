@@ -33,6 +33,15 @@ struct RdmaSetupResponse {
   response @0 :ResponseType;
 }
 
+struct ClientSyncRequest {
+  response @0 :ResponseType;
+  index @1: UInt64;
+}
+
+struct ClientSyncResponse {
+  response @0 :ResponseType;
+}
+
 struct Packet {
   data :union {
     putRequest @0 :PutRequest;
@@ -41,6 +50,8 @@ struct Packet {
     getResponse @3 :GetResponse;
     rdmaSetupRequest @4: RdmaSetupRequest;
     rdmaSetupResponse @5: RdmaSetupResponse;
+    clientSyncRequest @6: ClientSyncRequest;
+    clientSyncResponse @7: ClientSyncResponse;
   }
 }
 

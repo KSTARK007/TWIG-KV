@@ -36,21 +36,21 @@ int issueOps(BlockCacheConfig config, Configuration &ops_config,
              std::vector<std::string> &keys, Client client);
 
 HashMap<uint64_t, RDMA_connect> connect_to_servers(
-    BlockCacheConfig config, int machine_index, int value_size);
+    BlockCacheConfig config, int machine_index, int value_size, Configuration ops_config);
 
 void printRDMAConnect(const RDMA_connect &conn);
 
-void *RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index);
+void *RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index, Configuration ops_config);
 
 void rdma_writer_thread(RDMA_connect &node, uint64_t offset, std::span<uint8_t> buffer_data);
 
-void rdma_reader_thread(RDMA_connect &node, uint64_t offset, void *buffer_data, Server *server, int remoteIndex);
+void rdma_reader_thread(RDMA_connect &node, uint64_t offset, void *buffer_data, Server *server, int remoteIndex, int remote_port);
 
 int calculateNodeAndOffset(Configuration &ops_config, uint64_t key, int &nodeIndex, uint64_t &offset);
 
 void write_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect> &rdma_nodes, int node, uint64_t key, std::span<uint8_t> buffer_data);
 
-void read_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect> &rdma_nodes, int node, uint64_t key, void *buffer_data, Server *server, int remoteIndex);
+void read_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect> &rdma_nodes, int node, uint64_t key, void *buffer_data, Server *server, int remoteIndex, int remote_port);
 
 void printBuffer(const std::array<uint8_t, BLKSZ> &buffer);
 

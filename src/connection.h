@@ -27,6 +27,29 @@ struct ConnectionData
   MachnetFlow flow;
 };
 
+struct MachineIndexAndPort
+{
+  int machine_index;
+  int port;
+
+  bool operator==(const MachineIndexAndPort &other) const
+  {
+    return machine_index == other.machine_index && port == other.port;
+  }
+};
+
+namespace std
+{
+  template <>
+  struct hash<MachineIndexAndPort>
+  {
+    std::size_t operator()(const MachineIndexAndPort &flow) const
+    {
+      return std::hash<int>{}(flow.machine_index) ^ std::hash<int>{}(flow.port);
+    }
+  };
+} // namespace std
+
 struct Connection
 {
   Connection(BlockCacheConfig config_, Configuration ops_config_,
@@ -37,9 +60,10 @@ struct Connection
 
   void connect_to_remote_machine(int remote_index);
   void listen();
+  void send(int index, int port, std::string_view data);
   void send(int index, std::string_view data);
-  void put(int index, std::string_view key, std::string_view value);
-  std::string get(int index, std::string_view key);
+  void put(int index, int thread_index, std::string_view key, std::string_view value);
+  std::string get(int index, int thread_index, std::string_view key);
   void poll_receive(auto &&handler)
   {
     bool received_data = false;
@@ -99,12 +123,13 @@ struct Connection
       tx_flow.src_port = rx_flow.dst_port;
 
       auto remote_index = dst_ip_to_machine_index[rx_flow.src_ip];
-      machine_index_to_connection[remote_index].flow = tx_flow;
+      auto port = rx_flow.src_port;
+      machine_index_to_connection[{remote_index, port}].flow = tx_flow;
 
       LOG_STATE("[{}-{}] Received [{}]", machine_index, remote_index,
                 kj::str(data).cStr());
 
-      handler(remote_index, tx_flow, data);
+      handler(remote_index, port, tx_flow, data);
     }
     return true;
   }
@@ -127,8 +152,7 @@ protected:
   Configuration ops_config;
 
   // Mapping from remote machine index to flow (for sending)
-  HashMap<int, ConnectionData> machine_index_to_connection;
-  // HashMap<MachnetFlow, int> flow_to_machine_index;
+  HashMap<MachineIndexAndPort, ConnectionData> machine_index_to_connection;
   HashMap<int, int> dst_ip_to_machine_index;
 
   // Latest port, increments based on each connection to another machine
@@ -142,6 +166,9 @@ struct Client : public Connection
 {
   Client(BlockCacheConfig config, Configuration ops_config, int machine_index,
          int thread_index);
+
+  void connect_to_other_clients();
+  void sync_with_other_clients();
 };
 
 struct Server : public Connection
@@ -149,21 +176,26 @@ struct Server : public Connection
   Server(BlockCacheConfig config, Configuration ops_config, int machine_index,
          int thread_index);
 
+  void put_response(int index, int port, ResponseType response_type);
   void put_response(int index, ResponseType response_type);
+  void get_response(int index, int port, ResponseType response_type,
+                    std::string_view value);
   void get_response(int index, ResponseType response_type,
                     std::string_view value);
+
   void rdma_setup_request(int index, int my_index, uint64_t start_address,
                           uint64_t size);
   void rdma_setup_response(int index, ResponseType response_type);
 
   void execute_pending_operations() override;
-  void append_to_rdma_get_response_queue(int index, ResponseType response_type,
+  void append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
                                          std::string_view value);
 
 public:
   struct RDMAGetResponse
   {
     int index;
+    int port;
     ResponseType response_type;
     std::string value;
   };

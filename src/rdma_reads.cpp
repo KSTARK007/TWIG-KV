@@ -16,7 +16,7 @@
 
 // size_t buffer_size = size_t(5) * 1024 * 1024 * 1024;
 
-void read_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect> &rdma_nodes, int server_start_index, uint64_t key, void *buffer_data, Server *server, int remoteIndex)
+void read_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect> &rdma_nodes, int server_start_index, uint64_t key, void *buffer_data, Server *server, int remoteIndex, int remote_port)
 {
 
 	uint64_t remote_offset;
@@ -24,7 +24,7 @@ void read_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect
 	node = calculateNodeAndOffset(ops_config, key, server_start_index, remote_offset);
 	// info("key {} Node {} server_index {}", key, node, server_start_index);
 	// std::cout<< " key " << key << " node "<< node << " server_index " << server_start_index <<  std::endl;
-	rdma_reader_thread(rdma_nodes[node + server_start_index], remote_offset, buffer_data, server, remoteIndex);
+	rdma_reader_thread(rdma_nodes[node + server_start_index], remote_offset, buffer_data, server, remoteIndex, remote_port);
 }
 
 void write_correct_node(Configuration &ops_config, HashMap<uint64_t, RDMA_connect> &rdma_nodes, int server_start_index, uint64_t key, std::span<uint8_t> buffer_data)
@@ -84,7 +84,7 @@ void rdma_writer_thread(RDMA_connect &node, uint64_t offset, std::span<uint8_t> 
 	delete buffer;
 }
 
-void rdma_reader_thread(RDMA_connect &node, uint64_t offset, void *buffer_data, Server *server, int remoteIndex)
+void rdma_reader_thread(RDMA_connect &node, uint64_t offset, void *buffer_data, Server *server, int remoteIndex, int remote_port)
 {
 	if (server->get_ops_config().RDMA_ASYNC)
 	{
@@ -100,6 +100,7 @@ void rdma_reader_thread(RDMA_connect &node, uint64_t offset, void *buffer_data, 
 		async_rdma_op.server = server;
 		async_rdma_op.offset = offset;
 		async_rdma_op.remoteIndex = remoteIndex;
+		async_rdma_op.remote_port = remote_port;
 		node.circularBuffer->enqueue_async_rdma_op(async_rdma_op);
 #endif
 	} else {

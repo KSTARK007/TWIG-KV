@@ -18,6 +18,17 @@ inline static std::string default_value;
 // Background log for total amount of logs executed
 std::atomic<uint64_t> total_ops_executed;
 
+#ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
+// Total clients ready/done for syncing clients with workloads
+std::atomic<uint64_t> total_clients_ready{};
+std::atomic<bool> workload_ready = false;
+
+std::atomic<uint64_t> total_clients_done{};
+std::atomic<bool> workload_done = false;
+#endif
+
+std::vector<uint64_t> client_thread_ops_executed;
+
 void exec(std::string command, bool print_output = true)
 {
   // set up file redirection
@@ -76,6 +87,29 @@ std::vector<T> get_chunk(std::vector<T> const &vec, std::size_t n, std::size_t i
 void execute_operations(Client &client, const std::vector<std::pair<std::string, int>> &operation_set, int client_start_index, BlockCacheConfig config, Configuration &ops_config,
                         int client_index_per_thread, int machine_index, int thread_index)
 {
+#ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
+  total_clients_ready.fetch_add(1, std::memory_order::relaxed);
+  while (total_clients_ready.load(std::memory_order::relaxed) < FLAGS_threads * FLAGS_clients_per_threads)
+  {
+    std::this_thread::yield();
+  }
+
+  // First client is used to sync with other clients
+  if (thread_index == 0 && client_index_per_thread == 0)
+  {
+    client.connect_to_other_clients();
+    client.sync_with_other_clients();
+    workload_ready.store(true, std::memory_order::relaxed);
+  }
+
+  while (!workload_ready.load(std::memory_order::relaxed))
+  {
+    std::this_thread::yield();
+  }
+#endif
+
+  auto client_index = (thread_index * FLAGS_clients_per_threads) + client_index_per_thread;
+
   int wrong_value = 0;
   std::string value;
   std::vector<long long> timeStamps;
@@ -97,22 +131,50 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
       {
         panic("Invalid node number {}", index);
       }
-      std::string v = client.get(index + client_start_index, key);
+      LOG_STATE("[{}] [{}] Client executing [{}] [{}]", machine_index, client_index, key, index);
+      std::string v = client.get(index + client_start_index, thread_index, key);
+      LOG_STATE("[{}] [{}] Client received [{}] [{}]", machine_index, client_index, key, v);
       if (v != value)
       {
         wrong_value++;
         LOG_STATE("[{}] unexpected data {} {} for key {} wrong_values till now {}", index, v, value, key, wrong_value);
       }
-      auto elapsed = std::chrono::high_resolution_clock::now() - io_start;
+      auto now = std::chrono::high_resolution_clock::now();
+      auto elapsed = now - io_start;
       long long nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count();
       timeStamps.push_back(nanoseconds);
       total_ops_executed.fetch_add(1, std::memory_order::relaxed);
+      client_thread_ops_executed[client_index]++;
+
+      auto op_end = now - op_start;
+      run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
+      if (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS)
+      {
+        break;
+      }
     }
-    auto op_end = std::chrono::high_resolution_clock::now() - op_start;
-    run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
   } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
+  info("[{}] [{}] Client done executing {}", machine_index, client_index, timeStamps.size());
   dump_per_thread_latency_to_file(timeStamps, client_index_per_thread, machine_index, thread_index);
   LOG_STATE("wrong_values till now {}", wrong_value);
+
+#ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
+  total_clients_done.fetch_add(1, std::memory_order::relaxed);
+  while (total_clients_done.load(std::memory_order::relaxed) < FLAGS_threads * FLAGS_clients_per_threads)
+  {
+    std::this_thread::yield();
+  }
+  if (thread_index == 0 && client_index_per_thread == 0)
+  {
+    client.sync_with_other_clients();
+    workload_done.store(true, std::memory_order::relaxed);
+  }
+
+  while (!workload_done.load(std::memory_order::relaxed))
+  {
+    std::this_thread::yield();
+  }
+#endif
 }
 
 void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Configuration ops_config,
@@ -133,11 +195,12 @@ void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Con
     start_client_index++;
   }
 
-  auto ops_chunk = get_chunk(ops, FLAGS_threads * FLAGS_clients_per_threads, (thread_index * client_index_per_thread) + thread_index);
-  info("[{}] [{}] Client executing ops {}", machine_index, (thread_index * client_index_per_thread) + thread_index, ops_chunk.size());
+  auto client_index = (thread_index * FLAGS_clients_per_threads) + client_index_per_thread;
+  auto ops_chunk = get_chunk(ops, FLAGS_threads * FLAGS_clients_per_threads, client_index);
+  info("[{}] [{}] Client executing ops {}", machine_index, client_index, ops_chunk.size());
 
   auto total_cores = std::thread::hardware_concurrency();
-  auto bind_to_core = ((thread_index * client_index_per_thread) + thread_index) % total_cores;
+  auto bind_to_core = client_index % total_cores;
   bind_this_thread_to_core(bind_to_core);
 
   execute_operations(client, ops_chunk, start_client_index - 1, config, ops_config, client_index_per_thread, machine_index, thread_index);
@@ -167,7 +230,7 @@ void server_worker(
   while (!g_stop)
   {
     server.loop(
-        [&](auto remote_index, MachnetFlow &tx_flow, auto &&data)
+        [&](auto remote_index, auto remote_port, MachnetFlow &tx_flow, auto &&data)
         {
           // server.get_perf_monitor().report_stats();
           if (data.isPutRequest())
@@ -187,13 +250,21 @@ void server_worker(
             if (exists_in_cache)
             {
               // Return the correct key in local cache
-              server.get_response(remote_index, ResponseType::OK,
+              server.get_response(remote_index, remote_port, ResponseType::OK,
                                   block_cache->get(key, false, exists_in_cache));
             }
             else
             {
               // Otherwise, if RDMA is renabled, read from the correct node
               bool found_in_rdma = false;
+
+              auto key_index = std::stoi(key);
+              auto division_of_key_value_pairs = static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / 3.0;
+              auto remote_machine_index_to_rdma = static_cast<int>(
+                  static_cast<float>(key_index) / division_of_key_value_pairs);
+
+              auto base_index = machine_index - server_start_index;
+
               if (config.baseline.one_sided_rdma_enabled)
               {
                 if (!config.ingest_block_index)
@@ -201,24 +272,42 @@ void server_worker(
                   panic("Supports only ingest_block_index being enabled!");
                 }
 
-                auto key_index = std::stoi(key);
-                auto division_of_key_value_pairs = static_cast<int>(
-                    static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / 3);
-                auto remote_machine_index_to_rdma = static_cast<int>(
-                    static_cast<float>(key_index) / division_of_key_value_pairs);
-
                 LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
-                if (remote_machine_index_to_rdma != machine_index)
+                if (remote_machine_index_to_rdma != base_index)
                 {
-                  read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index);
+                  read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
                   found_in_rdma = true;
+                  if (!ops_config.RDMA_ASYNC)
+                  {
+                    auto buffer = std::string_view(static_cast<char *>(read_buffer), ops_config.VALUE_SIZE);
+                    server.get_response(remote_index, remote_port, ResponseType::OK, buffer);
+                  }
                 }
               }
               if (!found_in_rdma)
               {
-                auto value = block_cache->get(key);
-                LOG_STATE("Fetching from cache/disk {} {}", key, value);
-                server.get_response(remote_index, ResponseType::OK, value);
+                std::string value;
+                if (ops_config.operations_pollute_cache)
+                {
+                  LOG_STATE("Fetching from disk {} {}", key, value);
+                  if (auto result_or_err = block_cache->get_db()->get(key)) {
+                    value = result_or_err.value();
+                  } else {
+                    panic("Failed to get value from db for key {}", key);
+                  }
+                }
+                else
+                {
+                  LOG_STATE("Fetching from cache/disk {} {}", key, value);
+                  value = block_cache->get(key);
+                }
+
+                if (config.baseline.one_sided_rdma_enabled)
+                {
+                  panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
+                }
+
+                server.get_response(remote_index, remote_port, ResponseType::OK, value);
               }
             }
           }
@@ -328,11 +417,11 @@ int main(int argc, char *argv[])
           break;
         }
       }
-      auto result = std::async(std::launch::async, RDMA_Server_Init, RDMA_PORT, 1 * GB_TO_BYTES, FLAGS_machine_index);
+      auto result = std::async(std::launch::async, RDMA_Server_Init, RDMA_PORT, 1 * GB_TO_BYTES, FLAGS_machine_index, ops_config);
 
       sleep(10);
 
-      rdma_nodes = connect_to_servers(config, FLAGS_machine_index, ops_config.VALUE_SIZE);
+      rdma_nodes = connect_to_servers(config, FLAGS_machine_index, ops_config.VALUE_SIZE, ops_config);
       void *local_memory = result.get();
 
       rdma_nodes[machine_index].local_memory_region = local_memory;
@@ -405,11 +494,18 @@ int main(int argc, char *argv[])
         auto current_ops_executed = total_ops_executed.load(std::memory_order::relaxed);
         auto diff_ops_executed = current_ops_executed - last_ops_executed;
         info("Ops executed [{}] +[{}]", current_ops_executed, diff_ops_executed);
+        for (auto i = 0; i < client_thread_ops_executed.size(); i++)
+        {
+          const auto ops = client_thread_ops_executed[i];
+          info("\t[{}] Ops executed [{}]", i, ops);
+        }
         last_ops_executed = current_ops_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
     background_monitoring_thread.detach();
+
+    client_thread_ops_executed.resize(FLAGS_threads * FLAGS_clients_per_threads);
     for (auto i = 0; i < FLAGS_threads; i++)
     {
       for (auto j = 0; j < FLAGS_clients_per_threads; j++)

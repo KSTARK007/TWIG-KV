@@ -50,7 +50,7 @@ void Connection::connect_to_remote_machine(int remote_index)
   // auto port = use_next_port();
 
   auto remote_machine_config = config.remote_machine_configs[remote_index];
-  auto remote_port = remote_machine_config.port + thread_index;
+  auto remote_port = static_cast<int>(remote_machine_config.port + thread_index);
 
   auto connection_data = ConnectionData{};
   auto &[flow] = connection_data;
@@ -66,7 +66,7 @@ void Connection::connect_to_remote_machine(int remote_index)
   constexpr auto MACHNET_CONNECT_RETRIES = 100;
   for (auto i = 0; i < MACHNET_CONNECT_RETRIES; i++)
   {
-    info("[{}-{}] {} Connecting from [{}:{}] to [{}:{}]", machine_index,
+    LOG_STATE("[{}-{}] {} Connecting from [{}:{}] to [{}:{}]", machine_index,
               remote_index, flow_to_string(flow), ip, port,
               remote_machine_config.ip, remote_port);
 
@@ -84,18 +84,14 @@ void Connection::connect_to_remote_machine(int remote_index)
             remote_index, flow_to_string(flow), ip, port,
             remote_machine_config.ip, remote_port);
 
-  machine_index_to_connection[remote_index] = connection_data;
-
-  // TODO: this is for a hack with client, need unique for each connection
-  // (this only works with 1 server conn)
-  // machine_index_to_connection[machine_index] = connection_data;
+  machine_index_to_connection[{remote_index, remote_port}] = connection_data;
 }
 
 void Connection::listen()
 {
   auto my_machine_config = config.remote_machine_configs[machine_index];
   auto ip = my_machine_config.ip;
-  auto port = my_machine_config.port + thread_index;
+  auto port = static_cast<int>(my_machine_config.port + thread_index);
 
   auto connection_data = ConnectionData{};
   auto &[flow] = connection_data;
@@ -109,17 +105,17 @@ void Connection::listen()
   LOG_STATE("[{}] {} Listening on [{}:{}]", machine_index, flow_to_string(flow),
             ip, port);
 
-  machine_index_to_connection[machine_index] = connection_data;
+  machine_index_to_connection[{machine_index, port}] = connection_data;
 }
 
-void Connection::send(int index, std::string_view data)
+void Connection::send(int index, int port, std::string_view data)
 {
-  auto &connection_data = machine_index_to_connection[index];
+  auto &connection_data = machine_index_to_connection[{index, port}];
   auto &[flow] = connection_data;
-  LOG_STATE("[{}-{}] {} Sending size {}", machine_index, index,
+  LOG_STATE("[{}-{}:{}] {} Sending size {}", machine_index, index, port,
             flow_to_string(flow), data.size());
   auto ret = machnet_send(channel, flow, data.data(), data.size());
-  LOG_STATE("[{}-{}] {} Sent size {}", machine_index, index, flow_to_string(flow),
+  LOG_STATE("[{}-{}:{}] {} Sent size {}", machine_index, index, port, flow_to_string(flow),
             data.size());
   if (ret == -1)
   {
@@ -127,7 +123,13 @@ void Connection::send(int index, std::string_view data)
   }
 }
 
-void Connection::put(int index, std::string_view key, std::string_view value)
+void Connection::send(int index, std::string_view data)
+{
+  auto port = config.remote_machine_configs[index].port;
+  send(index, port, data);
+}
+
+void Connection::put(int index, int thread_index, std::string_view key, std::string_view value)
 {
   ::capnp::MallocMessageBuilder message;
   Packets::Builder packets = message.initRoot<Packets>();
@@ -142,23 +144,21 @@ void Connection::put(int index, std::string_view key, std::string_view value)
   LOG_STATE("[{}-{}] Put request [{}]", machine_index, index,
             kj::str(message.getRoot<Packets>()).cStr());
 
-  send(index, std::string_view(p.begin(), p.end()));
+  auto port = config.remote_machine_configs[index].port + thread_index;
+  send(index, port, std::string_view(p.begin(), p.end()));
 
-  poll_receive([&](auto remote_index, MachnetFlow &tx_flow, auto &&data)
+  poll_receive([&](auto remote_index, auto remote_port, MachnetFlow &tx_flow, auto &&data)
                {
-    if (data.isPutRequest()) {
-      auto p = data.getPutRequest();
-    } else if (data.isPutResponse()) {
+    if (data.isPutResponse()) {
       auto p = data.getPutResponse();
-      LOG_STATE("[{}-{}] Put response", machine_index, index);
-    } else if (data.isGetRequest()) {
-      auto p = data.getGetRequest();
-    } else if (data.isGetResponse()) {
-      auto p = data.getGetResponse();
-    } });
+      LOG_STATE("[{}-{}:{}] Put response", machine_index, index, remote_port);
+    } else {
+      panic("Unexpected response");
+    }
+  });
 }
 
-std::string Connection::get(int index, std::string_view key)
+std::string Connection::get(int index, int thread_index, std::string_view key)
 {
   ::capnp::MallocMessageBuilder message;
   Packets::Builder packets = message.initRoot<Packets>();
@@ -172,25 +172,21 @@ std::string Connection::get(int index, std::string_view key)
   LOG_STATE("[{}-{}] Get request [{}]", machine_index, index,
             kj::str(message.getRoot<Packets>()).cStr());
 
-  send(index, std::string_view(p.begin(), p.end()));
+  auto port = config.remote_machine_configs[index].port + thread_index;
+  send(index, port, std::string_view(p.begin(), p.end()));
 
   std::string value;
-  poll_receive([&](auto remote_index, MachnetFlow &tx_flow, auto &&data)
+  poll_receive([&](auto remote_index, auto remote_port, MachnetFlow &tx_flow, auto &&data)
                {
-    if (data.isPutRequest()) {
-      auto p = data.getPutRequest();
-      printf("Received put request: key = %s, value = %s\n",
-              p.getKey().cStr(), p.getValue().cStr());
-    } else if (data.isPutResponse()) {
-      auto p = data.getPutResponse();
-    } else if (data.isGetRequest()) {
-      auto p = data.getGetRequest();
-    } else if (data.isGetResponse()) {
+    if (data.isGetResponse()) {
       auto p = data.getGetResponse();
       value = p.getValue().cStr();
-      LOG_STATE("[{}-{}] Get response [key = {}, value = {}]", machine_index,
-            index, key, value);
-    } });
+      LOG_STATE("[{}-{}:{}] Get response [key = {}, value = {}]", machine_index,
+            index, remote_port, key, value);
+    } else {
+      panic("Unexpected response");
+    }
+  });
   return value;
 }
 
@@ -241,6 +237,79 @@ Client::Client(BlockCacheConfig config, Configuration ops_config, int machine_in
   }
 }
 
+void Client::connect_to_other_clients()
+{
+  LOG_STATE("Connecting to other clients");
+  listen();
+  for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+  {
+    if (i != machine_index && !config.remote_machine_configs[i].server)
+    {
+      connect_to_remote_machine(i);
+    }
+  }
+  LOG_STATE("Connecting to other clients");
+}
+
+void Client::sync_with_other_clients()
+{
+  auto total_other_clients = 0;
+  for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+  {
+    if (i != machine_index && !config.remote_machine_configs[i].server)
+    {
+      total_other_clients++;
+    }
+  }
+
+  HashMap<int, bool> request_acks;
+  HashMap<int, bool> response_acks;
+
+  // Send requests
+  for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+  {
+    if (i != machine_index && !config.remote_machine_configs[i].server)
+    {
+      ::capnp::MallocMessageBuilder message;
+      Packets::Builder packets = message.initRoot<Packets>();
+      ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
+      Packet::Data::Builder data = packet[0].initData();
+      ClientSyncRequest::Builder client_sync_request = data.initClientSyncRequest();
+      client_sync_request.setResponse(ResponseType::OK);
+      client_sync_request.setIndex(machine_index);
+      auto m = capnp::messageToFlatArray(message);
+      auto p = m.asChars();
+
+      info("[{}-{}] Client sync request [{}]", machine_index, i,
+                kj::str(message.getRoot<Packets>()).cStr());
+
+      send(i, std::string_view(p.begin(), p.end()));
+
+      info("[{}-{}] Client sync request sent [{}]", machine_index, i,
+                kj::str(message.getRoot<Packets>()).cStr());
+    }
+  }
+  
+  // Wait for requests and then send back responses
+  for (auto i = 0; i < total_other_clients; i++)
+  {
+    poll_receive([&](auto remote_index, int remote_port, MachnetFlow &tx_flow, auto &&data)
+    {
+      if (data.isClientSyncRequest()) {
+        auto p = data.getClientSyncRequest();
+        auto index = p.getIndex();
+        request_acks[index] = true;
+      }
+    });
+  }
+
+  // Check if the number of acks is equal to the number of other clients
+  if (request_acks.size() != total_other_clients)
+  {
+    panic("Client sync failed {} != {}", request_acks.size(), total_other_clients);
+  }
+}
+
 Server::Server(BlockCacheConfig config, Configuration ops_config, int machine_index,
                int thread_index)
     : Connection(config, ops_config, machine_index, thread_index)
@@ -248,7 +317,7 @@ Server::Server(BlockCacheConfig config, Configuration ops_config, int machine_in
   listen();
 }
 
-void Server::put_response(int index, ResponseType response_type)
+void Server::put_response(int index, int port, ResponseType response_type)
 {
   ::capnp::MallocMessageBuilder message;
   Packets::Builder packets = message.initRoot<Packets>();
@@ -259,16 +328,22 @@ void Server::put_response(int index, ResponseType response_type)
   auto m = capnp::messageToFlatArray(message);
   auto p = m.asChars();
 
-  LOG_STATE("[{}-{}] Put response [{}]", machine_index, index,
+  LOG_STATE("[{}-{}:{}] Put response [{}]", machine_index, index, port,
             kj::str(message.getRoot<Packets>()).cStr());
 
-  send(index, std::string_view(p.begin(), p.end()));
+  send(index, port, std::string_view(p.begin(), p.end()));
 
-  LOG_STATE("[{}-{}] Put response sent [{}]", machine_index, index,
+  LOG_STATE("[{}-{}:{}] Put response sent [{}]", machine_index, index, port,
             kj::str(message.getRoot<Packets>()).cStr());
 }
 
-void Server::get_response(int index, ResponseType response_type,
+void Server::put_response(int index, ResponseType response_type)
+{
+  auto port = config.remote_machine_configs[index].port;
+  put_response(index, port, response_type);
+}
+
+void Server::get_response(int index, int port, ResponseType response_type,
                           std::string_view value)
 {
   ::capnp::MallocMessageBuilder message;
@@ -281,13 +356,19 @@ void Server::get_response(int index, ResponseType response_type,
   auto m = capnp::messageToFlatArray(message);
   auto p = m.asChars();
 
-  LOG_STATE("[{}-{}] Get response [{}]", machine_index, index,
+  LOG_STATE("[{}-{}:{}] Get response [{}]", machine_index, index, port,
             kj::str(message.getRoot<Packets>()).cStr());
 
-  send(index, std::string_view(p.begin(), p.end()));
+  send(index, port, std::string_view(p.begin(), p.end()));
 
-  LOG_STATE("[{}-{}] Get response sent [{}]", machine_index, index,
+  LOG_STATE("[{}-{}:{}] Get response sent [{}]", machine_index, index, port,
             kj::str(message.getRoot<Packets>()).cStr());
+}
+
+void Server::get_response(int index, ResponseType response_type, std::string_view value)
+{
+  auto port = config.remote_machine_configs[index].port;
+  get_response(index, port, response_type, value);
 }
 
 void Server::rdma_setup_request(int index, int my_index, uint64_t start_address,
@@ -335,19 +416,19 @@ void Server::execute_pending_operations()
   RDMAGetResponse response;
   while (rdma_get_response_queue.try_dequeue(response))
   {
-    auto [index, response_type, value] = response;
+    auto [index, port, response_type, value] = response;
     if (response_type != ResponseType::OK)
     {
       panic("RDMA get failed");
     }
     LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
-    get_response(index, response_type, value);
+    get_response(index, port, response_type, value);
   }
 }
 
-void Server::append_to_rdma_get_response_queue(int index, ResponseType response_type,
+void Server::append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
                                                std::string_view value)
 {
-  auto response = Server::RDMAGetResponse{index, response_type, std::string(value)};
+  auto response = Server::RDMAGetResponse{index, port, response_type, std::string(value)};
   rdma_get_response_queue.enqueue(response);
 }

@@ -30,6 +30,8 @@ CAPNP_DECLARE_SCHEMA(a51a80a5d0621603);
 CAPNP_DECLARE_SCHEMA(9c293df3f2a02a07);
 CAPNP_DECLARE_SCHEMA(eb67a0eae928bb61);
 CAPNP_DECLARE_SCHEMA(d8f2d86285d59919);
+CAPNP_DECLARE_SCHEMA(d92927b00c6d5396);
+CAPNP_DECLARE_SCHEMA(9736b56e253cba13);
 CAPNP_DECLARE_SCHEMA(b36ecfe36db7d4ef);
 CAPNP_DECLARE_SCHEMA(a9a1635b25f07a7b);
 CAPNP_DECLARE_SCHEMA(9cc4c008dd1d858e);
@@ -130,6 +132,36 @@ struct RdmaSetupResponse {
   };
 };
 
+struct ClientSyncRequest {
+  ClientSyncRequest() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d92927b00c6d5396, 2, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ClientSyncResponse {
+  ClientSyncResponse() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(9736b56e253cba13, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct Packet {
   Packet() = delete;
 
@@ -159,6 +191,8 @@ struct Packet::Data {
     GET_RESPONSE,
     RDMA_SETUP_REQUEST,
     RDMA_SETUP_RESPONSE,
+    CLIENT_SYNC_REQUEST,
+    CLIENT_SYNC_RESPONSE,
   };
 
   struct _capnpPrivate {
@@ -682,6 +716,163 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class ClientSyncRequest::Reader {
+public:
+  typedef ClientSyncRequest Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::ResponseType getResponse() const;
+
+  inline  ::uint64_t getIndex() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ClientSyncRequest::Builder {
+public:
+  typedef ClientSyncRequest Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::ResponseType getResponse();
+  inline void setResponse( ::ResponseType value);
+
+  inline  ::uint64_t getIndex();
+  inline void setIndex( ::uint64_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ClientSyncRequest::Pipeline {
+public:
+  typedef ClientSyncRequest Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ClientSyncResponse::Reader {
+public:
+  typedef ClientSyncResponse Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::ResponseType getResponse() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ClientSyncResponse::Builder {
+public:
+  typedef ClientSyncResponse Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::ResponseType getResponse();
+  inline void setResponse( ::ResponseType value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ClientSyncResponse::Pipeline {
+public:
+  typedef ClientSyncResponse Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Packet::Reader {
 public:
   typedef Packet Reads;
@@ -801,6 +992,14 @@ public:
   inline bool hasRdmaSetupResponse() const;
   inline  ::RdmaSetupResponse::Reader getRdmaSetupResponse() const;
 
+  inline bool isClientSyncRequest() const;
+  inline bool hasClientSyncRequest() const;
+  inline  ::ClientSyncRequest::Reader getClientSyncRequest() const;
+
+  inline bool isClientSyncResponse() const;
+  inline bool hasClientSyncResponse() const;
+  inline  ::ClientSyncResponse::Reader getClientSyncResponse() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -877,6 +1076,22 @@ public:
   inline  ::RdmaSetupResponse::Builder initRdmaSetupResponse();
   inline void adoptRdmaSetupResponse(::capnp::Orphan< ::RdmaSetupResponse>&& value);
   inline ::capnp::Orphan< ::RdmaSetupResponse> disownRdmaSetupResponse();
+
+  inline bool isClientSyncRequest();
+  inline bool hasClientSyncRequest();
+  inline  ::ClientSyncRequest::Builder getClientSyncRequest();
+  inline void setClientSyncRequest( ::ClientSyncRequest::Reader value);
+  inline  ::ClientSyncRequest::Builder initClientSyncRequest();
+  inline void adoptClientSyncRequest(::capnp::Orphan< ::ClientSyncRequest>&& value);
+  inline ::capnp::Orphan< ::ClientSyncRequest> disownClientSyncRequest();
+
+  inline bool isClientSyncResponse();
+  inline bool hasClientSyncResponse();
+  inline  ::ClientSyncResponse::Builder getClientSyncResponse();
+  inline void setClientSyncResponse( ::ClientSyncResponse::Reader value);
+  inline  ::ClientSyncResponse::Builder initClientSyncResponse();
+  inline void adoptClientSyncResponse(::capnp::Orphan< ::ClientSyncResponse>&& value);
+  inline ::capnp::Orphan< ::ClientSyncResponse> disownClientSyncResponse();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -1203,6 +1418,48 @@ inline  ::ResponseType RdmaSetupResponse::Builder::getResponse() {
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 inline void RdmaSetupResponse::Builder::setResponse( ::ResponseType value) {
+  _builder.setDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::ResponseType ClientSyncRequest::Reader::getResponse() const {
+  return _reader.getDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::ResponseType ClientSyncRequest::Builder::getResponse() {
+  return _builder.getDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ClientSyncRequest::Builder::setResponse( ::ResponseType value) {
+  _builder.setDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint64_t ClientSyncRequest::Reader::getIndex() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t ClientSyncRequest::Builder::getIndex() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void ClientSyncRequest::Builder::setIndex( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::ResponseType ClientSyncResponse::Reader::getResponse() const {
+  return _reader.getDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::ResponseType ClientSyncResponse::Builder::getResponse() {
+  return _builder.getDataField< ::ResponseType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ClientSyncResponse::Builder::setResponse( ::ResponseType value) {
   _builder.setDataField< ::ResponseType>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
@@ -1553,6 +1810,114 @@ inline ::capnp::Orphan< ::RdmaSetupResponse> Packet::Data::Builder::disownRdmaSe
   KJ_IREQUIRE((which() == Packet::Data::RDMA_SETUP_RESPONSE),
               "Must check which() before get()ing a union member.");
   return ::capnp::_::PointerHelpers< ::RdmaSetupResponse>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isClientSyncRequest() const {
+  return which() == Packet::Data::CLIENT_SYNC_REQUEST;
+}
+inline bool Packet::Data::Builder::isClientSyncRequest() {
+  return which() == Packet::Data::CLIENT_SYNC_REQUEST;
+}
+inline bool Packet::Data::Reader::hasClientSyncRequest() const {
+  if (which() != Packet::Data::CLIENT_SYNC_REQUEST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasClientSyncRequest() {
+  if (which() != Packet::Data::CLIENT_SYNC_REQUEST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::ClientSyncRequest::Reader Packet::Data::Reader::getClientSyncRequest() const {
+  KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::ClientSyncRequest>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::ClientSyncRequest::Builder Packet::Data::Builder::getClientSyncRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::ClientSyncRequest>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setClientSyncRequest( ::ClientSyncRequest::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::CLIENT_SYNC_REQUEST);
+  ::capnp::_::PointerHelpers< ::ClientSyncRequest>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::ClientSyncRequest::Builder Packet::Data::Builder::initClientSyncRequest() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::CLIENT_SYNC_REQUEST);
+  return ::capnp::_::PointerHelpers< ::ClientSyncRequest>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptClientSyncRequest(
+    ::capnp::Orphan< ::ClientSyncRequest>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::CLIENT_SYNC_REQUEST);
+  ::capnp::_::PointerHelpers< ::ClientSyncRequest>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::ClientSyncRequest> Packet::Data::Builder::disownClientSyncRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::ClientSyncRequest>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isClientSyncResponse() const {
+  return which() == Packet::Data::CLIENT_SYNC_RESPONSE;
+}
+inline bool Packet::Data::Builder::isClientSyncResponse() {
+  return which() == Packet::Data::CLIENT_SYNC_RESPONSE;
+}
+inline bool Packet::Data::Reader::hasClientSyncResponse() const {
+  if (which() != Packet::Data::CLIENT_SYNC_RESPONSE) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasClientSyncResponse() {
+  if (which() != Packet::Data::CLIENT_SYNC_RESPONSE) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::ClientSyncResponse::Reader Packet::Data::Reader::getClientSyncResponse() const {
+  KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::ClientSyncResponse>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::ClientSyncResponse::Builder Packet::Data::Builder::getClientSyncResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::ClientSyncResponse>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setClientSyncResponse( ::ClientSyncResponse::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::CLIENT_SYNC_RESPONSE);
+  ::capnp::_::PointerHelpers< ::ClientSyncResponse>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::ClientSyncResponse::Builder Packet::Data::Builder::initClientSyncResponse() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::CLIENT_SYNC_RESPONSE);
+  return ::capnp::_::PointerHelpers< ::ClientSyncResponse>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptClientSyncResponse(
+    ::capnp::Orphan< ::ClientSyncResponse>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::CLIENT_SYNC_RESPONSE);
+  ::capnp::_::PointerHelpers< ::ClientSyncResponse>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::ClientSyncResponse> Packet::Data::Builder::disownClientSyncResponse() {
+  KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_RESPONSE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::ClientSyncResponse>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

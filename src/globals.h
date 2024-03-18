@@ -20,6 +20,9 @@
 #define RDMA_ASYNC_BUFFER_SIZE 512
 // #define PRINT_RDMA_LATENCY
 
+// Each client will sync with other clients (before starting workload and ending workload)
+#define CLIENT_SYNC_WITH_OTHER_CLIENTS
+
 // Stop the program, check this if we get SIGINT
 extern std::atomic<bool> g_stop;
 
