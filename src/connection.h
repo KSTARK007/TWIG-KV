@@ -190,6 +190,7 @@ struct Server : public Connection
   void execute_pending_operations() override;
   void append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
                                          std::string_view value);
+  json get_stats();
 
 public:
   struct RDMAGetResponse
@@ -202,4 +203,5 @@ public:
 
 private:
   MPMCQueue<RDMAGetResponse> rdma_get_response_queue;
+  uint64_t remote_rdma_cache_hits;
 };

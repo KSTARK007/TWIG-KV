@@ -551,7 +551,19 @@ int main(int argc, char *argv[])
   if (block_cache)
   {
     block_cache->dump_cache(FLAGS_cache_dump_path);
-    block_cache->dump_cache_info(FLAGS_cache_metrics_path);
+    auto j = block_cache->dump_cache_info_as_json();
+    if (is_server)
+    {
+      for (auto i = 0; i < FLAGS_threads; i++)
+      {
+        j["server_stats"].push_back(servers[i]->get_stats());
+      }
+    }
+    std::ofstream ofs(FLAGS_cache_metrics_path, std::ios::out | std::ios::trunc);
+    if (!ofs) {
+      panic("Unable to open file {}", FLAGS_cache_metrics_path);
+    }
+    ofs << j.dump(2);
   }
 
   return 0;

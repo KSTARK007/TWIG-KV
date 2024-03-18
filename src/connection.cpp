@@ -430,5 +430,13 @@ void Server::append_to_rdma_get_response_queue(int index, int port, ResponseType
                                                std::string_view value)
 {
   auto response = Server::RDMAGetResponse{index, port, response_type, std::string(value)};
+  remote_rdma_cache_hits++;
   rdma_get_response_queue.enqueue(response);
+}
+
+json Server::get_stats()
+{
+  json j;
+  j["remote_rdma_cache_hits"] = remote_rdma_cache_hits;
+  return j;
 }
