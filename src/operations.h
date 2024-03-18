@@ -45,6 +45,7 @@ struct Configuration
   bool RDMA_ASYNC;
   std::string infinity_bound_nic;
   int infinity_bound_device_port;
+  bool operations_pollute_cache;
 };
 
 std::ostream &operator<<(std::ostream &os, const Configuration &config);
