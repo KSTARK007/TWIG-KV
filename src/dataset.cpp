@@ -120,6 +120,7 @@ int generateDatabaseAndOperationSet(Configuration &ops_config)
     operationSet = singleNodeHotSetDataTo80SecondNode20Other(keys, ops_config);
     break;
   case YCSB:
+    dumpOperationSetToFile(operationSet);
     break;
   default:
     std::cerr << "Invalid distribution type selected." << std::endl;
