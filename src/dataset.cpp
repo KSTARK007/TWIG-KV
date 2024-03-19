@@ -227,6 +227,11 @@ Configuration parseConfigFile(const std::string &configFile)
     config.DISTRIBUTION_TYPE = SINGLE_NODE_HOT_KEYS_TO_SECOND_NODE_RDMA_ONLY;
   } else if (distributionTypeStr == "SINGLE_NODE_HOT_KEYS_TO_SECOND_NODE_SPLIT") {
     config.DISTRIBUTION_TYPE = SINGLE_NODE_HOT_KEYS_TO_SECOND_NODE_SPLIT;
+  } else if (distributionTypeStr == "YCSB") {
+    config.DISTRIBUTION_TYPE = YCSB;
+  } else {
+    std::cerr << "Invalid distribution type selected." << std::endl;
+    exit(0);
   }
 
   config.HOT_KEY_PERCENTAGE = jsonData["HOT_KEY_PERCENTAGE"];
