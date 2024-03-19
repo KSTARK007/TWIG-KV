@@ -287,13 +287,17 @@ void server_worker(
               if (!found_in_rdma)
               {
                 std::string value;
-                if (ops_config.operations_pollute_cache)
+                if (!ops_config.operations_pollute_cache)
                 {
-                  LOG_STATE("Fetching from disk {} {}", key, value);
-                  if (auto result_or_err = block_cache->get_db()->get(key)) {
-                    value = result_or_err.value();
+                  if (ops_config.DISK_ASYNC) {
+                    
                   } else {
-                    panic("Failed to get value from db for key {}", key);
+                    LOG_STATE("Fetching from disk {} {}", key, value);
+                    if (auto result_or_err = block_cache->get_db()->get(key)) {
+                      value = result_or_err.value();
+                    } else {
+                      panic("Failed to get value from db for key {}", key);
+                    }
                   }
                 }
                 else

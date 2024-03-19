@@ -43,6 +43,7 @@ struct Configuration
   int RDMA_THREAD;
   float TOTAL_RUNTIME_IN_SECONDS;
   bool RDMA_ASYNC;
+  bool DISK_ASYNC;
   std::string infinity_bound_nic;
   int infinity_bound_device_port;
   bool operations_pollute_cache;
