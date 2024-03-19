@@ -119,6 +119,8 @@ int generateDatabaseAndOperationSet(Configuration &ops_config)
   info("SINGLE_NODE_HOT_KEYS_TO_SECOND_NODE_SPLIT");
     operationSet = singleNodeHotSetDataTo80SecondNode20Other(keys, ops_config);
     break;
+  case YCSB:
+    break;
   default:
     std::cerr << "Invalid distribution type selected." << std::endl;
     return 1;
