@@ -304,11 +304,13 @@ void server_worker(
                       value = block_cache->get_cache()->get(key);
                     } else {
                       block_cache->increment_cache_miss();
-                      if (auto result_or_err = block_cache->get_db()->get(key)) {
-                        value = result_or_err.value();
-                      } else {
-                        panic("Failed to get value from db for key {}", key);
-                      }
+                      auto& node = rdma_nodes[machine_index];
+                      auto disk_request = node.circularBuffer->get_next_disk_request();
+                      disk_request.server = server_.get();
+                      disk_request.index = remote_index;
+                      disk_request.port = remote_port;
+                      disk_request.key = key;
+                      node.circularBuffer->enqueue_disk_request(disk_request);
                     }
                   } else {
                     LOG_STATE("Fetching from disk {} {}", key, value);
