@@ -174,7 +174,7 @@ struct Client : public Connection
 struct Server : public Connection
 {
   Server(BlockCacheConfig config, Configuration ops_config, int machine_index,
-         int thread_index);
+         int thread_index, std::shared_ptr<BlockCache<std::string, std::string>> block_cache_);
 
   void put_response(int index, int port, ResponseType response_type);
   void put_response(int index, ResponseType response_type);
@@ -191,6 +191,10 @@ struct Server : public Connection
   void append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
                                          std::string_view value);
   json get_stats();
+  void append_to_rdma_block_cache_request_queue(int index, int port, ResponseType response_type,
+                                                std::string_view value);
+
+  auto get_block_cache() { return block_cache; }
 
 public:
   struct RDMAGetResponse
@@ -201,7 +205,19 @@ public:
     std::string value;
   };
 
+  struct BlockCacheRequest
+  {
+    int index;
+    int port;
+    ResponseType response_type;
+    std::string value;
+  };
+
 private:
   MPMCQueue<RDMAGetResponse> rdma_get_response_queue;
   uint64_t remote_rdma_cache_hits;
+
+  std::shared_ptr<BlockCache<std::string, std::string>> block_cache;
+  MPMCQueue<BlockCacheRequest> block_cache_request_queue;
+  uint64_t async_disk_requests;
 };

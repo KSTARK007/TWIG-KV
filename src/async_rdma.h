@@ -272,6 +272,14 @@ struct AsyncRdmaOp
     }
 };
 
+struct AsyncDiskReadRequest
+{
+    Server *server;
+    int index;
+    int port;
+    std::string key;
+};
+
 class AsyncRdmaOpCircularBuffer
 {
 public:
@@ -290,8 +298,10 @@ public:
             op.isAvailable = true;
 
             free_queue.enqueue(op);
+
+            free_disk_queue.enqueue(AsyncDiskReadRequest{});
         }
-        std::thread localPollingThread(&AsyncRdmaOpCircularBuffer::pollRdmaOperations, this);
+        std::thread localPollingThread(&AsyncRdmaOpCircularBuffer::background_work, this);
         pollingThread.emplace_back(std::move(localPollingThread));
     }
 
@@ -310,13 +320,32 @@ public:
         pending_queue.enqueue(async_rdma_op);
     }
 
-    void pollRdmaOperations()
+    void enqueue_disk_request(AsyncDiskReadRequest async_disk_request)
+    {
+        pending_disk_queue.enqueue(async_disk_request);
+    }
+
+    AsyncDiskReadRequest get_next_disk_request()
+    {
+        AsyncDiskReadRequest async_disk_request;
+        while (free_disk_queue.try_dequeue(async_disk_request))
+        {
+            return async_disk_request;
+        }
+        return async_disk_request;
+    }
+
+    void background_work()
     {
         while (keepPolling && !g_stop)
         {
+            bool did_work = false;
+
             AsyncRdmaOp async_rdma_op;
-            while (pending_queue.try_dequeue(async_rdma_op))
+            if (pending_queue.try_dequeue(async_rdma_op))
             {
+                did_work = true;
+
                 auto &op = async_rdma_op;
                 if (op.request_token->checkIfCompleted())
                 {
@@ -333,6 +362,30 @@ public:
                     pending_queue.enqueue(async_rdma_op);
                 }
             }
+
+            AsyncDiskReadRequest async_disk_request;
+            if (pending_disk_queue.try_dequeue(async_disk_request))
+            {
+                did_work = true;
+
+                const auto& [server, index, port, key] = async_disk_request;
+                auto block_cache = server->get_block_cache();
+                std::string value;
+                if (auto result_or_err = block_cache->get_db()->get(key)) {
+                    value = result_or_err.value();
+                } else {
+                    panic("Failed to get value from db for key {}", key);
+                }
+
+                server->append_to_rdma_block_cache_request_queue(index, port, ResponseType::OK, value);
+
+                free_disk_queue.enqueue(async_disk_request);
+            }
+
+            if (!did_work)
+            {
+                std::this_thread::yield();
+            }
         }
     }
 
@@ -344,6 +397,9 @@ public:
 
     MPMCQueue<AsyncRdmaOp> free_queue;
     MPMCQueue<AsyncRdmaOp> pending_queue;
+
+    MPMCQueue<AsyncDiskReadRequest> free_disk_queue;
+    MPMCQueue<AsyncDiskReadRequest> pending_disk_queue;
 };
 
 #endif

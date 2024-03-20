@@ -311,8 +311,8 @@ void Client::sync_with_other_clients()
 }
 
 Server::Server(BlockCacheConfig config, Configuration ops_config, int machine_index,
-               int thread_index)
-    : Connection(config, ops_config, machine_index, thread_index)
+               int thread_index, std::shared_ptr<BlockCache<std::string, std::string>> block_cache_)
+    : Connection(config, ops_config, machine_index, thread_index), block_cache(block_cache_)
 {
   listen();
 }
@@ -424,19 +424,41 @@ void Server::execute_pending_operations()
     LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
     get_response(index, port, response_type, value);
   }
+
+  BlockCacheRequest block_cache_request;
+  while (block_cache_request_queue.try_dequeue(block_cache_request))
+  {
+    auto [index, port, response_type, value] = block_cache_request;
+    if (response_type != ResponseType::OK)
+    {
+      panic("Disk get failed");
+    }
+    LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
+    get_response(index, port, response_type, value);
+  }
 }
 
 void Server::append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
                                                std::string_view value)
 {
   auto response = Server::RDMAGetResponse{index, port, response_type, std::string(value)};
-  remote_rdma_cache_hits++;
   rdma_get_response_queue.enqueue(response);
+
+  remote_rdma_cache_hits++;
 }
 
 json Server::get_stats()
 {
   json j;
   j["remote_rdma_cache_hits"] = remote_rdma_cache_hits;
+  j["async_disk_requests"] = async_disk_requests;
   return j;
+}
+
+void Server::append_to_rdma_block_cache_request_queue(int index, int port, ResponseType response_type, std::string_view value)
+{
+  auto request = Server::BlockCacheRequest{index, port, response_type, std::string(value)};
+  block_cache_request_queue.enqueue(request);
+
+  async_disk_requests++;
 }

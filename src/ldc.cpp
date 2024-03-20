@@ -235,6 +235,7 @@ void server_worker(
       break;
     }
   }
+
   while (!g_stop)
   {
     server.loop(
@@ -298,9 +299,20 @@ void server_worker(
                 if (!ops_config.operations_pollute_cache)
                 {
                   if (ops_config.DISK_ASYNC) {
-                    
+                    if (block_cache->get_cache()->exist(key)) {
+                      block_cache->increment_cache_hit();
+                      value = block_cache->get_cache()->get(key);
+                    } else {
+                      block_cache->increment_cache_miss();
+                      if (auto result_or_err = block_cache->get_db()->get(key)) {
+                        value = result_or_err.value();
+                      } else {
+                        panic("Failed to get value from db for key {}", key);
+                      }
+                    }
                   } else {
                     LOG_STATE("Fetching from disk {} {}", key, value);
+                    block_cache->increment_cache_miss();
                     if (auto result_or_err = block_cache->get_db()->get(key)) {
                       value = result_or_err.value();
                     } else {
@@ -491,7 +503,7 @@ int main(int argc, char *argv[])
   {
     for (auto i = 0; i < FLAGS_threads; i++)
     {
-      auto server = std::make_shared<Server>(config, ops_config, FLAGS_machine_index, i);
+      auto server = std::make_shared<Server>(config, ops_config, FLAGS_machine_index, i, block_cache);
       servers.emplace_back(server);
     }
     info("Setup server done");
