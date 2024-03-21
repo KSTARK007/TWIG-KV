@@ -215,9 +215,9 @@ public:
 
 private:
   MPMCQueue<RDMAGetResponse> rdma_get_response_queue;
-  uint64_t remote_rdma_cache_hits;
+  uint64_t remote_rdma_cache_hits{};
 
   std::shared_ptr<BlockCache<std::string, std::string>> block_cache;
   MPMCQueue<BlockCacheRequest> block_cache_request_queue;
-  uint64_t async_disk_requests;
+  uint64_t async_disk_requests{};
 };
