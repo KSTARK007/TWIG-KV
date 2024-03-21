@@ -380,6 +380,7 @@ public:
                 server->append_to_rdma_block_cache_request_queue(index, port, ResponseType::OK, value);
 
                 free_disk_queue.enqueue(async_disk_request);
+                info("Background thread finished disk request for index {}", index);
             }
 
             if (!did_work)
