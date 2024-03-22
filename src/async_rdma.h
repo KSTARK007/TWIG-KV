@@ -376,6 +376,7 @@ public:
                 } else {
                     panic("Failed to get value from db for key {}", key);
                 }
+                server->get_block_cache()->get_cache()->put(key, value);
 
                 server->append_to_rdma_block_cache_request_queue(index, port, ResponseType::OK, value);
 
