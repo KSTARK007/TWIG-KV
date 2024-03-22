@@ -80,7 +80,7 @@ void Connection::connect_to_remote_machine(int remote_index)
   }
   assert_with_msg(ret == 0, fmt::format("machnet_connect() failed [{}] [{}]", remote_machine_config.ip, remote_port).c_str());
 
-  LOG_STATE("[{}-{}] {} Connected from [{}:{}] to [{}:{}]", machine_index,
+  info("[{}-{}] {} Connected from [{}:{}] to [{}:{}]", machine_index,
             remote_index, flow_to_string(flow), ip, port,
             remote_machine_config.ip, remote_port);
 
