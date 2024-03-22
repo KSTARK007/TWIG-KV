@@ -293,10 +293,11 @@ void server_worker(
                   }
                 }
               }
+
               if (!found_in_rdma)
               {
                 std::string value;
-                if (!ops_config.operations_pollute_cache)
+                if (ops_config.operations_pollute_cache)
                 {
                   if (ops_config.DISK_ASYNC) {
                     if (block_cache->get_cache()->exist(key)) {
@@ -313,6 +314,16 @@ void server_worker(
                       node.circularBuffer->enqueue_disk_request(disk_request);
                     }
                   } else {
+                    LOG_STATE("Fetching from cache/disk {} {}", key, value);
+                    value = block_cache->get(key);
+                  }
+                }
+                else
+                {
+                  if (block_cache->get_cache()->exist(key)) {
+                    block_cache->increment_cache_hit();
+                    value = block_cache->get_cache()->get(key);
+                  } else {
                     LOG_STATE("Fetching from disk {} {}", key, value);
                     block_cache->increment_cache_miss();
                     if (auto result_or_err = block_cache->get_db()->get(key)) {
@@ -322,18 +333,16 @@ void server_worker(
                     }
                   }
                 }
-                else
-                {
-                  LOG_STATE("Fetching from cache/disk {} {}", key, value);
-                  value = block_cache->get(key);
-                }
 
                 if (config.baseline.one_sided_rdma_enabled)
                 {
                   panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
                 }
 
-                server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                if (!ops_config.DISK_ASYNC)
+                {
+                  server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                }
               }
             }
           }
