@@ -146,13 +146,10 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
       total_ops_executed.fetch_add(1, std::memory_order::relaxed);
       client_thread_ops_executed[client_index]++;
 
-      auto op_end = now - op_start;
-      run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
-      if (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS)
-      {
-        break;
-      }
     }
+    auto now = std::chrono::high_resolution_clock::now();
+    auto op_end = now - op_start;
+    run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
   } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
   info("[{}] [{}] Client done executing {}", machine_index, client_index, timeStamps.size());
   dump_per_thread_latency_to_file(timeStamps, client_index_per_thread, machine_index, thread_index);
