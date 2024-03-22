@@ -307,7 +307,7 @@ void server_worker(
                       block_cache->increment_cache_miss();
                     
                     	uint64_t remote_offset;
-                    	auto node_index = calculateNodeAndOffset(ops_config, key, server_start_index, remote_offset);
+                    	auto node_index = calculateNodeAndOffset(ops_config, key_index, server_start_index, remote_offset);
                       auto& node = rdma_nodes[node_index];
                     
                       auto disk_request = node.circularBuffer->get_next_disk_request();
