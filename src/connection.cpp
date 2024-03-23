@@ -425,16 +425,19 @@ void Server::execute_pending_operations()
     get_response(index, port, response_type, value);
   }
 
-  BlockCacheRequest block_cache_request;
-  while (block_cache_request_queue.try_dequeue(block_cache_request))
+  if (config.db.block_db.async)
   {
-    auto [index, port, response_type, value] = block_cache_request;
-    if (response_type != ResponseType::OK)
+    BlockCacheRequest block_cache_request;
+    while (block_cache_request_queue.try_dequeue(block_cache_request))
     {
-      panic("Disk get failed");
+      auto [index, port, response_type, value] = block_cache_request;
+      if (response_type != ResponseType::OK)
+      {
+        panic("Disk get failed");
+      }
+      LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
+      get_response(index, port, response_type, value);
     }
-    LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
-    get_response(index, port, response_type, value);
   }
 }
 
