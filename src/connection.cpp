@@ -425,17 +425,17 @@ void Server::execute_pending_operations()
     get_response(index, port, response_type, value);
   }
 
-  // BlockCacheRequest block_cache_request;
-  // while (block_cache_request_queue.try_dequeue(block_cache_request))
-  // {
-  //   auto [index, port, response_type, value] = block_cache_request;
-  //   if (response_type != ResponseType::OK)
-  //   {
-  //     panic("Disk get failed");
-  //   }
-  //   LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
-  //   get_response(index, port, response_type, value);
-  // }
+  BlockCacheRequest block_cache_request;
+  while (block_cache_request_queue.try_dequeue(block_cache_request))
+  {
+    auto [index, port, response_type, value] = block_cache_request;
+    if (response_type != ResponseType::OK)
+    {
+      panic("Disk get failed");
+    }
+    LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
+    get_response(index, port, response_type, value);
+  }
 }
 
 void Server::append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
