@@ -303,16 +303,10 @@ void server_worker(
                     } else {
                       block_cache->increment_cache_miss();
                     
-                    	uint64_t remote_offset;
-                    	auto node_index = calculateNodeAndOffset(ops_config, key_index, server_start_index, remote_offset);
-                      auto& node = rdma_nodes[node_index];
-                    
-                      auto disk_request = node.circularBuffer->get_next_disk_request();
-                      disk_request.server = server_.get();
-                      disk_request.index = remote_index;
-                      disk_request.port = remote_port;
-                      disk_request.key = key;
-                      node.circularBuffer->enqueue_disk_request(disk_request);
+                    	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
+                        server.increment_async_disk_requests();
+                    		server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                    	});
                     }
                   } else {
                     LOG_STATE("Fetching from cache/disk {} {}", key, value);

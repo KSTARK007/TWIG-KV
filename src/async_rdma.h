@@ -363,29 +363,29 @@ public:
                 }
             }
 
-            AsyncDiskReadRequest async_disk_request;
-            if (pending_disk_queue.try_dequeue(async_disk_request))
-            {
-                did_work = true;
+            // AsyncDiskReadRequest async_disk_request;
+            // if (pending_disk_queue.try_dequeue(async_disk_request))
+            // {
+            //     did_work = true;
 
-                const auto& [server, index, port, key] = async_disk_request;
-                auto block_cache = server->get_block_cache();
-                std::string value;
-                if (auto result_or_err = block_cache->get_db()->get(key)) {
-                    value = result_or_err.value();
-                } else {
-                    panic("Failed to get value from db for key {}", key);
-                }
-                if (server->get_ops_config().operations_pollute_cache)
-                {
-                    server->get_block_cache()->get_cache()->put(key, value);
-                }
+            //     const auto& [server, index, port, key] = async_disk_request;
+            //     auto block_cache = server->get_block_cache();
+            //     std::string value;
+            //     if (auto result_or_err = block_cache->get_db()->get(key)) {
+            //         value = result_or_err.value();
+            //     } else {
+            //         panic("Failed to get value from db for key {}", key);
+            //     }
+            //     if (server->get_ops_config().operations_pollute_cache)
+            //     {
+            //         server->get_block_cache()->get_cache()->put(key, value);
+            //     }
 
-                server->append_to_rdma_block_cache_request_queue(index, port, ResponseType::OK, value);
+            //     server->append_to_rdma_block_cache_request_queue(index, port, ResponseType::OK, value);
 
-                free_disk_queue.enqueue(async_disk_request);
-                info("Background thread finished disk request for index {}", index);
-            }
+            //     free_disk_queue.enqueue(async_disk_request);
+            //     info("Background thread finished disk request for index {}", index);
+            // }
 
             if (!did_work)
             {
