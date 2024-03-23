@@ -242,6 +242,7 @@ target_link_libraries(ldc PUBLIC
     #expected
     capnp
 
+    uring
     glog
     #core
     machnet_shim
