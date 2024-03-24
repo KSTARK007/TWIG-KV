@@ -298,15 +298,21 @@ void server_worker(
                 {
                   if (ops_config.DISK_ASYNC) {
                     if (block_cache->get_cache()->exist(key)) {
+                      // Cache hit
                       block_cache->increment_cache_hit();
                       value = block_cache->get_cache()->get(key);
+
+                      // Put the value in the cache
+                      block_cache->get_cache()->put(key, value, true);
                     } else {
+                      // Cache miss
                       block_cache->increment_cache_miss();
-                    
-                    	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
+                    	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key, block_cache](auto value) {
+                        // Put the value in the cache
+                        block_cache->get_cache()->put(key, value, true);
+
+                        // Send the response
                         server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-                        // server.increment_async_disk_requests();
-                    		// server.get_response(remote_index, remote_port, ResponseType::OK, value);
                     	});
                     }
                   } else {
@@ -317,15 +323,24 @@ void server_worker(
                 else
                 {
                   if (block_cache->get_cache()->exist(key)) {
+                    // Cache hit
                     block_cache->increment_cache_hit();
                     value = block_cache->get_cache()->get(key);
                   } else {
+                    // Cache miss
                     LOG_STATE("Fetching from disk {} {}", key, value);
                     block_cache->increment_cache_miss();
-                    if (auto result_or_err = block_cache->get_db()->get(key)) {
-                      value = result_or_err.value();
+                    if (ops_config.DISK_ASYNC) {
+                    	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
+                        // Send the response
+                        server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+                    	});
                     } else {
-                      panic("Failed to get value from db for key {}", key);
+                      if (auto result_or_err = block_cache->get_db()->get(key)) {
+                        value = result_or_err.value();
+                      } else {
+                        panic("Failed to get value from db for key {}", key);
+                      }
                     }
                   }
                 }
