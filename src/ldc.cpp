@@ -304,9 +304,9 @@ void server_worker(
                       block_cache->increment_cache_miss();
                     
                     	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
-                        server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-                        // server.increment_async_disk_requests();
-                    		// server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                        // server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+                        server.increment_async_disk_requests();
+                    		server.get_response(remote_index, remote_port, ResponseType::OK, value);
                     	});
                     }
                   } else {
