@@ -23,6 +23,9 @@
 // Each client will sync with other clients (before starting workload and ending workload)
 #define CLIENT_SYNC_WITH_OTHER_CLIENTS
 
+// Initialize clients in parallel
+#define INIT_CLIENTS_IN_PARALLEL
+
 // Stop the program, check this if we get SIGINT
 extern std::atomic<bool> g_stop;
 

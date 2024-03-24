@@ -552,6 +552,18 @@ int main(int argc, char *argv[])
     background_monitoring_thread.detach();
 
     client_thread_ops_executed.resize(FLAGS_threads * FLAGS_clients_per_threads);
+#ifdef INIT_CLIENTS_IN_PARALLEL
+    std::vector<std::future<std::shared_ptr<Client>>> client_futures;
+    for (auto i = 0; i < FLAGS_threads; i++)
+    {
+      client_futures.emplace_back(std::async(std::launch::async, [&config, &ops_config, machine_index, i]
+                                             { return std::make_shared<Client>(config, ops_config, FLAGS_machine_index, i); }));
+    }
+    for (auto &f : client_futures)
+    {
+      clients.emplace_back(f.get());
+    }
+#else
     for (auto i = 0; i < FLAGS_threads; i++)
     {
       for (auto j = 0; j < FLAGS_clients_per_threads; j++)
@@ -560,6 +572,7 @@ int main(int argc, char *argv[])
         clients.emplace_back(client);
       }
     }
+#endif
     info("Setup client done");
   }
 
