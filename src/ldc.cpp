@@ -544,10 +544,10 @@ int main(int argc, char *argv[])
           info("\t[{}] Ops executed [{}]", i, ops);
         }
         last_ops_executed = current_ops_executed;
-        if (last_ops_executed == current_ops_executed)
+        if (last_ops_executed == current_ops_executed && last_ops_executed != 0 && current_ops_executed != 0)
         {
           ops_executed_same_time++;
-          if (ops_executed_same_time > 10 && last_ops_executed != 0)
+          if (ops_executed_same_time > 10)
           {
             panic("Ops executed same time for more than 10 seconds... Program must be stuck");
           }
