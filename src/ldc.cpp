@@ -556,8 +556,11 @@ int main(int argc, char *argv[])
     std::vector<std::future<std::shared_ptr<Client>>> client_futures;
     for (auto i = 0; i < FLAGS_threads; i++)
     {
-      client_futures.emplace_back(std::async(std::launch::async, [&config, &ops_config, machine_index, i]
+      for (auto j = 0; j < FLAGS_clients_per_threads; j++)
+      {
+        client_futures.emplace_back(std::async(std::launch::async, [&config, &ops_config, machine_index, i]
                                              { return std::make_shared<Client>(config, ops_config, FLAGS_machine_index, i); }));
+      }
     }
     for (auto &f : client_futures)
     {
@@ -573,7 +576,7 @@ int main(int argc, char *argv[])
       }
     }
 #endif
-    info("Setup client done");
+    info("Setup client done {} {}", client_futures.size(), clients.size());
   }
 
   for (auto i = 0; i < FLAGS_threads; i++)
