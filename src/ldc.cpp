@@ -532,6 +532,7 @@ int main(int argc, char *argv[])
     static std::thread background_monitoring_thread([&]()
     {
       uint64_t last_ops_executed = 0;
+      auto ops_executed_same_time = 0;
       while (!g_stop)
       {
         auto current_ops_executed = total_ops_executed.load(std::memory_order::relaxed);
@@ -543,6 +544,18 @@ int main(int argc, char *argv[])
           info("\t[{}] Ops executed [{}]", i, ops);
         }
         last_ops_executed = current_ops_executed;
+        if (last_ops_executed == current_ops_executed)
+        {
+          ops_executed_same_time++;
+          if (ops_executed_same_time > 10)
+          {
+            panic("Ops executed same time for more than 10 seconds... Program must be stuck");
+          }
+        }
+        else
+        {
+          ops_executed_same_time = 0;
+        }
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
