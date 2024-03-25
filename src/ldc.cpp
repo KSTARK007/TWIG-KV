@@ -540,7 +540,6 @@ int main(int argc, char *argv[])
           const auto ops = client_thread_ops_executed[i];
           info("\t[{}] Ops executed [{}]", i, ops);
         }
-        last_ops_executed = current_ops_executed;
         if (last_ops_executed == current_ops_executed && last_ops_executed != 0 && current_ops_executed != 0)
         {
           ops_executed_same_time++;
@@ -553,6 +552,7 @@ int main(int argc, char *argv[])
         {
           ops_executed_same_time = 0;
         }
+        last_ops_executed = current_ops_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
