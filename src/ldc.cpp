@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
         if (last_ops_executed == current_ops_executed && last_ops_executed != 0 && current_ops_executed != 0)
         {
           ops_executed_same_time++;
-          if (ops_executed_same_time > 10)
+          if (ops_executed_same_time > 10 && current_ops_executed < 100000)
           {
             panic("Ops executed same time for more than 10 seconds... Program must be stuck");
           }
