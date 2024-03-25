@@ -26,6 +26,9 @@
 // Initialize clients in parallel
 #define INIT_CLIENTS_IN_PARALLEL
 
+// Use separate threads for submitting and polling io_uring 
+// #define IO_URING_SUBMITTING_THREAD
+
 // Stop the program, check this if we get SIGINT
 extern std::atomic<bool> g_stop;
 

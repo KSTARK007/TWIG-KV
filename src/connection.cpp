@@ -430,12 +430,17 @@ void Server::execute_pending_operations()
     BlockCacheRequest block_cache_request;
     while (block_cache_request_queue.try_dequeue(block_cache_request))
     {
-      auto [index, port, response_type, value] = block_cache_request;
+      auto [index, port, response_type, key, value] = block_cache_request;
       if (response_type != ResponseType::OK)
       {
         panic("Disk get failed");
       }
       LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
+      if (ops_config.operations_pollute_cache)
+      {
+        // Put the value in the cache
+        block_cache->get_cache()->put(key, value, true);
+      }
       get_response(index, port, response_type, value);
     }
   }
@@ -458,9 +463,9 @@ json Server::get_stats()
   return j;
 }
 
-void Server::append_to_rdma_block_cache_request_queue(int index, int port, ResponseType response_type, std::string_view value)
+void Server::append_to_rdma_block_cache_request_queue(int index, int port, ResponseType response_type, std::string_view key, std::string_view value)
 {
-  auto request = Server::BlockCacheRequest{index, port, response_type, std::string(value)};
+  auto request = Server::BlockCacheRequest{index, port, response_type, std::string(key), std::string(value)};
   block_cache_request_queue.enqueue(request);
 
   async_disk_requests++;

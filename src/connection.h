@@ -192,7 +192,7 @@ struct Server : public Connection
                                          std::string_view value);
   json get_stats();
   void append_to_rdma_block_cache_request_queue(int index, int port, ResponseType response_type,
-                                                std::string_view value);
+                                                std::string_view key, std::string_view value);
   void increment_async_disk_requests() { async_disk_requests++; }
 
   auto get_block_cache() { return block_cache; }
@@ -211,6 +211,7 @@ public:
     int index;
     int port;
     ResponseType response_type;
+    std::string key;
     std::string value;
   };
 

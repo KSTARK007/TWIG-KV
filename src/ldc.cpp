@@ -305,11 +305,8 @@ void server_worker(
                       // Cache miss
                       block_cache->increment_cache_miss();
                     	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key, block_cache](auto value) {
-                        // Put the value in the cache
-                        block_cache->get_cache()->put(key, value, true);
-
                         // Send the response
-                        server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+                        server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
                     	});
                     }
                   } else {
@@ -330,7 +327,7 @@ void server_worker(
                     if (ops_config.DISK_ASYNC) {
                     	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
                         // Send the response
-                        server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+                        server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, {}, value);
                     	});
                     } else {
                       if (auto result_or_err = block_cache->get_db()->get(key)) {
