@@ -301,9 +301,6 @@ void server_worker(
                       // Cache hit
                       block_cache->increment_cache_hit();
                       value = block_cache->get_cache()->get(key);
-
-                      // Put the value in the cache
-                      block_cache->get_cache()->put(key, value, true);
                     } else {
                       // Cache miss
                       block_cache->increment_cache_miss();
