@@ -72,7 +72,12 @@ void Connection::connect_to_remote_machine(int remote_index)
 
     ret = machnet_connect(channel, ip.c_str(), remote_machine_config.ip.c_str(),
                           remote_port, &flow);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, 100);
+    auto val = dis(gen);
+    std::this_thread::sleep_for(std::chrono::milliseconds(val));
     if (ret == 0)
     {
       break;
