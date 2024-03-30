@@ -159,7 +159,7 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
         }
     }
 	std::cout << "[client]: initialized rdma connections" << std::endl<< std::endl<< std::endl;
-    CacheIndexLogs cache_index_logs(config, ops_config, machine_index, node.context, node.qp_factory);
+    CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context, qpf);
     return rdma_nodes;
 }
 
