@@ -159,7 +159,14 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
         }
     }
 	std::cout << "[client]: initialized rdma connections" << std::endl<< std::endl<< std::endl;
-    CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context, qpf);
+    {
+        auto *context = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
+        infinity::memory::Buffer *buffer_to_receive = new infinity::memory::Buffer(context, 4096 * sizeof(char));
+        context->postReceiveBuffer(buffer_to_receive);
+
+        auto *qpf = new infinity::queues::QueuePairFactory(context);
+        CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context, qpf);
+    }
     return rdma_nodes;
 }
 

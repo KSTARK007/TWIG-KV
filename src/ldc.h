@@ -46,7 +46,7 @@ struct RDMAData
     {
       LOG_RDMA_DATA("[RDMAData] Accepting incoming connection on port [{}]", port);
   		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
-      LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", qp->getRemoteAddr(), port);
+      LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", my_server_config.ip, port);
       qps.emplace_back(qp);
     }
     is_server = true;
