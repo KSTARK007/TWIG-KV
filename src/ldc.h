@@ -219,8 +219,11 @@ struct CacheIndexLogs
       auto cache_index_log_size = 10000;
       auto& cache_index_log_entries = cache_index_log_entries_per_machine[i];
       cache_index_log_entries.resize(cache_index_log_size);
-      listen_rdma_data->connect(CACHE_INDEX_LOG_PORT);
-      connect_rdma_data->listen(CACHE_INDEX_LOG_PORT, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
+      auto done_connect = std::async(std::launch::async, [&] {
+        connect_rdma_data->connect(CACHE_INDEX_LOG_PORT);
+      });
+      listen_rdma_data->listen(CACHE_INDEX_LOG_PORT, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
+      done_connect.wait();
     }
     LOG_RDMA_DATA("[CacheIndexLogs] Initialized");
   }
