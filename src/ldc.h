@@ -44,7 +44,7 @@ struct RDMAData
     {
       info("[RDMAData] Accepting incoming connection on port [{}]", port);
   		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
-      info("[RDMAData] Accepted incoming connection on port [{}]", port);
+      info("[RDMAData] Accepted incoming connection on port [{}:{}]", qp->getRemoteAddr(), port);
       qps.emplace_back(qp);
     }
     is_server = true;
@@ -203,7 +203,7 @@ struct CacheIndexLogs : public RDMAData
   CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
     RDMAData(block_cache_config, ops_config,  machine_index, context, qp_factory)
   {
-    info("[CacheIndexLogs] initializing listen");
+    info("[CacheIndexLogs] Initializing");
     cache_index_log_entries_per_machine.resize(server_configs.size());
     for (auto i = 0; i < server_configs.size(); i++)
     {
@@ -218,7 +218,7 @@ struct CacheIndexLogs : public RDMAData
       RDMAData::listen(server_config.port, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
       done_connect.wait();
     }
-    info("[CacheIndexLogs] initialized");
+    info("[CacheIndexLogs] Initialized");
   }
 
   std::vector<CacheIndexLogEntries> cache_index_log_entries_per_machine;
