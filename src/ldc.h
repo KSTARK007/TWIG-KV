@@ -232,6 +232,7 @@ struct CacheIndexLogs
         {
 
         }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         connect_rdma_data->connect(CACHE_INDEX_LOG_PORT);
       });
       listen_rdma_data->listen(CACHE_INDEX_LOG_PORT, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
