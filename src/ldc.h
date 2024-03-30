@@ -205,8 +205,10 @@ using CacheIndexLogEntries = std::vector<CacheIndexLogEntry>;
 struct CacheIndexLogs
 {
   CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
-    listen_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, qp_factory)),
-    connect_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, qp_factory))
+    listen_qpf(std::make_unique<infinity::queues::QueuePairFactory>(context)),
+    connect_qpf(std::make_unique<infinity::queues::QueuePairFactory>(context)),
+    listen_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, listen_qpf)),
+    connect_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, connect_qpf))
   {
     LOG_RDMA_DATA("[CacheIndexLogs] Initializing");
     // auto *qpf = new infinity::queues::QueuePairFactory(context);
@@ -228,6 +230,8 @@ struct CacheIndexLogs
     LOG_RDMA_DATA("[CacheIndexLogs] Initialized");
   }
 
+  std::unique_ptr<infinity::queues::QueuePairFactory> listen_qpf;
+  std::unique_ptr<infinity::queues::QueuePairFactory> connect_qpf;
   std::unique_ptr<RDMAData> listen_rdma_data;
   std::unique_ptr<RDMAData> connect_rdma_data;
   std::vector<CacheIndexLogEntries> cache_index_log_entries_per_machine;
