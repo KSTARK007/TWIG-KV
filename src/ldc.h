@@ -24,10 +24,14 @@ struct RDMAData
     auto& [read_write_buffer, region_token] = get_buffer(buffer, size);
 		region_token = read_write_buffer->createRegionToken();
 
+    info("[RDMAData] Listening on port [{}]", port);
     qp_factory->bindToPort(port);
+    info("[RDMAData] Listening on port [{}] bound", port);
     for (int i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
+      info("[RDMAData] Accepting incoming connection on port [{}]", port);
   		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
+      info("[RDMAData] Accepted incoming connection on port [{}]", port);
       qps.emplace_back(qp);
     }
     is_server = true;
@@ -38,7 +42,9 @@ struct RDMAData
     for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
       auto remote_machine_config = block_cache_config.remote_machine_configs[i];
+      info("[RDMAData] Connecting to remote machines [{}:{}]", remote_machine_config.ip, port);
       infinity::queues::QueuePair* qp = qp_factory->connectToRemoteHost(remote_machine_config.ip.c_str(), port);
+      info("[RDMAData] Connected to remote machines [{}:{}]", remote_machine_config.ip, port);
       qps.emplace_back(qp);
     }
     is_server = false;
@@ -180,6 +186,7 @@ struct CacheIndexLogs : public RDMAData
   CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
     RDMAData(block_cache_config, ops_config, context, qp_factory)
   {
+    info("[CacheIndexLogs] initializing listen");
     cache_index_log_entries_per_machine.resize(block_cache_config.remote_machine_configs.size());
     for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
@@ -188,10 +195,13 @@ struct CacheIndexLogs : public RDMAData
       auto cache_index_log_size = 10000;
       auto& cache_index_log_entries = cache_index_log_entries_per_machine[i];
       cache_index_log_entries.resize(cache_index_log_size);
+      auto done_connect = std::async(std::launch::async, [this, remote_machine_config]{
+        RDMAData::connect(remote_machine_config.port);
+      });
       RDMAData::listen(remote_machine_config.port, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
-      RDMAData::connect(remote_machine_config.port);
+      done_connect.wait();
     }
-    info("CacheIndexLogs initialized");
+    info("[CacheIndexLogs] initialized");
   }
 
   std::vector<CacheIndexLogEntries> cache_index_log_entries_per_machine;
