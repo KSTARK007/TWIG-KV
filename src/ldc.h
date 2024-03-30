@@ -207,8 +207,8 @@ struct CacheIndexLogs
   CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
     listen_qpf(std::make_unique<infinity::queues::QueuePairFactory>(context)),
     connect_qpf(std::make_unique<infinity::queues::QueuePairFactory>(context)),
-    listen_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, listen_qpf)),
-    connect_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, connect_qpf))
+    listen_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, listen_qpf.get())),
+    connect_rdma_data(std::make_unique<RDMAData>(block_cache_config, ops_config, machine_index, context, connect_qpf.get()))
   {
     LOG_RDMA_DATA("[CacheIndexLogs] Initializing");
     // auto *qpf = new infinity::queues::QueuePairFactory(context);
