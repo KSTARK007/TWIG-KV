@@ -15,23 +15,6 @@ std::mutex m;
 std::condition_variable cv;
 bool ready = false;
 
-std::optional<std::string> find_nic_containing(std::string_view s)
-{
-    int32_t numberOfInstalledDevices = 0;
-    ibv_device **ibvDeviceList = ibv_get_device_list(&numberOfInstalledDevices);
-
-    int dev_i = 0;
-    for (int dev_i = 0; dev_i < numberOfInstalledDevices; dev_i++) {
-        ibv_device *dev = ibvDeviceList[dev_i];
-        const char *name = ibv_get_device_name(dev);
-        if (std::string_view(name).find(s) != std::string::npos)
-        {
-            return name;
-        }
-    }
-    return std::nullopt;
-}
-
 void * RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index, Configuration ops_config)
 {
     std::cout << "[RDMA SERVER] RDMA SERVER INIT";
@@ -159,19 +142,6 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
         }
     }
 	std::cout << "[client]: initialized rdma connections" << std::endl<< std::endl<< std::endl;
-    {
-        auto *context1 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
-        infinity::memory::Buffer *buffer_to_receive1 = new infinity::memory::Buffer(context1, 4096 * sizeof(char));
-        context1->postReceiveBuffer(buffer_to_receive1);
-
-        auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
-        infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
-        context2->postReceiveBuffer(buffer_to_receive2);
-
-        auto *qpf1 = new infinity::queues::QueuePairFactory(context1);
-        auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
-        CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context1, context2, qpf1, qpf2);
-    }
     return rdma_nodes;
 }
 

@@ -471,6 +471,21 @@ int main(int argc, char *argv[])
         printRDMAConnect(t.second);
       }
 
+      {
+        auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
+        auto *context1 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
+        infinity::memory::Buffer *buffer_to_receive1 = new infinity::memory::Buffer(context1, 4096 * sizeof(char));
+        context1->postReceiveBuffer(buffer_to_receive1);
+
+        auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
+        infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
+        context2->postReceiveBuffer(buffer_to_receive2);
+
+        auto *qpf1 = new infinity::queues::QueuePairFactory(context1);
+        auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
+        CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context1, context2, qpf1, qpf2);
+      }
+
       // Fill in each buffer with value
       std::array<uint8_t, BLKSZ> write_buffer;
       std::fill(write_buffer.begin(), write_buffer.end(), 0);

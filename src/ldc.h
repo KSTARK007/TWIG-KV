@@ -320,6 +320,23 @@ struct RDMA_connect
   std::shared_ptr<RDMACacheIndexStorage> rdma_cache_index_storage = nullptr;
 };
 
+inline std::optional<std::string> find_nic_containing(std::string_view s)
+{
+    int32_t numberOfInstalledDevices = 0;
+    ibv_device **ibvDeviceList = ibv_get_device_list(&numberOfInstalledDevices);
+
+    int dev_i = 0;
+    for (int dev_i = 0; dev_i < numberOfInstalledDevices; dev_i++) {
+        ibv_device *dev = ibvDeviceList[dev_i];
+        const char *name = ibv_get_device_name(dev);
+        if (std::string_view(name).find(s) != std::string::npos)
+        {
+            return name;
+        }
+    }
+    return std::nullopt;
+}
+
 std::vector<std::string> load_database(Configuration &ops_config,
                                        Client &client);
 int generateDatabaseAndOperationSet(Configuration &ops_config);
