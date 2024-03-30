@@ -14,8 +14,8 @@ struct RDMABufferAndToken
 
 struct RDMAData
 {
-  RDMAData(BlockCacheConfig block_cache_config_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_) :
-    block_cache_config(block_cache_config_), context(context_), qp_factory(qp_factory_)
+  RDMAData(BlockCacheConfig block_cache_config_, Configuration ops_config_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_) :
+    block_cache_config(block_cache_config_), ops_config(ops_config_), context(context_), qp_factory(qp_factory_)
   {
   }
 
@@ -55,6 +55,16 @@ struct RDMAData
     return request_token;
   }
 
+  std::unique_ptr<infinity::requests::RequestToken> write(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
+  {
+    auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
+
+    auto qp = qps[remote_index];
+    auto request_token = std::make_unique<infinity::requests::RequestToken>(context);
+    qp->write(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
+    return request_token;
+  }
+
   RDMABufferAndToken& get_buffer(void* buffer, uint64_t size)
   {
     auto rdma_buffer_and_token = buffer_map.find(buffer);
@@ -71,6 +81,7 @@ struct RDMAData
   }
 
   BlockCacheConfig block_cache_config;
+  Configuration ops_config;
   infinity::core::Context *context;
   infinity::queues::QueuePairFactory *qp_factory;
   void* buffer{};
@@ -82,24 +93,122 @@ struct RDMAData
   bool is_server;
 };
 
+template<typename T>
+struct RDMADataWithQueue : public RDMAData
+{
+  RDMADataWithQueue(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory, uint64_t queue_size) :
+    RDMAData(block_cache_config, ops_config, context, qp_factory)
+  {
+    for (auto i = 0; i < queue_size; i++)
+    {
+      auto data = std::make_unique<T>();
+      DataWithRequestToken data_with_token{std::move(data), nullptr};
+      free_queue.enqueue(data_with_token);
+    }
+  }
+
+  void read(int remote_index, const T& read_data, uint64_t local_offset = 0, uint64_t remote_offset = 0, uint64_t size_in_bytes = sizeof(T))
+  {
+    DataWithRequestToken data_with_request_token;
+    while (!free_queue.try_dequeue(data_with_request_token))
+    {
+      info("Cannot queue read operation");
+    }
+    *data_with_request_token.data = read_data;
+
+    data_with_request_token.token = RDMAData::read(remote_index, data_with_request_token.data.get(), sizeof(T), local_offset, remote_offset, size_in_bytes);
+    pending_read_queue.enqueue(std::move(data_with_request_token));
+  }
+
+  template<typename F>
+  void execute_pending_reads(F&& f)
+  {
+    DataWithRequestToken data_with_request_token;
+    while (pending_read_queue.try_dequeue(data_with_request_token))
+    {
+      data_with_request_token.token->waitUntilCompleted();
+      f(*data_with_request_token.data);
+      free_queue.push(std::move(data_with_request_token));
+    }
+  }
+
+public:
+  struct DataWithRequestToken
+  {
+    std::unique_ptr<T> data;
+    std::unique_ptr<infinity::requests::RequestToken> request_token;
+  };
+
+protected:
+  MPMCQueue<DataWithRequestToken> pending_read_queue;
+  MPMCQueue<DataWithRequestToken> free_queue;
+};
+
 struct RDMACacheIndex2
 {
   RDMACacheIndex* cache_index;
   bool is_local = false;
 };
 
+constexpr auto RDMA_CACHE_INDEX_KEY_VALUE_SIZE = 100;
+constexpr auto RDMA_CACHE_INDEX_KEY_QUEUE_SIZE = 100;
+
+struct RDMACacheIndexKeyValue
+{
+  uint64_t key_index;
+  uint8_t data[RDMA_CACHE_INDEX_KEY_VALUE_SIZE];
+};
+
+// This index storage maintains a cache index for each remote machine
+// This index storage is mapped as rdma to each of the machines, this means we can read directly into the key value storage using the key_value_offset
+// Three RDMA points
+// [Local CacheIndex] has key_value_offset --> RDMA read --> [KeyValueStore]
+// [UpdateCacheIndexLog] has batch updates --> RDMA write --> [Local CacheIndexLog] --> apply local --> [Local CacheIndex]
+// Every server -> CacheIndexLog * N servers
+// Every server -> KeyValueStore
+
+struct CacheIndexLogEntry
+{
+  uint64_t key;
+  uint64_t key_value_storage_offset; // Into KeyValueStorage
+};
+
+using CacheIndexLogEntries = std::vector<CacheIndexLogEntry>;
+
+struct CacheIndexLogs : public RDMAData
+{
+  CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
+    RDMAData(block_cache_config, ops_config, context, qp_factory)
+  {
+    cache_index_log_entries_per_machine.resize(block_cache_config.remote_machine_configs.size());
+    for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
+    {
+      auto remote_machine_config = block_cache_config.remote_machine_configs[i];
+      // TODO: add to config
+      auto cache_index_log_size = 10000;
+      auto& cache_index_log_entries = cache_index_log_entries_per_machine[i];
+      cache_index_log_entries.resize(cache_index_log_size);
+      RDMAData::listen(remote_machine_config.port, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
+      RDMAData::connect(remote_machine_config.port);
+    }
+    info("CacheIndexLogs initialized");
+  }
+
+  std::vector<CacheIndexLogEntries> cache_index_log_entries_per_machine;
+};
+
 struct RDMACacheIndexStorage : public RDMAData
 {
-  RDMACacheIndexStorage(BlockCacheConfig block_cache_config_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_,
-    RDMAKeyValueStorage* kv_storage_, int server_index_) :
-    RDMAData(block_cache_config_, context_, qp_factory_), kv_storage(kv_storage_), server_index(server_index_)
+  RDMACacheIndexStorage(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory,
+    RDMAKeyValueStorage* kv_storage_, int machine_index_) :
+    RDMAData(block_cache_config, ops_config, context, qp_factory), kv_storage(kv_storage_), machine_index(machine_index_)
   {
     for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
       auto remote_machine_config = block_cache_config.remote_machine_configs[i];
       RDMACacheIndex* cache_index;
       auto is_local = false;
-      if (remote_machine_config.index == server_index)
+      if (remote_machine_config.index == machine_index)
       {
         is_local = true;
       }
@@ -147,7 +256,7 @@ struct RDMACacheIndexStorage : public RDMAData
 
   RDMAKeyValueStorage* kv_storage;
   std::vector<RDMACacheIndex2> rdma_cache_indexes;
-  int server_index = -1;
+  int machine_index = -1;
 };
 
 struct RDMA_connect
