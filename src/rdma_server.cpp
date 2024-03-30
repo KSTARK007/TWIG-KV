@@ -90,7 +90,8 @@ void * RDMA_Server_Init(int serverport, uint64_t buffer_size, int machine_index,
 }
 
 HashMap<uint64_t, RDMA_connect>  connect_to_servers(
-    BlockCacheConfig config, int machine_index, int value_size, Configuration ops_config)
+    BlockCacheConfig config, int machine_index, int value_size, Configuration ops_config,
+    std::shared_ptr<BlockCache<std::string, std::string>> block_cache)
 {
     std::unique_lock lk(m);
     cv.wait(lk, []{ return ready; });
@@ -116,6 +117,9 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
         panic("No device found with name: {}", ops_config.infinity_bound_nic);
     }
     auto *context = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
+    infinity::memory::Buffer *buffer_to_receive = new infinity::memory::Buffer(context, 4096 * sizeof(char));
+    context->postReceiveBuffer(buffer_to_receive);
+
     auto *qpf = new infinity::queues::QueuePairFactory(context);
     for(auto &t : config.remote_machine_configs) {
         std::cout << "adding node "<< t.ip<< std::endl; 
@@ -128,8 +132,14 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
             node.context = context;
             node.qp_factory = qpf;
             node.isLocal = false;
-            node.tmp_buffer = malloc(BLKSZ);
-            node.buffer = new infinity::memory::Buffer(node.context, node.tmp_buffer, BLKSZ);
+            auto size = BLKSZ;
+            node.tmp_buffer = malloc(size);
+    	    if (config.baseline.use_cache_indexing)
+            {
+                size = ops_config.NUM_KEY_VALUE_PAIRS * sizeof(RDMACacheIndex);
+                node.tmp_buffer = realloc(node.tmp_buffer, size);
+            }
+            node.buffer = new infinity::memory::Buffer(node.context, node.tmp_buffer, size);
             std::cout << "connectToRemoteHost"<< t.ip<< std::endl;
             node.qp = node.qp_factory->connectToRemoteHost(t.ip.c_str(), 50000);
             std::cout << "connectToRemoteHost end"<< t.ip<< std::endl;
@@ -141,6 +151,10 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
                 node.isLocal = true;
                 // node.local_memory_region = node.remote_buffer_token->getMemoryRegion()->getAddress();
             }
+            node.rdma_cache_index_storage = std::make_shared<RDMACacheIndexStorage>(config, node.context, node.qp_factory,
+                block_cache->get_rdma_key_value_storage(), machine_index);
+            node.rdma_cache_index_storage->listen(config.rdma_port);
+            node.rdma_cache_index_storage->connect(config.rdma_port);
             rdma_nodes[node.index] = node;
         }
     }

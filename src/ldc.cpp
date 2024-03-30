@@ -461,7 +461,7 @@ int main(int argc, char *argv[])
 
       sleep(10);
 
-      rdma_nodes = connect_to_servers(config, FLAGS_machine_index, ops_config.VALUE_SIZE, ops_config);
+      rdma_nodes = connect_to_servers(config, FLAGS_machine_index, ops_config.VALUE_SIZE, ops_config, block_cache);
       void *local_memory = result.get();
 
       rdma_nodes[machine_index].local_memory_region = local_memory;

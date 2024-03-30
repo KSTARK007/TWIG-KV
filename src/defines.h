@@ -46,6 +46,7 @@
 #include <chrono>
 #include <filesystem>
 #include <iomanip>
+#include <memory_resource>
 
 // Alias
 template <typename T, typename T2>

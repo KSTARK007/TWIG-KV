@@ -6,6 +6,150 @@
 #include "heap.h"
 #include "async_rdma.h"
 
+struct RDMABufferAndToken
+{
+  infinity::memory::Buffer* buffer;
+  infinity::memory::RegionToken* region_token;
+};
+
+struct RDMAData
+{
+  RDMAData(BlockCacheConfig block_cache_config_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_) :
+    block_cache_config(block_cache_config_), context(context_), qp_factory(qp_factory_)
+  {
+  }
+
+  void listen(int port, void* buffer, uint64_t size)
+  {
+    auto& [read_write_buffer, region_token] = get_buffer(buffer, size);
+		region_token = read_write_buffer->createRegionToken();
+
+    qp_factory->bindToPort(port);
+    for (int i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
+    {
+  		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
+      qps.emplace_back(qp);
+    }
+    is_server = true;
+  }
+
+  void connect(int port)
+  {
+    for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
+    {
+      auto remote_machine_config = block_cache_config.remote_machine_configs[i];
+      infinity::queues::QueuePair* qp = qp_factory->connectToRemoteHost(remote_machine_config.ip.c_str(), port);
+      qps.emplace_back(qp);
+    }
+    is_server = false;
+  }
+
+  std::unique_ptr<infinity::requests::RequestToken> read(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
+  {
+    auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
+
+    auto qp = qps[remote_index];
+    region_token = (infinity::memory::RegionToken *)qp->getUserData();
+    auto request_token = std::make_unique<infinity::requests::RequestToken>(context);
+    qp->read(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
+    return request_token;
+  }
+
+  RDMABufferAndToken& get_buffer(void* buffer, uint64_t size)
+  {
+    auto rdma_buffer_and_token = buffer_map.find(buffer);
+    if (rdma_buffer_and_token != std::end(buffer_map))
+    {
+      return rdma_buffer_and_token->second;
+    }
+    else
+    {
+      auto read_write_buffer = new infinity::memory::Buffer(context, buffer, size);
+      auto [new_buffer, inserted] = buffer_map.insert({buffer, {read_write_buffer, nullptr}});
+      return new_buffer->second;
+    }
+  }
+
+  BlockCacheConfig block_cache_config;
+  infinity::core::Context *context;
+  infinity::queues::QueuePairFactory *qp_factory;
+  void* buffer{};
+  uint64_t size{};
+  infinity::queues::QueuePair *qp;
+  
+  HashMap<void*, RDMABufferAndToken> buffer_map;
+  std::vector<infinity::queues::QueuePair*> qps;
+  bool is_server;
+};
+
+struct RDMACacheIndex2
+{
+  RDMACacheIndex* cache_index;
+  bool is_local = false;
+};
+
+struct RDMACacheIndexStorage : public RDMAData
+{
+  RDMACacheIndexStorage(BlockCacheConfig block_cache_config_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_,
+    RDMAKeyValueStorage* kv_storage_, int server_index_) :
+    RDMAData(block_cache_config_, context_, qp_factory_), kv_storage(kv_storage_), server_index(server_index_)
+  {
+    for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
+    {
+      auto remote_machine_config = block_cache_config.remote_machine_configs[i];
+      RDMACacheIndex* cache_index;
+      auto is_local = false;
+      if (remote_machine_config.index == server_index)
+      {
+        is_local = true;
+      }
+      if (is_local)
+      {
+        cache_index = kv_storage->get_cache_index_buffer();
+      }
+      else
+      {
+        cache_index = kv_storage->allocate_cache_index();
+      }
+      RDMACacheIndex2 rdma_cache_index{ cache_index, is_local };
+      rdma_cache_indexes.push_back(rdma_cache_index);
+    }
+  }
+
+  void listen(int port)
+  {
+    auto* buffer = kv_storage->get_cache_index_buffer();
+    auto size = kv_storage->get_key_value_size();
+    RDMAData::listen(port, buffer, size);
+  }
+
+  void connect(int port)
+  {
+    RDMAData::connect(port);
+  }
+
+  std::vector<uint8_t> read_value(int remote_index, uint64_t key_index, bool remote_read)
+  {
+    auto [rdma_cache_index, is_local] = rdma_cache_indexes[remote_index];
+    if (is_local)
+    {
+      panic("Local read not supported");
+    }
+
+    auto rdma_cache_index_key = rdma_cache_index[key_index];
+    auto key_value_size = kv_storage->get_key_value_size();
+
+    std::vector<uint8_t> buffer(key_value_size);
+    auto request_token = RDMAData::read(remote_index, buffer.data(), 0, 0, rdma_cache_index_key.key_value_ptr_offset, key_value_size);
+    request_token->waitUntilCompleted();
+    return buffer;
+  }
+
+  RDMAKeyValueStorage* kv_storage;
+  std::vector<RDMACacheIndex2> rdma_cache_indexes;
+  int server_index = -1;
+};
+
 struct RDMA_connect
 {
   std::string ip;
@@ -20,6 +164,8 @@ struct RDMA_connect
   bool isLocal;
   void *local_memory_region;
   AsyncRdmaOpCircularBuffer *circularBuffer;
+  std::shared_ptr<BlockCache<std::string, std::string>> block_cache{};
+  std::shared_ptr<RDMACacheIndexStorage> rdma_cache_index_storage = nullptr;
 };
 
 std::vector<std::string> load_database(Configuration &ops_config,
@@ -36,7 +182,7 @@ int issueOps(BlockCacheConfig config, Configuration &ops_config,
              std::vector<std::string> &keys, Client client);
 
 HashMap<uint64_t, RDMA_connect> connect_to_servers(
-    BlockCacheConfig config, int machine_index, int value_size, Configuration ops_config);
+    BlockCacheConfig config, int machine_index, int value_size, Configuration ops_config, std::shared_ptr<BlockCache<std::string, std::string>> block_cache);
 
 void printRDMAConnect(const RDMA_connect &conn);
 
