@@ -14,12 +14,17 @@ struct RDMABufferAndToken
 
 struct RDMAData
 {
-  RDMAData(BlockCacheConfig block_cache_config_, Configuration ops_config_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_) :
-    block_cache_config(block_cache_config_), ops_config(ops_config_), context(context_), qp_factory(qp_factory_)
+  RDMAData(BlockCacheConfig block_cache_config_, Configuration ops_config_, int machine_index_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_) :
+    block_cache_config(block_cache_config_), ops_config(ops_config_), machine_index(machine_index_), context(context_), qp_factory(qp_factory_)
   {
     for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
       auto remote_machine_config = block_cache_config.remote_machine_configs[i];
+      if (i == machine_index)
+      {
+        my_server_config = remote_machine_config;
+        server_machine_index = server_configs.size();
+      }
       if (remote_machine_config.server)
       {
         server_configs.push_back(remote_machine_config);
@@ -32,9 +37,9 @@ struct RDMAData
     auto& [read_write_buffer, region_token] = get_buffer(buffer, size);
 		region_token = read_write_buffer->createRegionToken();
 
-    info("[RDMAData] Listening on port [{}]", port);
+    info("[RDMAData] Listening on port [{}:{}]", my_server_config.ip, port);
     qp_factory->bindToPort(port);
-    info("[RDMAData] Listening on port [{}] bound", port);
+    info("[RDMAData] Listening on port [{}:{}] bound", my_server_config.ip, port);
     for (int i = 0; i < server_configs.size(); i++)
     {
       info("[RDMAData] Accepting incoming connection on port [{}]", port);
@@ -96,9 +101,12 @@ struct RDMAData
 
   BlockCacheConfig block_cache_config;
   Configuration ops_config;
+  int machine_index;
   infinity::core::Context *context;
   infinity::queues::QueuePairFactory *qp_factory;
   std::vector<RemoteMachineConfig> server_configs;
+  int server_machine_index;
+  RemoteMachineConfig my_server_config;
   void* buffer{};
   uint64_t size{};
   infinity::queues::QueuePair *qp;
@@ -111,8 +119,8 @@ struct RDMAData
 template<typename T>
 struct RDMADataWithQueue : public RDMAData
 {
-  RDMADataWithQueue(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory, uint64_t queue_size) :
-    RDMAData(block_cache_config, ops_config, context, qp_factory)
+  RDMADataWithQueue(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory, uint64_t queue_size) :
+    RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory)
   {
     for (auto i = 0; i < queue_size; i++)
     {
@@ -192,8 +200,8 @@ using CacheIndexLogEntries = std::vector<CacheIndexLogEntry>;
 
 struct CacheIndexLogs : public RDMAData
 {
-  CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
-    RDMAData(block_cache_config, ops_config, context, qp_factory)
+  CacheIndexLogs(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory) :
+    RDMAData(block_cache_config, ops_config,  machine_index, context, qp_factory)
   {
     info("[CacheIndexLogs] initializing listen");
     cache_index_log_entries_per_machine.resize(server_configs.size());
@@ -218,9 +226,9 @@ struct CacheIndexLogs : public RDMAData
 
 struct RDMACacheIndexStorage : public RDMAData
 {
-  RDMACacheIndexStorage(BlockCacheConfig block_cache_config, Configuration ops_config, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory,
-    RDMAKeyValueStorage* kv_storage_, int machine_index_) :
-    RDMAData(block_cache_config, ops_config, context, qp_factory), kv_storage(kv_storage_), machine_index(machine_index_)
+  RDMACacheIndexStorage(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory,
+    RDMAKeyValueStorage* kv_storage_) :
+    RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory), kv_storage(kv_storage_)
   {
     for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
@@ -275,7 +283,6 @@ struct RDMACacheIndexStorage : public RDMAData
 
   RDMAKeyValueStorage* kv_storage;
   std::vector<RDMACacheIndex2> rdma_cache_indexes;
-  int machine_index = -1;
 };
 
 struct RDMA_connect

@@ -151,7 +151,7 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
                 node.isLocal = true;
                 // node.local_memory_region = node.remote_buffer_token->getMemoryRegion()->getAddress();
             }
-            CacheIndexLogs cache_index_logs(config, ops_config, node.context, node.qp_factory);
+            CacheIndexLogs cache_index_logs(config, ops_config, machine_index, node.context, node.qp_factory);
             // node.rdma_cache_index_storage = std::make_shared<RDMACacheIndexStorage>(config, ops_config, node.context, node.qp_factory,
             //     block_cache->get_rdma_key_value_storage(), machine_index);
             // node.rdma_cache_index_storage->listen(config.rdma_port, nullptr, nullptr);
