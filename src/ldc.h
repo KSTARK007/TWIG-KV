@@ -45,6 +45,7 @@ struct RDMAData
     for (int i = 0; i < server_configs.size(); i++)
     {
       LOG_RDMA_DATA("[RDMAData] Accepting incoming connection on port [{}]", port);
+      start_accepting_connections = true;
   		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
       LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", my_server_config.ip, port);
       qps.emplace_back(qp);
@@ -116,6 +117,7 @@ struct RDMAData
   HashMap<void*, RDMABufferAndToken> buffer_map;
   std::vector<infinity::queues::QueuePair*> qps;
   bool is_server;
+  bool start_accepting_connections = false;
 };
 
 template<typename T>
@@ -226,6 +228,10 @@ struct CacheIndexLogs
       auto& cache_index_log_entries = cache_index_log_entries_per_machine[i];
       cache_index_log_entries.resize(cache_index_log_size);
       auto done_connect = std::async(std::launch::async, [&] {
+        while(!listen_rdma_data->start_accepting_connections)
+        {
+
+        }
         connect_rdma_data->connect(CACHE_INDEX_LOG_PORT);
       });
       listen_rdma_data->listen(CACHE_INDEX_LOG_PORT, cache_index_log_entries.data(), cache_index_log_entries.size() * sizeof(CacheIndexLogEntry));
