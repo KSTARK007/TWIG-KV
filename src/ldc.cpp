@@ -479,9 +479,10 @@ int main(int argc, char *argv[])
 
         auto *qpf1 = new infinity::queues::QueuePairFactory(context1);
 
-        for (auto &[t, node] : rdma_nodes) {
-          node.rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index, node.context, node.qp_factory,
+        auto rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index, node.context, node.qp_factory,
           block_cache->get_rdma_key_value_storage(), block_cache);
+        for (auto &[t, node] : rdma_nodes) {
+          node.rdma_key_value_cache = rdma_key_value_cache;
         }
 
         // auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
