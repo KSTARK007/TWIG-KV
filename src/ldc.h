@@ -397,13 +397,13 @@ struct RDMAKeyValueCache : public RDMAData
     cache_indexes(std::make_unique<CacheIndexes>(block_cache_config, ops_config, machine_index, context, qp_factory, kv_storage)),
     key_value_storage(std::make_unique<KeyValueStorage>(block_cache_config, ops_config, machine_index, context, qp_factory, kv_storage))
   {
-    info("[RDMAKeyValueCache] Initialized");
+    LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
     auto cache = block_cache->get_cache();
     cache->add_callback_on_write([this](const std::string& key, const std::string& value){
       // Update the cache_indexes on remote nodes
       cache_indexes->write_remote(key, value);
     });
-    info("[RDMAKeyValueCache] Initialized");
+    LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
 
   template<typename F>
