@@ -471,6 +471,7 @@ int main(int argc, char *argv[])
         printRDMAConnect(t.second);
       }
 
+      if (0)
       {
         auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
         auto *context1 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
