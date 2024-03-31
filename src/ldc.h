@@ -208,8 +208,8 @@ struct MachineCacheIndexLog
   CopyableAtomic<uint64_t> index;
 };
 
-#define CACHE_INDEX_LOG_PORT 50001
-#define KEY_VALUE_STORAGE_PORT 50002
+#define CACHE_INDEX_LOG_PORT 50100
+#define KEY_VALUE_STORAGE_PORT 50200
 
 struct CacheIndexLogs : public RDMAData
 {
@@ -232,10 +232,10 @@ struct CacheIndexLogs : public RDMAData
         {
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        connect(CACHE_INDEX_LOG_PORT);
+        connect(CACHE_INDEX_LOG_PORT + i);
       });
       cache_index_log_entries_size = cache_index_log_entries.size() * sizeof(CacheIndexLogEntry);
-      listen(CACHE_INDEX_LOG_PORT, cache_index_log_entries.data(), cache_index_log_entries_size);
+      listen(CACHE_INDEX_LOG_PORT + i, cache_index_log_entries.data(), cache_index_log_entries_size);
       done_connect.wait();
     }
     LOG_RDMA_DATA("[CacheIndexLogs] Initialized");
