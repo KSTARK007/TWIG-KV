@@ -205,10 +205,11 @@ using CacheIndexLogEntries = std::vector<CacheIndexLogEntry>;
 struct MachineCacheIndexLog
 {
   CacheIndexLogEntries cache_index_log_entries;
-  std::atomic<uint64_t> index;
+  CopyableAtomic<uint64_t> index;
 };
 
 #define CACHE_INDEX_LOG_PORT 50001
+#define KEY_VALUE_STORAGE_PORT 50002
 
 struct CacheIndexLogs : public RDMAData
 {
@@ -218,7 +219,6 @@ struct CacheIndexLogs : public RDMAData
     RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory)
   {
     LOG_RDMA_DATA("[CacheIndexLogs] Initializing");
-    // auto *qpf = new infinity::queues::QueuePairFactory(context);
     machine_cache_index_logs.resize(server_configs.size());
     for (auto i = 0; i < server_configs.size(); i++)
     {
@@ -251,13 +251,41 @@ struct CacheIndexLogs : public RDMAData
       cache_index_log_entry = entry;
       
       // Update this on remotes
-      RDMA::write(i, cache_index_log_entries.data(), cache_index_log_entries_size, 0, current_log_index * sizeof(CacheIndexLogEntry), sizeof(CacheIndexLogEntry));
+      write(i, cache_index_log_entries.data(), cache_index_log_entries_size, 0, current_log_index * sizeof(CacheIndexLogEntry), sizeof(CacheIndexLogEntry));
     }
   }
 
-  auto MAX_CACHE_INDEX_LOG_SIZE = 10000;
+  const uint64_t MAX_CACHE_INDEX_LOG_SIZE = 10000;
   uint64_t cache_index_log_entries_size = 0;
   std::vector<MachineCacheIndexLog> machine_cache_index_logs;
+};
+
+struct KeyValueStorage : public RDMAData
+{
+  KeyValueStorage(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index,
+    infinity::core::Context *context,
+    infinity::queues::QueuePairFactory* qp_factory, RDMAKeyValueStorage* rdma_kv_storage_ = nullptr) :
+    RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory), rdma_kv_storage(rdma_kv_storage_)
+  {
+    LOG_RDMA_DATA("[KeyValueStorage] Initializing");
+
+    auto key_value_buffer = rdma_kv_storage->get_key_value_buffer();
+    auto key_value_buffer_size = rdma_kv_storage->get_key_value_buffer_size();
+
+    auto done_connect = std::async(std::launch::async, [&] {
+      while(!start_accepting_connections)
+      {
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      connect(KEY_VALUE_STORAGE_PORT);
+    });
+    listen(KEY_VALUE_STORAGE_PORT, key_value_buffer, key_value_buffer_size);
+    done_connect.wait();
+
+    LOG_RDMA_DATA("[KeyValueStorage] Initialized");
+  }
+
+  RDMAKeyValueStorage* rdma_kv_storage{};
 };
 
 struct RDMACacheIndexStorage : public RDMAData
@@ -317,7 +345,7 @@ struct RDMACacheIndexStorage : public RDMAData
     return buffer;
   }
 
-  RDMAKeyValueStorage* kv_storage;CacheIndexLogs
+  RDMAKeyValueStorage* kv_storage;
   std::vector<RDMACacheIndex2> rdma_cache_indexes;
 };
 
