@@ -471,21 +471,26 @@ int main(int argc, char *argv[])
         printRDMAConnect(t.second);
       }
 
-      if (0)
       {
         auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
         auto *context1 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
         infinity::memory::Buffer *buffer_to_receive1 = new infinity::memory::Buffer(context1, 4096 * sizeof(char));
         context1->postReceiveBuffer(buffer_to_receive1);
 
-        auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
-        infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
-        context2->postReceiveBuffer(buffer_to_receive2);
-
         auto *qpf1 = new infinity::queues::QueuePairFactory(context1);
-        auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
-        CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context1, qpf1);
-        cache_index_logs.append_entry({0, 1000});
+
+        for (auto &[t, node] : rdma_nodes) {
+          node.rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index, node.context, node.qp_factory,
+          block_cache->get_rdma_key_value_storage(), block_cache);
+        }
+
+        // auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
+        // infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
+        // context2->postReceiveBuffer(buffer_to_receive2);
+
+        // auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
+        // CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context1, qpf1);
+        // cache_index_logs.append_entry({0, 1000});
       }
 
       // Fill in each buffer with value
