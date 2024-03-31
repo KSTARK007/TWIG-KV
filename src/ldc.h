@@ -210,7 +210,7 @@ struct MachineCacheIndexLog
 
 #define CACHE_INDEX_LOG_PORT 50100
 #define KEY_VALUE_STORAGE_PORT 50200
-#define CACHE_INDEXES_PORT 50200
+#define CACHE_INDEXES_PORT 50300
 
 struct CacheIndexLogs : public RDMAData
 {
