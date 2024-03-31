@@ -484,6 +484,7 @@ int main(int argc, char *argv[])
         auto *qpf1 = new infinity::queues::QueuePairFactory(context1);
         auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
         CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context1, qpf1);
+        cache_index_logs.append_entry({0, 1000});
       }
 
       // Fill in each buffer with value
