@@ -66,23 +66,23 @@ struct RDMAData
     is_server = false;
   }
 
-  std::unique_ptr<infinity::requests::RequestToken> read(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
+  std::shared_ptr<infinity::requests::RequestToken> read(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
 
     auto qp = qps[remote_index];
     region_token = (infinity::memory::RegionToken *)qp->getUserData();
-    auto request_token = std::make_unique<infinity::requests::RequestToken>(context);
+    auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
     qp->read(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
     return request_token;
   }
 
-  std::unique_ptr<infinity::requests::RequestToken> write(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
+  std::shared_ptr<infinity::requests::RequestToken> write(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
 
     auto qp = qps[remote_index];
-    auto request_token = std::make_unique<infinity::requests::RequestToken>(context);
+    auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
     qp->write(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
     return request_token;
   }
@@ -128,7 +128,7 @@ struct RDMADataWithQueue : public RDMAData
   {
     for (auto i = 0; i < queue_size; i++)
     {
-      auto data = std::make_unique<T>();
+      auto data = std::make_shared<T>();
       DataWithRequestToken data_with_token{std::move(data), nullptr};
       free_queue.enqueue(data_with_token);
     }
@@ -162,8 +162,8 @@ struct RDMADataWithQueue : public RDMAData
 public:
   struct DataWithRequestToken
   {
-    std::unique_ptr<T> data;
-    std::unique_ptr<infinity::requests::RequestToken> request_token;
+    std::shared_ptr<T> data;
+    std::shared_ptr<infinity::requests::RequestToken> request_token;
   };
 
 protected:
@@ -260,12 +260,14 @@ struct CacheIndexLogs : public RDMAData
   std::vector<MachineCacheIndexLog> machine_cache_index_logs;
 };
 
-struct KeyValueStorage : public RDMAData
+constexpr auto CacheIndexValueQueueSize = 1000;
+
+struct KeyValueStorage : public RDMADataWithQueue<RDMACacheIndexKeyValue>
 {
   KeyValueStorage(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index,
     infinity::core::Context *context,
     infinity::queues::QueuePairFactory* qp_factory, RDMAKeyValueStorage* rdma_kv_storage_ = nullptr) :
-    RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory), rdma_kv_storage(rdma_kv_storage_)
+    RDMADataWithQueue(block_cache_config, ops_config, machine_index, context, qp_factory, CacheIndexValueQueueSize), rdma_kv_storage(rdma_kv_storage_)
   {
     LOG_RDMA_DATA("[KeyValueStorage] Initializing");
 
@@ -284,6 +286,11 @@ struct KeyValueStorage : public RDMAData
 
     LOG_RDMA_DATA("[KeyValueStorage] Initialized");
   }
+
+  // std::vector<uint8_t> read(uintptr_t key_value_offset)
+  // {
+    
+  // }
 
   RDMAKeyValueStorage* rdma_kv_storage{};
 };
