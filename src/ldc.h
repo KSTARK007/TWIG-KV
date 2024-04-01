@@ -330,8 +330,7 @@ struct CacheIndexes : public RDMAData
     {
       auto server_config = server_configs[i];
       RDMACacheIndex* cache_index;
-      auto is_local = false;
-      if (server_config.index == machine_index)
+      if (i == machine_index)
       {
         LOG_RDMA_DATA("[CacheIndexes] Local cache index buffer {}", i);
         cache_index = rdma_kv_storage->get_cache_index_buffer();
