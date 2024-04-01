@@ -369,7 +369,9 @@ struct CacheIndexes : public RDMAData
       }
       auto size = rdma_kv_storage->get_allocated_cache_index_size();
       auto offset = key_index * sizeof(RDMACacheIndex);
-      auto request_token = RDMAData::write(i, rdma_cache_indexes[i], size, offset, offset, sizeof(RDMACacheIndex));      
+      const auto& rdma_cache_index = rdma_cache_indexes[i];
+      LOG_RDMA_DATA("[CacheIndexes] Writing remote {} key {} offset {}", i, key_index, rdma_cache_index[key_index].key_value_ptr_offset);
+      auto request_token = RDMAData::write(i, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));      
       pending_write_queue.enqueue(request_token);
     }
   }
