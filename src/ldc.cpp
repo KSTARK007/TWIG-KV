@@ -485,6 +485,18 @@ int main(int argc, char *argv[])
           node.rdma_key_value_cache = rdma_key_value_cache;
         }
         
+        auto& node = rdma_nodes[1];
+        std::thread t([&](){
+          while(true)
+          {
+            node.rdma_key_value_cache->execute_pending([&](RDMACacheIndexKeyValue& kv)
+            {
+              info("KV {} {}", kv.key_index, std::string_view((const char*)kv.data));
+            });
+          }
+        });
+        t.detach();
+
         for (const auto &k : keys)
         {
           auto key_index = std::stoi(k);
@@ -530,17 +542,6 @@ int main(int argc, char *argv[])
         {
           info("{} {}", t, machine_index);
         }
-        auto& node = rdma_nodes[1];
-        std::thread t([&](){
-          while(true)
-          {
-            node.rdma_key_value_cache->execute_pending([&](RDMACacheIndexKeyValue& kv)
-            {
-              info("KV {} {}", kv.key_index, std::string_view((const char*)kv.data));
-            });
-          }
-        });
-        t.detach();
         for (auto i = 0; i < 500; i++)
         {
           node.rdma_key_value_cache->read(0, std::to_string(i));
