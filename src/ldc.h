@@ -22,14 +22,18 @@ struct RDMAData
     for (auto i = 0; i < block_cache_config.remote_machine_configs.size(); i++)
     {
       auto remote_machine_config = block_cache_config.remote_machine_configs[i];
-      if (i == machine_index)
-      {
-        my_server_config = remote_machine_config;
-        server_machine_index = server_configs.size();
-      }
       if (remote_machine_config.server)
       {
         server_configs.push_back(remote_machine_config);
+      }
+    }
+
+    for (auto i = 0; i < server_configs.size(); i++)
+    {
+      if (i == machine_index)
+      {
+        my_server_config = server_configs[i];
+        break;
       }
     }
   }
@@ -108,7 +112,6 @@ struct RDMAData
   infinity::core::Context *context;
   infinity::queues::QueuePairFactory *qp_factory;
   std::vector<RemoteMachineConfig> server_configs;
-  int server_machine_index;
   RemoteMachineConfig my_server_config;
   void* buffer{};
   uint64_t size{};
@@ -303,6 +306,7 @@ struct KeyValueStorage : public RDMADataWithQueue<RDMACacheIndexKeyValue>
 
   void read(int remote_index, RDMACacheIndex rdma_cache_index)
   {
+    LOG_RDMA_DATA("[KeyValueStorage] Read machine {} with offset {}", remote_index, rdma_cache_index.key_value_ptr_offset);
     RDMACacheIndexKeyValue read_data;
     auto remote_offset = rdma_cache_index.key_value_ptr_offset;
 
@@ -329,10 +333,12 @@ struct CacheIndexes : public RDMAData
       auto is_local = false;
       if (server_config.index == machine_index)
       {
+        LOG_RDMA_DATA("[CacheIndexes] Local cache index buffer {}", i);
         cache_index = rdma_kv_storage->get_cache_index_buffer();
       }
       else
       {
+        LOG_RDMA_DATA("[CacheIndexes] Remote cache index buffer {}", i);
         cache_index = rdma_kv_storage->allocate_cache_index();
       }
       rdma_cache_indexes[i] = cache_index;
