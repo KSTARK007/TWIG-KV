@@ -515,6 +515,10 @@ int main(int argc, char *argv[])
       }
 
       {
+        for (auto& [t, node] : rdma_nodes)
+        {
+          info("{} {}", t, machine_index);
+        }
         auto& node = rdma_nodes[0];
         std::thread t([&](){
           while(true)
