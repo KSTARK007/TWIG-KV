@@ -403,6 +403,7 @@ struct RDMAKeyValueCache : public RDMAData
     auto cache = block_cache->get_cache();
     cache->add_callback_on_write([this](const std::string& key, const std::string& value){
       // Update the cache_indexes on remote nodes
+      LOG_RDMA_DATA("[RDMAKeyValueCache] Writing callback on cache index");
       cache_indexes->write_remote(key, value);
     });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
