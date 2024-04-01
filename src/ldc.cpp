@@ -538,6 +538,7 @@ int main(int argc, char *argv[])
       }
 
       {
+        auto& node = rdma_nodes[1];
         for (auto& [t, node] : rdma_nodes)
         {
           info("{} {}", t, machine_index);
