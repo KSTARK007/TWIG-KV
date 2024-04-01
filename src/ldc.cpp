@@ -485,7 +485,18 @@ int main(int argc, char *argv[])
           node.rdma_key_value_cache = rdma_key_value_cache;
         }
         
-
+        for (const auto &k : keys)
+        {
+          auto key_index = std::stoi(k);
+          if (key_index >= start_keys && key_index < end_keys)
+          {
+            block_cache->put(k, value);
+          }
+          else
+          {
+            block_cache->get_db()->put(k, value);
+          }
+        }
         // cache_index_logs.append_entry({0, 1000});
 
 
