@@ -255,7 +255,7 @@ struct CacheIndexLogs : public RDMAData
       cache_index_log_entry = entry;
       
       // Update this on remotes
-      auto request_token = RDMAData::write(i, cache_index_log_entries.data(), cache_index_log_entries_size, 0, current_log_index * sizeof(CacheIndexLogEntry), sizeof(CacheIndexLogEntry));      
+      auto request_token = RDMAData::write((i * server_configs.size()) + i, cache_index_log_entries.data(), cache_index_log_entries_size, 0, current_log_index * sizeof(CacheIndexLogEntry), sizeof(CacheIndexLogEntry));      
       pending_write_queue.enqueue(request_token);
     }
   }
