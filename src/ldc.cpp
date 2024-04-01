@@ -484,6 +484,10 @@ int main(int argc, char *argv[])
         for (auto &[t, node] : rdma_nodes) {
           node.rdma_key_value_cache = rdma_key_value_cache;
         }
+        
+
+        // cache_index_logs.append_entry({0, 1000});
+
 
         // auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
         // infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
@@ -507,6 +511,24 @@ int main(int argc, char *argv[])
         if (key_index >= start_keys && key_index < end_keys)
         {
           write_correct_node(ops_config, rdma_nodes, server_start_index, key_index, write_buffer);
+        }
+      }
+
+      {
+        auto& node = rdma_nodes[0];
+        std::thread t([&](){
+          while(true)
+          {
+            node.rdma_key_value_cache->execute_pending([&](RDMACacheIndexKeyValue& kv)
+            {
+              info("KV {} {}", kv.key_index, std::string_view((const char*)kv.data));
+            });
+          }
+        });
+        t.detach();
+        for (auto i = 0; i < 100; i++)
+        {
+          node.rdma_key_value_cache->read(0, std::to_string(i));
         }
       }
     }

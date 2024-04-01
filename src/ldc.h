@@ -154,8 +154,8 @@ struct RDMADataWithQueue : public RDMAData
     while (pending_read_queue.try_dequeue(data_with_request_token))
     {
       data_with_request_token.token->waitUntilCompleted();
-      f(*data_with_request_token.data);
-      free_queue.push(std::move(data_with_request_token));
+      f(*data_with_request_token.data.get());
+      free_queue.enqueue(std::move(data_with_request_token));
     }
   }
 
@@ -368,6 +368,8 @@ struct CacheIndexes : public RDMAData
     }
   }
 
+  auto& get_cache_index(int index) { return rdma_cache_indexes[index]; }
+
   template<typename F>
   void execute_pending(F&& f)
   {
@@ -406,20 +408,20 @@ struct RDMAKeyValueCache : public RDMAData
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
 
-  template<typename F>
-  void read(int remote_index, const std::string& key, F&& f)
+  void read(int remote_index, const std::string& key)
   {
     auto key_index = std::stoi(key);
 
-    key_value_storage->read(remote_index, RDMACacheIndex{ key_index });
+    RDMACacheIndex* cache_index = cache_indexes->get_cache_index(remote_index);
+    key_value_storage->read(remote_index, cache_index[key_index]);
   }
 
   template<typename F>
   void execute_pending(F&& f)
   {
     cache_index_logs->execute_pending([](){});
-    cache_indexes->execute_pending(f);
-    key_value_storage->execute_pending([](){});
+    cache_indexes->execute_pending([](){});
+    key_value_storage->execute_pending(f);
   }
 
 private:
