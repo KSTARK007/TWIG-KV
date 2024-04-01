@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
           }
         });
         t.detach();
-        for (auto i = 0; i < 100; i++)
+        for (auto i = 0; i < 500; i++)
         {
           node.rdma_key_value_cache->read(0, std::to_string(i));
         }
