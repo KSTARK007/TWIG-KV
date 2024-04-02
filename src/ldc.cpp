@@ -479,6 +479,12 @@ int main(int argc, char *argv[])
 
         auto *qpf1 = new infinity::queues::QueuePairFactory(context1);
 
+        auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
+        infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
+        context2->postReceiveBuffer(buffer_to_receive2);
+
+        auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
+
         auto rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index - 1, context1, qpf1,
           block_cache->get_rdma_key_value_storage(), block_cache);
         for (auto &[t, node] : rdma_nodes) {
@@ -497,18 +503,38 @@ int main(int argc, char *argv[])
         });
         t.detach();
 
-        for (const auto &k : keys)
+        // for (const auto &k : keys)
+        // {
+        //   auto key_index = std::stoi(k);
+        //   if (key_index >= start_keys && key_index < end_keys)
+        //   {
+        //     block_cache->put(k, value);
+        //   }
+        //   else
+        //   {
+        //     block_cache->get_db()->put(k, value);
+        //   }
+        // }
+
+        std::vector<uint32_t> v(100);
+        auto data = RDMAData(config, ops_config, machine_index, context2, qpf2);
+        auto done_connect = std::async(std::launch::async, [&] {
+          std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+          data.connect(51000);
+        });
+        auto ptr = v.data();
+        auto size = sizeof(uint32_t) * v.size();
+        data.listen(51000, ptr, size);
+        if (machine_index == 1)
         {
-          auto key_index = std::stoi(k);
-          if (key_index >= start_keys && key_index < end_keys)
-          {
-            block_cache->put(k, value);
-          }
-          else
-          {
-            block_cache->get_db()->put(k, value);
-          }
+          v[0] = 100;
+          data.write(1, ptr, size, 0, 0, size);
+          data.write(2, ptr, size, 0, 0, size);
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        info("GOT DATA {}", v[0]);
+
         // cache_index_logs.append_entry({0, 1000});
 
 
@@ -526,8 +552,6 @@ int main(int argc, char *argv[])
       std::fill(write_buffer.begin(), write_buffer.end(), 0);
       std::copy(value.begin(), value.end(), write_buffer.begin());
 
-      if (machine_index == 1)
-      {
       // write the value into buffer
       info("writing keys");
       for (const auto &k : keys)
@@ -549,8 +573,6 @@ int main(int argc, char *argv[])
         {
           node.rdma_key_value_cache->read(0, std::to_string(i));
         }
-      }
-
       }
     }
     info("Running server");
