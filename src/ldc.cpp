@@ -526,6 +526,8 @@ int main(int argc, char *argv[])
       std::fill(write_buffer.begin(), write_buffer.end(), 0);
       std::copy(value.begin(), value.end(), write_buffer.begin());
 
+      if (machine_index == 1)
+      {
       // write the value into buffer
       info("writing keys");
       for (const auto &k : keys)
@@ -547,6 +549,8 @@ int main(int argc, char *argv[])
         {
           node.rdma_key_value_cache->read(0, std::to_string(i));
         }
+      }
+
       }
     }
     info("Running server");
