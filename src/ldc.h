@@ -41,6 +41,7 @@ struct RDMAData
   void listen(int port, void* buffer, uint64_t size)
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, size);
+		region_token = read_write_buffer->createRegionToken();
 
     LOG_RDMA_DATA("[RDMAData] Listening on port [{}:{}]", my_server_config.ip, port);
     infinity::queues::QueuePairFactory* qpf = new infinity::queues::QueuePairFactory(context);
@@ -51,7 +52,7 @@ struct RDMAData
     {
       LOG_RDMA_DATA("[RDMAData] Accepting incoming connection on port [{}]", port);
       start_accepting_connections = true;
-  		infinity::queues::QueuePair* qp = qpf->acceptIncomingConnection();
+  		infinity::queues::QueuePair* qp = qpf->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
       LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", my_server_config.ip, port);
       listen_qps.emplace_back(qp);
     }
@@ -81,7 +82,7 @@ struct RDMAData
     auto& qps = connect_qps;
     LOG_RDMA_DATA("[RDMAData] Read from remote machine [{}/{}] Local {} Remote {} Size {}", remote_index, qps.size(), local_offset, remote_offset, size_in_bytes);
     auto qp = qps[remote_index];
-    auto region_token = (infinity::memory::RegionToken *)qp->getUserData();
+    region_token = (infinity::memory::RegionToken *)qp->getUserData();
     auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
     qp->read(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
     return request_token;
