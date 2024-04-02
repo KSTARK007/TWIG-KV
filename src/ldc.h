@@ -147,7 +147,7 @@ struct RDMADataWithQueue : public RDMAData
     }
     *data_with_request_token.data = read_data;
 
-    LOG_RDMA_DATA("[RDMADataWithQueue] {} Request data [{}]", remote_index, data_with_request_token.data->key_index);
+    LOG_RDMA_DATA("[RDMADataWithQueue] {} Request data [{}:{}:{}]", remote_index, local_offset, remote_offset, size_in_bytes);
     data_with_request_token.token = RDMAData::read(remote_index, data_with_request_token.data.get(), sizeof(T), local_offset, remote_offset, size_in_bytes);
     // pending_read_queue.enqueue(std::move(data_with_request_token));
     data_with_request_token.token->waitUntilCompleted();
