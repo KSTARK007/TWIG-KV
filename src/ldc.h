@@ -44,9 +44,9 @@ struct RDMAData
 		region_token = read_write_buffer->createRegionToken();
 
     LOG_RDMA_DATA("[RDMAData] Listening on port [{}:{}]", my_server_config.ip, port);
-    infinity::queues::QueuePairFactory* qp_factory = new infinity::queues::QueuePairFactory(context);
-    qpfs.emplace_back(qp_factory);
-    qp_factory->bindToPort(port);
+    infinity::queues::QueuePairFactory* qpf = new infinity::queues::QueuePairFactory(context);
+    qpfs.emplace_back(qpf);
+    qpf->bindToPort(port);
     LOG_RDMA_DATA("[RDMAData] Listening on port [{}:{}] bound", my_server_config.ip, port);
     for (int i = 0; i < server_configs.size(); i++)
     {
@@ -63,9 +63,12 @@ struct RDMAData
   {
     for (auto i = 0; i < server_configs.size(); i++)
     {
+      infinity::queues::QueuePairFactory* qpf = new infinity::queues::QueuePairFactory(context);
+      qpfs.emplace_back(qpf);
+
       auto server_config = server_configs[i];
       LOG_RDMA_DATA("[RDMAData] Connecting to remote machine [{}:{}]", server_config.ip, port);
-      infinity::queues::QueuePair* qp = qp_factory->connectToRemoteHost(server_config.ip.c_str(), port);
+      infinity::queues::QueuePair* qp = qpf->connectToRemoteHost(server_config.ip.c_str(), port);
       LOG_RDMA_DATA("[RDMAData] Connected to remote machine [{}:{}]", server_config.ip, port);
       connect_qps.emplace_back(qp);
     }
@@ -385,9 +388,8 @@ struct CacheIndexes : public RDMAData
       LOG_RDMA_DATA("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
       for (auto j = 0; j < 9; j++)
       {
-        auto request_token = RDMAData::write(j, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));      
+        auto request_token = RDMAData::write(j, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));
         pending_write_queue.enqueue(request_token);
-
       }
     }
   }
