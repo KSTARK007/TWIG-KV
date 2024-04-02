@@ -44,6 +44,8 @@ struct RDMAData
 		region_token = read_write_buffer->createRegionToken();
 
     LOG_RDMA_DATA("[RDMAData] Listening on port [{}:{}]", my_server_config.ip, port);
+    infinity::queues::QueuePairFactory* qp_factory = new infinity::queues::QueuePairFactory(context);
+    qpfs.emplace_back(qp_factory);
     qp_factory->bindToPort(port);
     LOG_RDMA_DATA("[RDMAData] Listening on port [{}:{}] bound", my_server_config.ip, port);
     for (int i = 0; i < server_configs.size(); i++)
@@ -121,6 +123,7 @@ struct RDMAData
   uint64_t size{};
   
   HashMap<void*, RDMABufferAndToken> buffer_map;
+  std::vector<infinity::queues::QueuePairFactory*> qpfs;
   std::vector<infinity::queues::QueuePair*> listen_qps;
   std::vector<infinity::queues::QueuePair*> connect_qps;
   std::vector<infinity::queues::QueuePair*> qps;
