@@ -369,8 +369,9 @@ struct CacheIndexes : public RDMAData
       auto size = rdma_kv_storage->get_allocated_cache_index_size();
       auto offset = key_index * sizeof(RDMACacheIndex);
       const auto& rdma_cache_index = rdma_cache_indexes[machine_index];
-      LOG_RDMA_DATA("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, (i * server_configs.size()) + i, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
-      auto request_token = RDMAData::write((i * server_configs.size()) + i, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));      
+      auto rdma_index = (i * server_configs.size()) + machine_index;
+      LOG_RDMA_DATA("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
+      auto request_token = RDMAData::write(rdma_index, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));      
       pending_write_queue.enqueue(request_token);
     }
   }
@@ -421,6 +422,7 @@ struct RDMAKeyValueCache : public RDMAData
     auto key_index = std::stoi(key);
 
     RDMACacheIndex* cache_index = cache_indexes->get_cache_index(remote_index);
+    auto rdma_index = (machine_index * server_configs.size()) + remote_index;
     key_value_storage->read(remote_index, cache_index[key_index]);
   }
 
