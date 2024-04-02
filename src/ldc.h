@@ -52,7 +52,7 @@ struct RDMAData
       start_accepting_connections = true;
   		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
       LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", my_server_config.ip, port);
-      qps.emplace_back(qp);
+      listen_qps.emplace_back(qp);
     }
     is_server = true;
   }
@@ -65,7 +65,7 @@ struct RDMAData
       LOG_RDMA_DATA("[RDMAData] Connecting to remote machine [{}:{}]", server_config.ip, port);
       infinity::queues::QueuePair* qp = qp_factory->connectToRemoteHost(server_config.ip.c_str(), port);
       LOG_RDMA_DATA("[RDMAData] Connected to remote machine [{}:{}]", server_config.ip, port);
-      qps.emplace_back(qp);
+      connect_qps.emplace_back(qp);
     }
     is_server = false;
   }
@@ -74,7 +74,7 @@ struct RDMAData
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
 
-    auto qp = qps[remote_index];
+    auto qp = connect_qps[remote_index];
     region_token = (infinity::memory::RegionToken *)qp->getUserData();
     auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
     qp->read(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
@@ -85,7 +85,7 @@ struct RDMAData
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
 
-    auto qp = qps[remote_index];
+    auto qp = connect_qps[remote_index];
     auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
     qp->write(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
     return request_token;
@@ -115,9 +115,10 @@ struct RDMAData
   RemoteMachineConfig my_server_config;
   void* buffer{};
   uint64_t size{};
-  infinity::queues::QueuePair *qp;
   
   HashMap<void*, RDMABufferAndToken> buffer_map;
+  std::vector<infinity::queues::QueuePair*> listen_qps;
+  std::vector<infinity::queues::QueuePair*> connect_qps;
   std::vector<infinity::queues::QueuePair*> qps;
   bool is_server;
   bool start_accepting_connections = false;
