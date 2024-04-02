@@ -52,7 +52,7 @@ struct RDMAData
     {
       LOG_RDMA_DATA("[RDMAData] Accepting incoming connection on port [{}]", port);
       start_accepting_connections = true;
-  		infinity::queues::QueuePair* qp = qp_factory->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
+  		infinity::queues::QueuePair* qp = qpf->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
       LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", my_server_config.ip, port);
       listen_qps.emplace_back(qp);
     }
@@ -63,12 +63,12 @@ struct RDMAData
   {
     for (auto i = 0; i < server_configs.size(); i++)
     {
-      infinity::queues::QueuePairFactory* qpf = new infinity::queues::QueuePairFactory(context);
-      qpfs.emplace_back(qpf);
+      // infinity::queues::QueuePairFactory* qpf = new infinity::queues::QueuePairFactory(context);
+      // qpfs.emplace_back(qpf);
 
       auto server_config = server_configs[i];
       LOG_RDMA_DATA("[RDMAData] Connecting to remote machine [{}:{}]", server_config.ip, port);
-      infinity::queues::QueuePair* qp = qpf->connectToRemoteHost(server_config.ip.c_str(), port);
+      infinity::queues::QueuePair* qp = qp_factory->connectToRemoteHost(server_config.ip.c_str(), port);
       LOG_RDMA_DATA("[RDMAData] Connected to remote machine [{}:{}]", server_config.ip, port);
       connect_qps.emplace_back(qp);
     }
