@@ -503,37 +503,48 @@ int main(int argc, char *argv[])
         });
         t.detach();
 
-        // for (const auto &k : keys)
+        for (const auto &k : keys)
+        {
+          auto key_index = std::stoi(k);
+          if (key_index >= start_keys && key_index < end_keys)
+          {
+            block_cache->put(k, value);
+          }
+          else
+          {
+            block_cache->get_db()->put(k, value);
+          }
+        }
+
+        // std::vector<uint32_t> v(100);
+        // auto data = RDMAData(config, ops_config, machine_index-1, context2, qpf2);
+        // auto done_connect = std::async(std::launch::async, [&] {
+        //   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //   data.connect(51000);
+        // });
+        // auto ptr = v.data();
+        // auto size = sizeof(uint32_t) * v.size();
+        // data.listen(51000, ptr, size);
+        // done_connect.wait();
+        // if (machine_index == 1)
         // {
-        //   auto key_index = std::stoi(k);
-        //   if (key_index >= start_keys && key_index < end_keys)
+        //   v[0] = 100;
+        //   info("WROTE {}", v[0]);
+        //   for (auto j = 0; j < 3; j++)
         //   {
-        //     block_cache->put(k, value);
-        //   }
-        //   else
-        //   {
-        //     block_cache->get_db()->put(k, value);
+        //     auto request = data.write(j, ptr, size, 0, 0, size);
+        //     request->waitUntilCompleted();
         //   }
         // }
 
-        std::vector<uint32_t> v(100);
-        auto data = RDMAData(config, ops_config, machine_index, context2, qpf2);
-        auto done_connect = std::async(std::launch::async, [&] {
-          std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-          data.connect(51000);
-        });
-        auto ptr = v.data();
-        auto size = sizeof(uint32_t) * v.size();
-        data.listen(51000, ptr, size);
-        if (machine_index == 1)
-        {
-          v[0] = 100;
-          data.write(1, ptr, size, 0, 0, size);
-          data.write(2, ptr, size, 0, 0, size);
-        }
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // info("GOT DATA {}", v[0]);
+        // {
+        //   auto request = data.read(0, ptr, size, 0, 0, size);
+        //   request->waitUntilCompleted();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        info("GOT DATA {}", v[0]);
+        //   info("GOT DATA2 {}", v[0]);
+        // }
 
         // cache_index_logs.append_entry({0, 1000});
 
