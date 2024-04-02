@@ -424,7 +424,7 @@ struct RDMAKeyValueCache : public RDMAData
     RDMACacheIndex* cache_index = cache_indexes->get_cache_index(remote_index);
     auto rdma_index = (machine_index * server_configs.size()) + remote_index;
     LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {}", rdma_index);
-    key_value_storage->read(remote_index, cache_index[key_index]);
+    key_value_storage->read(rdma_index, cache_index[key_index]);
   }
 
   template<typename F>
