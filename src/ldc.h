@@ -41,7 +41,6 @@ struct RDMAData
   void listen(int port, void* buffer, uint64_t size)
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, size);
-		region_token = read_write_buffer->createRegionToken();
 
     LOG_RDMA_DATA("[RDMAData] Listening on port [{}:{}]", my_server_config.ip, port);
     infinity::queues::QueuePairFactory* qpf = new infinity::queues::QueuePairFactory(context);
@@ -52,7 +51,7 @@ struct RDMAData
     {
       LOG_RDMA_DATA("[RDMAData] Accepting incoming connection on port [{}]", port);
       start_accepting_connections = true;
-  		infinity::queues::QueuePair* qp = qpf->acceptIncomingConnection(region_token, sizeof(infinity::memory::RegionToken));
+  		infinity::queues::QueuePair* qp = qpf->acceptIncomingConnection();
       LOG_RDMA_DATA("[RDMAData] Accepted incoming connection on port [{}:{}]", my_server_config.ip, port);
       listen_qps.emplace_back(qp);
     }
@@ -77,7 +76,7 @@ struct RDMAData
 
   std::shared_ptr<infinity::requests::RequestToken> read(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
   {
-    auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
+    auto& [read_write_buffer, _] = get_buffer(buffer, buffer_size);
 
     auto& qps = connect_qps;
     LOG_RDMA_DATA("[RDMAData] Read from remote machine [{}/{}] Local {} Remote {} Size {}", remote_index, qps.size(), local_offset, remote_offset, size_in_bytes);
@@ -384,6 +383,7 @@ struct CacheIndexes : public RDMAData
       auto size = rdma_kv_storage->get_allocated_cache_index_size();
       auto offset = key_index * sizeof(RDMACacheIndex);
       const auto& rdma_cache_index = rdma_cache_indexes[machine_index];
+      rdma_cache_indexes[i][key_index] = rdma_cache_index[key_index];
       auto rdma_index = (i * server_configs.size()) + machine_index;
       LOG_RDMA_DATA("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
       for (auto j = 0; j < 9; j++)
