@@ -75,7 +75,7 @@ struct RDMAData
     auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
 
     auto& qps = connect_qps;
-    LOG_RDMA_DATA("[RDMAData] Read from remote machine [{}/{}]", remote_index, qps.size());
+    LOG_RDMA_DATA("[RDMAData] Read from remote machine [{}/{}] Local {} Remote {} Size {}", remote_index, qps.size(), local_offset, remote_offset, size_in_bytes);
     auto qp = qps[remote_index];
     region_token = (infinity::memory::RegionToken *)qp->getUserData();
     auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
@@ -87,8 +87,8 @@ struct RDMAData
   {
     auto& [read_write_buffer, region_token] = get_buffer(buffer, buffer_size);
 
-    auto& qps = listen_qps;
-    LOG_RDMA_DATA("[RDMAData] Writing to remote machine [{}/{}]", remote_index, qps.size());
+    auto& qps = connect_qps;
+    LOG_RDMA_DATA("[RDMAData] Writing to remote machine [{}/{}] Local {} Remote {} Size {}", remote_index, qps.size(), local_offset, remote_offset, size_in_bytes);
     auto qp = qps[remote_index];
     auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
     qp->write(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
