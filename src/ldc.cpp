@@ -474,18 +474,18 @@ int main(int argc, char *argv[])
     }
     default_value = std::string(ops_config.VALUE_SIZE, 'A');
     auto value = default_value;
-    for (const auto &k : keys)
-    {
-      auto key_index = std::stoi(k);
-      if (key_index >= start_keys && key_index < end_keys)
-      {
-        block_cache->put(k, value);
-      }
-      else
-      {
-        block_cache->get_db()->put(k, value);
-      }
-    }
+    // for (const auto &k : keys)
+    // {
+    //   auto key_index = std::stoi(k);
+    //   if (key_index >= start_keys && key_index < end_keys)
+    //   {
+    //     block_cache->put(k, value);
+    //   }
+    //   else
+    //   {
+    //     block_cache->get_db()->put(k, value);
+    //   }
+    // }
 
     // Connect to one sided RDMA
     if (config.baseline.one_sided_rdma_enabled)
@@ -532,6 +532,35 @@ int main(int argc, char *argv[])
         for (auto &[t, node] : rdma_nodes) {
           node.rdma_key_value_cache = rdma_key_value_cache;
         }
+
+        bool finished_running_keys = false;
+        std::thread t([&](){
+          while (!finished_running_keys)
+          {
+            rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
+            {
+              const auto& [kv, _, remote_index, remote_port] = v;
+              auto key_index = kv->key_index;
+              auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
+              info("[Execute pending for RDMA] [{}:{}] key {} value {}", remote_index, remote_port, key_index, value);
+            });
+          }
+        });
+
+        for (const auto &k : keys)
+        {
+          auto key_index = std::stoi(k);
+          if (key_index >= start_keys && key_index < end_keys)
+          {
+            block_cache->put(k, value);
+          }
+          else
+          {
+            block_cache->get_db()->put(k, value);
+          }
+        }
+        finished_running_keys = true;
+        t.join();
 
         // std::vector<uint32_t> v(100);
         // auto data = RDMAData(config, ops_config, machine_index-1, context2, qpf2);
