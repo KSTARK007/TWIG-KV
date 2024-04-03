@@ -362,15 +362,15 @@ void server_worker(
                     {
                       uint64_t key_index = kv.key_index;
                       auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
-                      info("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
+                      LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
                       if (key_index == expected_key)
                       {
-                        info("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
+                        LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                         server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
                       }
                       else
                       {
-                        info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
+                        LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                         fetch_from_disk();
                       }
                     });
@@ -551,7 +551,7 @@ int main(int argc, char *argv[])
               const auto& [kv, _, remote_index, __] = v;
               auto key_index = kv->key_index;
               auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
-              info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+              LOG_RDMA_DATA("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
             });
           }
         });
