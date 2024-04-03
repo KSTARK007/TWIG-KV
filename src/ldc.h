@@ -149,7 +149,7 @@ struct RDMADataWithQueue : public RDMAData
     }
   }
 
-  void read(int remote_index, const T& read_data, uint64_t local_offset = 0, uint64_t remote_offset = 0, uint64_t size_in_bytes = sizeof(T))
+  void read(int remote_index, int port, const T& read_data, uint64_t local_offset = 0, uint64_t remote_offset = 0, uint64_t size_in_bytes = sizeof(T))
   {
     DataWithRequestToken data_with_request_token;
     while (!free_queue.try_dequeue(data_with_request_token))
@@ -157,6 +157,8 @@ struct RDMADataWithQueue : public RDMAData
       LOG_RDMA_DATA("Cannot queue read operation");
     }
     *data_with_request_token.data = read_data;
+    data_with_request_token.remote_index = remote_index;
+    data_with_request_token.port = port;
 
     LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Request data [{}:{}:{}]", remote_index, local_offset, remote_offset, size_in_bytes);
     data_with_request_token.token = RDMAData::read(remote_index, data_with_request_token.data.get(), sizeof(T), local_offset, remote_offset, size_in_bytes);
@@ -173,7 +175,7 @@ struct RDMADataWithQueue : public RDMAData
     while (pending_read_queue.try_dequeue(data_with_request_token))
     {
       data_with_request_token.token->waitUntilCompleted();
-      f(*data_with_request_token.data.get());
+      f(data_with_request_token);
       free_queue.enqueue(std::move(data_with_request_token));
     }
   }
@@ -183,6 +185,8 @@ public:
   {
     std::shared_ptr<T> data;
     std::shared_ptr<infinity::requests::RequestToken> token;
+    int remote_index;
+    int port;
   };
 
 protected:
@@ -320,13 +324,13 @@ struct KeyValueStorage : public RDMADataWithQueue<RDMACacheIndexKeyValue>
     LOG_RDMA_DATA("[KeyValueStorage] Initialized");
   }
 
-  void read(int remote_index, RDMACacheIndex rdma_cache_index)
+  void read(int remote_index, int port, RDMACacheIndex rdma_cache_index)
   {
     LOG_RDMA_DATA("[KeyValueStorage] Read machine {} with offset {}", remote_index, rdma_cache_index.key_value_ptr_offset);
     RDMACacheIndexKeyValue read_data;
     auto remote_offset = rdma_cache_index.key_value_ptr_offset;
 
-    RDMADataWithQueue::read(remote_index, read_data, 0, remote_offset);
+    RDMADataWithQueue::read(remote_index, port, read_data, 0, remote_offset);
   }
 
   RDMAKeyValueStorage* rdma_kv_storage{};
@@ -433,7 +437,7 @@ struct RDMAKeyValueCache : public RDMAData
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
 
-  void read(int remote_index, const std::string& key)
+  void read(int remote_index, int port, const std::string& key)
   {
     auto key_index = std::stoi(key);
 
@@ -442,7 +446,7 @@ struct RDMAKeyValueCache : public RDMAData
     auto rdma_index = remote_index;
     const auto& ci = cache_index[key_index];
     LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
-    key_value_storage->read(rdma_index, ci);
+    key_value_storage->read(rdma_index, port, ci);
   }
 
   template<typename F>

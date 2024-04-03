@@ -233,6 +233,33 @@ void server_worker(
     }
   }
 
+  std::vector<std::thread> rdma_key_value_cache_workers;
+  auto& rdma_node = rdma_nodes[1];
+  if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
+  {
+    std::thread t([&](){
+      while (!g_stop)
+      {
+        rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
+        {
+          const auto& [kv, _, remote_index, remote_port] = v;
+          // info("KV {} {}", kv.key_index, std::string_view((const char*)kv.data));
+          auto expected_key = 0;
+          if (kv->key_index == expected_key)
+          {
+            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, std::string_view((const char*)kv->data, ops_config.VALUE_SIZE));
+          }
+          else
+          {
+            // TODO: read from disk instead, we need to know expected key
+            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, std::string_view((const char*)kv->data, ops_config.VALUE_SIZE));
+          }
+        });
+      }
+    });
+    rdma_key_value_cache_workers.emplace_back(std::move(t));
+  }
+
   while (!g_stop)
   {
     server.loop(
@@ -281,7 +308,15 @@ void server_worker(
                 LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
                 if (remote_machine_index_to_rdma != base_index)
                 {
-                  read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
+                  if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
+                  {
+                    rdma_node.rdma_key_value_cache->read(base_index, remote_port, key);
+                  }
+                  else
+                  {
+                    read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
+                  }
+
                   found_in_rdma = true;
                   if (!ops_config.RDMA_ASYNC)
                   {
@@ -366,6 +401,11 @@ void server_worker(
                  magic_enum::enum_name(p.getResponse()));
           }
         });
+  }
+
+  for (auto& t : rdma_key_value_cache_workers)
+  {
+    t.join();
   }
 }
 
@@ -490,18 +530,6 @@ int main(int argc, char *argv[])
         for (auto &[t, node] : rdma_nodes) {
           node.rdma_key_value_cache = rdma_key_value_cache;
         }
-        
-        auto& node = rdma_nodes[1];
-        std::thread t([&](){
-          while(true)
-          {
-            node.rdma_key_value_cache->execute_pending([&](RDMACacheIndexKeyValue& kv)
-            {
-              info("KV {} {}", kv.key_index, std::string_view((const char*)kv.data));
-            });
-          }
-        });
-        t.detach();
 
         for (const auto &k : keys)
         {
@@ -574,17 +602,17 @@ int main(int argc, char *argv[])
         }
       }
 
-      {
-        auto& node = rdma_nodes[1];
-        for (auto& [t, node] : rdma_nodes)
-        {
-          info("{} {}", t, machine_index);
-        }
-        for (auto i = 0; i < 500; i++)
-        {
-          node.rdma_key_value_cache->read(0, std::to_string(i));
-        }
-      }
+      // {
+      //   auto& node = rdma_nodes[1];
+      //   for (auto& [t, node] : rdma_nodes)
+      //   {
+      //     info("{} {}", t, machine_index);
+      //   }
+      //   for (auto i = 0; i < 500; i++)
+      //   {
+      //     node.rdma_key_value_cache->read(0, std::to_string(i));
+      //   }
+      // }
     }
     info("Running server");
   }
