@@ -243,16 +243,18 @@ void server_worker(
         rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
         {
           const auto& [kv, _, remote_index, remote_port] = v;
-          // info("KV {} {}", kv.key_index, std::string_view((const char*)kv.data));
+          auto key_index = kv->key_index;
+          auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
+          info("[Execute pending for RDMA] [{}:{}] key {} value {}", remote_index, remote_port, key_index, value);
           auto expected_key = 0;
-          if (kv->key_index == expected_key)
+          if (key_index == expected_key)
           {
-            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, std::string_view((const char*)kv->data, ops_config.VALUE_SIZE));
+            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
           }
           else
           {
             // TODO: read from disk instead, we need to know expected key
-            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, std::string_view((const char*)kv->data, ops_config.VALUE_SIZE));
+            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
           }
         });
       }
