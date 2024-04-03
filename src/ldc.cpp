@@ -560,6 +560,28 @@ int main(int argc, char *argv[])
             block_cache->get_db()->put(k, value);
           }
         }
+        {
+          auto count = 0;
+          for (const auto &k : keys)
+          {
+            auto key_index = std::stoi(k);
+            if (!(key_index >= start_keys && key_index < end_keys))
+            {
+              if (machine_index - 1 != 0)
+              {
+                info("Request read {}", k);
+                rdma_node.rdma_key_value_cache->read(0, 0, k);
+              }
+              if (count < 1000)
+              {
+                break;
+              }
+              count++;
+            }
+          }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         finished_running_keys = true;
         t.join();
 
