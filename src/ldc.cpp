@@ -534,6 +534,7 @@ int main(int argc, char *argv[])
         }
 
         bool finished_running_keys = false;
+        auto& rdma_node = rdma_nodes[1];
         std::thread t([&](){
           while (!finished_running_keys)
           {
