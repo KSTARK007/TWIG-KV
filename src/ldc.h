@@ -162,10 +162,11 @@ struct RDMADataWithQueue : public RDMAData
 
     LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Request data [{}:{}:{}]", remote_index, local_offset, remote_offset, size_in_bytes);
     data_with_request_token.token = RDMAData::read(remote_index, data_with_request_token.data.get(), sizeof(T), local_offset, remote_offset, size_in_bytes);
-    // pending_read_queue.enqueue(std::move(data_with_request_token));
-    data_with_request_token.token->waitUntilCompleted();
-    LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Got data [{}:{}]", remote_index, data_with_request_token.data->key_index, (char*)data_with_request_token.data->data);
-    free_queue.enqueue(std::move(data_with_request_token));
+    pending_read_queue.enqueue(std::move(data_with_request_token));
+
+    // data_with_request_token.token->waitUntilCompleted();
+    // LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Got data [{}:{}]", remote_index, data_with_request_token.data->key_index, (char*)data_with_request_token.data->data);
+    // free_queue.enqueue(std::move(data_with_request_token));
   }
 
   template<typename F>
