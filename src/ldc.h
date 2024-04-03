@@ -351,6 +351,7 @@ struct CacheIndexes : public RDMAData
     RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory), rdma_kv_storage(rdma_kv_storage_)
   {
     LOG_RDMA_DATA("[CacheIndexes] Initializing");
+    rdma_kv_storage->set_my_cache_index(machine_index);
     rdma_cache_indexes.resize(server_configs.size());
     for (auto i = 0; i < server_configs.size(); i++)
     {
@@ -366,6 +367,7 @@ struct CacheIndexes : public RDMAData
         LOG_RDMA_DATA("[CacheIndexes] Remote cache index buffer {}", i);
         cache_index = rdma_kv_storage->allocate_cache_index();
       }
+      rdma_kv_storage->set_cache_index(i, cache_index);
       rdma_cache_indexes[i] = cache_index;
 
       auto done_connect = std::async(std::launch::async, [&] {
