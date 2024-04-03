@@ -12,8 +12,6 @@ struct RDMABufferAndToken
   infinity::memory::RegionToken* region_token;
 };
 
-#define LOG_RDMA_DATA info
-
 struct RDMAData
 {
   RDMAData(BlockCacheConfig block_cache_config_, Configuration ops_config_, int machine_index_, infinity::core::Context *context_, infinity::queues::QueuePairFactory* qp_factory_) :

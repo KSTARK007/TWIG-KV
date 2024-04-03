@@ -117,17 +117,16 @@ HashMap<uint64_t, RDMA_connect>  connect_to_servers(
             node.isLocal = false;
             auto size = BLKSZ;
             node.tmp_buffer = malloc(size);
-    	    if (config.baseline.use_cache_indexing)
-            {
-                size = ops_config.NUM_KEY_VALUE_PAIRS * sizeof(RDMACacheIndex);
-                node.tmp_buffer = realloc(node.tmp_buffer, size);
-            }
             node.buffer = new infinity::memory::Buffer(node.context, node.tmp_buffer, size);
             std::cout << "connectToRemoteHost"<< t.ip<< std::endl;
             node.qp = node.qp_factory->connectToRemoteHost(t.ip.c_str(), 50000);
             std::cout << "connectToRemoteHost end"<< t.ip<< std::endl;
             node.remote_buffer_token = (infinity::memory::RegionToken *)node.qp->getUserData();
-            node.circularBuffer = new AsyncRdmaOpCircularBuffer(RDMA_ASYNC_BUFFER_SIZE, value_size, node.context);
+            if (!config.baseline.use_cache_indexing)
+            {
+                node.circularBuffer = new AsyncRdmaOpCircularBuffer(RDMA_ASYNC_BUFFER_SIZE, value_size, node.context);
+            }
+
             std::cout << "created new Buffers"<<std::endl;
             node.free_blocks = static_cast<u_int64_t>((cache_size * GB_TO_BYTES)/config.db.block_db.block_size);
             if (t.index == machine_index) {

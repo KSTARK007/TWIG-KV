@@ -104,33 +104,11 @@ void rdma_reader_thread(RDMA_connect &node, uint64_t offset, void *buffer_data, 
 		node.circularBuffer->enqueue_async_rdma_op(async_rdma_op);
 #endif
 	} else {
-	    if (server->get_block_cache_config().baseline.use_cache_indexing)
-		{
-			uint64_t lru_offset = 0;
-			auto block_cache = node.block_cache;
-			RDMAKeyValueStorage* kv_store = block_cache->get_rdma_key_value_storage();
-			{
-				infinity::requests::RequestToken request_token(node.context);
-				node.qp->read(node.buffer, 0, node.remote_buffer_token, offset, BLKSZ,
-							infinity::queues::OperationFlags(), &request_token);
-				request_token.waitUntilCompleted();
-			}
-			lru_offset = (uint64_t)node.buffer->getData();
-			infinity::requests::RequestToken request_token(node.context);
-			node.qp->read(node.buffer, 0, node.remote_buffer_token, lru_offset, BLKSZ,
-						infinity::queues::OperationFlags(), &request_token);
-			request_token.waitUntilCompleted();
-			auto key_value_pair = (uint64_t)node.buffer->getData();
-			memcpy(buffer_data, node.buffer->getData(), BLKSZ);
-		}
-		else
-		{
-			infinity::requests::RequestToken request_token(node.context);
-			node.qp->read(node.buffer, 0, node.remote_buffer_token, offset, BLKSZ,
-						infinity::queues::OperationFlags(), &request_token);
-			request_token.waitUntilCompleted();
-			memcpy(buffer_data, node.buffer->getData(), BLKSZ);
-		}
+		infinity::requests::RequestToken request_token(node.context);
+		node.qp->read(node.buffer, 0, node.remote_buffer_token, offset, BLKSZ,
+					infinity::queues::OperationFlags(), &request_token);
+		request_token.waitUntilCompleted();
+		memcpy(buffer_data, node.buffer->getData(), BLKSZ);
 	}
 }
 

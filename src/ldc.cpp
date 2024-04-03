@@ -267,7 +267,6 @@ void server_worker(
     server.loop(
         [&](auto remote_index, auto remote_port, MachnetFlow &tx_flow, auto &&data)
         {
-          // server.get_perf_monitor().report_stats();
           if (data.isPutRequest())
           {
             auto p = data.getPutRequest();
@@ -359,7 +358,6 @@ void server_worker(
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
-                    info("GET REMOTE INDEX {}", remote_index);
                     rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       uint64_t key_index = kv.key_index;
@@ -522,6 +520,7 @@ int main(int argc, char *argv[])
         printRDMAConnect(t.second);
       }
 
+      if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
       {
         auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
         auto *context1 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
@@ -570,7 +569,7 @@ int main(int argc, char *argv[])
           }
         }
 
-        if (1)
+        if (0)
         {
           auto count = 0;
           for (const auto &k : keys)
@@ -595,47 +594,21 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         finished_running_keys = true;
         t.join();
-
-        // std::vector<uint32_t> v(100);
-        // auto data = RDMAData(config, ops_config, machine_index-1, context2, qpf2);
-        // auto done_connect = std::async(std::launch::async, [&] {
-        //   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        //   data.connect(51000);
-        // });
-        // auto ptr = v.data();
-        // auto size = sizeof(uint32_t) * v.size();
-        // data.listen(51000, ptr, size);
-        // done_connect.wait();
-        // if (machine_index == 1)
-        // {
-        //   v[0] = 100;
-        //   info("WROTE {}", v[0]);
-        //   for (auto j = 0; j < 3; j++)
-        //   {
-        //     auto request = data.write(j, ptr, size, 0, 0, size);
-        //     request->waitUntilCompleted();
-        //   }
-        // }
-
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        // info("GOT DATA {}", v[0]);
-        // {
-        //   auto request = data.read(0, ptr, size, 0, 0, size);
-        //   request->waitUntilCompleted();
-
-        //   info("GOT DATA2 {}", v[0]);
-        // }
-
-        // cache_index_logs.append_entry({0, 1000});
-
-
-        // auto *context2 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
-        // infinity::memory::Buffer *buffer_to_receive2 = new infinity::memory::Buffer(context2, 4096 * sizeof(char));
-        // context2->postReceiveBuffer(buffer_to_receive2);
-
-        // auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
-        // CacheIndexLogs cache_index_logs(config, ops_config, machine_index, context1, qpf1);
-        // cache_index_logs.append_entry({0, 1000});
+      }
+      else
+      {
+        for (const auto &k : keys)
+        {
+          auto key_index = std::stoi(k);
+          if (key_index >= start_keys && key_index < end_keys)
+          {
+            block_cache->put(k, value);
+          }
+          else
+          {
+            block_cache->get_db()->put(k, value);
+          }
+        }
       }
 
       // Fill in each buffer with value
@@ -644,13 +617,16 @@ int main(int argc, char *argv[])
       std::copy(value.begin(), value.end(), write_buffer.begin());
 
       // write the value into buffer
-      info("writing keys");
-      for (const auto &k : keys)
+      if (!config.baseline.use_cache_indexing)
       {
-        auto key_index = std::stoi(k);
-        if (key_index >= start_keys && key_index < end_keys)
+        info("writing keys");
+        for (const auto &k : keys)
         {
-          write_correct_node(ops_config, rdma_nodes, server_start_index, key_index, write_buffer);
+          auto key_index = std::stoi(k);
+          if (key_index >= start_keys && key_index < end_keys)
+          {
+            write_correct_node(ops_config, rdma_nodes, server_start_index, key_index, write_buffer);
+          }
         }
       }
 
