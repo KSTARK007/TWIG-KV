@@ -136,6 +136,9 @@ struct RDMAData
 };
 
 template<typename T>
+using DataWithRequestCallback = std::function<void(const T&)>;
+
+template<typename T>
 struct RDMADataWithQueue : public RDMAData
 {
   RDMADataWithQueue(BlockCacheConfig block_cache_config, Configuration ops_config, int machine_index, infinity::core::Context *context, infinity::queues::QueuePairFactory* qp_factory, uint64_t queue_size) :
@@ -149,7 +152,7 @@ struct RDMADataWithQueue : public RDMAData
     }
   }
 
-  void read(int remote_index, int port, const T& read_data, uint64_t local_offset = 0, uint64_t remote_offset = 0, uint64_t size_in_bytes = sizeof(T))
+  void read(int remote_index, DataWithRequestCallback<T> callback, const T& read_data, uint64_t local_offset = 0, uint64_t remote_offset = 0, uint64_t size_in_bytes = sizeof(T))
   {
     DataWithRequestToken data_with_request_token;
     while (!free_queue.try_dequeue(data_with_request_token))
@@ -158,15 +161,15 @@ struct RDMADataWithQueue : public RDMAData
     }
     *data_with_request_token.data = read_data;
     data_with_request_token.remote_index = remote_index;
-    data_with_request_token.port = port;
+    data_with_request_token.callback = std::move(callback);
 
     LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Request data [{}:{}:{}]", remote_index, local_offset, remote_offset, size_in_bytes);
     data_with_request_token.token = RDMAData::read(remote_index, data_with_request_token.data.get(), sizeof(T), local_offset, remote_offset, size_in_bytes);
-    // pending_read_queue.enqueue(std::move(data_with_request_token));
+    pending_read_queue.enqueue(std::move(data_with_request_token));
 
-    data_with_request_token.token->waitUntilCompleted();
-    LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Got data [{}:{}]", remote_index, data_with_request_token.data->key_index, (char*)data_with_request_token.data->data);
-    free_queue.enqueue(std::move(data_with_request_token));
+    // data_with_request_token.token->waitUntilCompleted();
+    // LOG_RDMA_DATA("[RDMADataWithQueue] Index [{}] Got data [{}:{}]", remote_index, data_with_request_token.data->key_index, (char*)data_with_request_token.data->data);
+    // free_queue.enqueue(std::move(data_with_request_token));
   }
 
   template<typename F>
@@ -177,6 +180,10 @@ struct RDMADataWithQueue : public RDMAData
     {
       data_with_request_token.token->waitUntilCompleted();
       f(data_with_request_token);
+      if (data_with_request_token.callback)
+      {
+        data_with_request_token.callback(*data_with_request_token.data);
+      }
       free_queue.enqueue(std::move(data_with_request_token));
     }
   }
@@ -187,7 +194,7 @@ public:
     std::shared_ptr<T> data;
     std::shared_ptr<infinity::requests::RequestToken> token;
     int remote_index;
-    int port;
+    DataWithRequestCallback<T> callback;
   };
 
 protected:
@@ -325,13 +332,13 @@ struct KeyValueStorage : public RDMADataWithQueue<RDMACacheIndexKeyValue>
     LOG_RDMA_DATA("[KeyValueStorage] Initialized");
   }
 
-  void read(int remote_index, int port, RDMACacheIndex rdma_cache_index)
+  void read(int remote_index, DataWithRequestCallback<RDMACacheIndexKeyValue> callback, RDMACacheIndex rdma_cache_index)
   {
     LOG_RDMA_DATA("[KeyValueStorage] Read machine {} with offset {}", remote_index, rdma_cache_index.key_value_ptr_offset);
     RDMACacheIndexKeyValue read_data;
     auto remote_offset = rdma_cache_index.key_value_ptr_offset;
 
-    RDMADataWithQueue::read(remote_index, port, read_data, 0, remote_offset);
+    RDMADataWithQueue::read(remote_index, callback, read_data, 0, remote_offset);
   }
 
   RDMAKeyValueStorage* rdma_kv_storage{};
@@ -438,16 +445,41 @@ struct RDMAKeyValueCache : public RDMAData
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
 
-  void read(int remote_index, int port, const std::string& key)
+  void read(int remote_index, uint64_t key_index)
   {
-    auto key_index = std::stoi(key);
-
     RDMACacheIndex* cache_index = cache_indexes->get_cache_index(remote_index);
     // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
     auto rdma_index = remote_index;
     const auto& ci = cache_index[key_index];
     LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
-    key_value_storage->read(rdma_index, port, ci);
+    key_value_storage->read(rdma_index, {}, ci);
+  }
+
+  void read_callback(uint64_t key_index, DataWithRequestCallback<RDMACacheIndexKeyValue> callback)
+  {
+    bool found_remote_machine_with_possible_value = false;
+    for (auto i = 0; i < server_configs.size(); i++)
+    {
+      auto rdma_index = i;
+      if (rdma_index == machine_index)
+      {
+        continue;
+      }
+      RDMACacheIndex* cache_index = cache_indexes->get_cache_index(rdma_index);
+      const auto& ci = cache_index[key_index];
+      if (ci.key_value_ptr_offset)
+      {
+        // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
+        LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
+        key_value_storage->read(rdma_index, callback, ci);
+        found_remote_machine_with_possible_value = true;
+        break;
+      }
+    }
+    if (!found_remote_machine_with_possible_value)
+    {
+      panic("Could not find remote machine with key {}", key_index);
+    }
   }
 
   template<typename F>

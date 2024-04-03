@@ -242,20 +242,20 @@ void server_worker(
       {
         rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
         {
-          const auto& [kv, _, remote_index, remote_port] = v;
-          auto key_index = kv->key_index;
-          auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
-          info("[Execute pending for RDMA] [{}:{}] key {} value {}", remote_index, remote_port, key_index, value);
-          auto expected_key = 0;
-          if (key_index == expected_key)
-          {
-            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-          }
-          else
-          {
-            // TODO: read from disk instead, we need to know expected key
-            server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-          }
+          // const auto& [kv, _, remote_index, remote_port] = v;
+          // auto key_index = kv->key_index;
+          // auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
+          // info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+          // auto expected_key = 0;
+          // if (key_index == expected_key)
+          // {
+          //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+          // }
+          // else
+          // {
+          //   // TODO: read from disk instead, we need to know expected key
+          //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+          // }
         });
       }
     });
@@ -285,8 +285,8 @@ void server_worker(
             if (exists_in_cache)
             {
               // Return the correct key in local cache
-              server.get_response(remote_index, remote_port, ResponseType::OK,
-                                  block_cache->get(key, false, exists_in_cache));
+              auto value = block_cache->get(key, false, exists_in_cache);
+              server.get_response(remote_index, remote_port, ResponseType::OK, value);
             }
             else
             {
@@ -300,6 +300,53 @@ void server_worker(
 
               auto base_index = machine_index - server_start_index;
 
+              auto fetch_from_disk = [&]()
+              {
+                std::string value;
+                if (ops_config.operations_pollute_cache)
+                {
+                  if (ops_config.DISK_ASYNC) {
+                    // Cache miss
+                    block_cache->increment_cache_miss();
+                    block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key, block_cache](auto value) {
+                      // Send the response
+                      server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                    });
+                  } else {
+                    LOG_STATE("Fetching from cache/disk {} {}", key, value);
+                    value = block_cache->get(key);
+                  }
+                }
+                else
+                {
+                  // Cache miss
+                  LOG_STATE("Fetching from disk {} {}", key, value);
+                  block_cache->increment_cache_miss();
+                  if (ops_config.DISK_ASYNC) {
+                    block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
+                      // Send the response
+                      server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, {}, value);
+                    });
+                  } else {
+                    if (auto result_or_err = block_cache->get_db()->get(key)) {
+                      value = result_or_err.value();
+                    } else {
+                      panic("Failed to get value from db for key {}", key);
+                    }
+                  }
+                }
+
+                if (config.baseline.one_sided_rdma_enabled)
+                {
+                  panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
+                }
+
+                if (!ops_config.DISK_ASYNC)
+                {
+                  server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                }
+              };
+
               if (config.baseline.one_sided_rdma_enabled)
               {
                 if (!config.ingest_block_index)
@@ -312,7 +359,23 @@ void server_worker(
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
-                    rdma_node.rdma_key_value_cache->read(base_index, remote_port, key);
+                    info("GET REMOTE INDEX {}", remote_index);
+                    rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
+                    {
+                      uint64_t key_index = kv.key_index;
+                      auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
+                      info("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
+                      if (key_index == expected_key)
+                      {
+                        info("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
+                        server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+                      }
+                      else
+                      {
+                        info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
+                        fetch_from_disk();
+                      }
+                    });
                   }
                   else
                   {
@@ -330,61 +393,7 @@ void server_worker(
 
               if (!found_in_rdma)
               {
-                std::string value;
-                if (ops_config.operations_pollute_cache)
-                {
-                  if (ops_config.DISK_ASYNC) {
-                    if (block_cache->get_cache()->exist(key)) {
-                      // Cache hit
-                      block_cache->increment_cache_hit();
-                      value = block_cache->get_cache()->get(key);
-                    } else {
-                      // Cache miss
-                      block_cache->increment_cache_miss();
-                    	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key, block_cache](auto value) {
-                        // Send the response
-                        server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
-                    	});
-                    }
-                  } else {
-                    LOG_STATE("Fetching from cache/disk {} {}", key, value);
-                    value = block_cache->get(key);
-                  }
-                }
-                else
-                {
-                  if (block_cache->get_cache()->exist(key)) {
-                    // Cache hit
-                    block_cache->increment_cache_hit();
-                    value = block_cache->get_cache()->get(key);
-                  } else {
-                    // Cache miss
-                    LOG_STATE("Fetching from disk {} {}", key, value);
-                    block_cache->increment_cache_miss();
-                    if (ops_config.DISK_ASYNC) {
-                    	block_cache->get_db()->get_async(key, [&server, remote_index, remote_port](auto value) {
-                        // Send the response
-                        server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, {}, value);
-                    	});
-                    } else {
-                      if (auto result_or_err = block_cache->get_db()->get(key)) {
-                        value = result_or_err.value();
-                      } else {
-                        panic("Failed to get value from db for key {}", key);
-                      }
-                    }
-                  }
-                }
-
-                if (config.baseline.one_sided_rdma_enabled)
-                {
-                  panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
-                }
-
-                if (!ops_config.DISK_ASYNC)
-                {
-                  server.get_response(remote_index, remote_port, ResponseType::OK, value);
-                }
+                fetch_from_disk();
               }
             }
           }
@@ -540,10 +549,10 @@ int main(int argc, char *argv[])
           {
             rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
             {
-              const auto& [kv, _, remote_index, remote_port] = v;
+              const auto& [kv, _, remote_index, __] = v;
               auto key_index = kv->key_index;
               auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
-              info("[Execute pending for RDMA] [{}:{}] key {} value {}", remote_index, remote_port, key_index, value);
+              info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
             });
           }
         });
@@ -560,8 +569,8 @@ int main(int argc, char *argv[])
             block_cache->get_db()->put(k, value);
           }
         }
-        
-        if (0)
+
+        if (1)
         {
           auto count = 0;
           for (const auto &k : keys)
@@ -569,12 +578,12 @@ int main(int argc, char *argv[])
             auto key_index = std::stoi(k);
             if (!(key_index >= start_keys && key_index < end_keys))
             {
-              if (machine_index - 1 != 0)
+              // if (machine_index - 1 != 0)
               {
                 info("Request read {}", k);
-                rdma_node.rdma_key_value_cache->read(0, 0, k);
+                rdma_node.rdma_key_value_cache->read(1, key_index);
               }
-              if (count < 1000)
+              if (count > 1000)
               {
                 break;
               }
