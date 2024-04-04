@@ -557,6 +557,8 @@ int main(int argc, char *argv[])
 
         bool finished_running_keys = false;
         auto& rdma_node = rdma_nodes[1];
+        auto count_expected = 0;
+        auto count_finished = 0;
         std::thread t([&](){
           while (!finished_running_keys)
           {
@@ -566,6 +568,7 @@ int main(int argc, char *argv[])
               auto key_index = kv->key_index;
               auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
               LOG_RDMA_DATA("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+              count_finished++;
             });
           }
         });
@@ -576,6 +579,7 @@ int main(int argc, char *argv[])
           if (key_index >= start_keys && key_index < end_keys)
           {
             block_cache->put(k, value);
+            count_expected++;
           }
           else
           {
@@ -607,6 +611,10 @@ int main(int argc, char *argv[])
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         finished_running_keys = true;
+        while (count_expected != count_finished)
+        {
+          std::this_thread::yield();
+        }
         t.join();
       }
       else
