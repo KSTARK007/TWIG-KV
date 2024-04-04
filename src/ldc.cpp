@@ -18,6 +18,9 @@ inline static std::string default_value;
 // Background log for total amount of logs executed
 std::atomic<uint64_t> total_ops_executed;
 
+// Background log for total amount of rdmas executed
+std::atomic<uint64_t> total_rdma_executed;
+
 #ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
 // Total clients ready/done for syncing clients with workloads
 std::atomic<uint64_t> total_clients_ready{};
@@ -363,6 +366,7 @@ void server_worker(
                   {
                     rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
+                      total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                       uint64_t key_index = kv.key_index;
                       auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
                       LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
@@ -695,6 +699,20 @@ int main(int argc, char *argv[])
 
   if (is_server)
   {
+    static std::thread background_monitoring_thread([&]()
+    {
+      uint64_t last_rdma_executed = 0;
+      while (!g_stop)
+      {
+        auto current_rdma_executed = total_rdma_executed.load(std::memory_order::relaxed);
+        auto diff_rdma_executed = current_rdma_executed - last_rdma_executed;
+        info("RDMA executed [{}] +[{}]", current_rdma_executed, diff_rdma_executed);
+        last_rdma_executed = current_rdma_executed;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+    });
+    background_monitoring_thread.detach();
+
     for (auto i = 0; i < FLAGS_threads; i++)
     {
       auto server = std::make_shared<Server>(config, ops_config, FLAGS_machine_index, i, block_cache);
