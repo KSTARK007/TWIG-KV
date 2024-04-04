@@ -538,7 +538,18 @@ int main(int argc, char *argv[])
 
         auto *qpf2 = new infinity::queues::QueuePairFactory(context2);
 
-        auto rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index - 1, context1, qpf1,
+        auto start_client_index = 0;
+        for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+        {
+          auto remote_machine_config = config.remote_machine_configs[i];
+          if (remote_machine_config.server)
+          {
+            break;
+          }
+          start_client_index++;
+        }
+
+        auto rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index - start_client_index, context1, qpf1,
           block_cache->get_rdma_key_value_storage(), block_cache);
         for (auto &[t, node] : rdma_nodes) {
           node.rdma_key_value_cache = rdma_key_value_cache;
