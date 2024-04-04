@@ -610,11 +610,11 @@ int main(int argc, char *argv[])
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        finished_running_keys = true;
         while (count_expected != count_finished)
         {
           std::this_thread::yield();
         }
+        finished_running_keys = true;
         t.join();
       }
       else
