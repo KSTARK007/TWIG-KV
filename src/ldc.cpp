@@ -416,6 +416,10 @@ void server_worker(
             info("RDMA setup response [reponse_type = {}]",
                  magic_enum::enum_name(p.getResponse()));
           }
+          else if (data.isSingletonPutRequest())
+          {
+            auto p = data.getSingletonPutRequest();
+          }          
         });
   }
 
