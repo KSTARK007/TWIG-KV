@@ -42,6 +42,13 @@ struct ClientSyncResponse {
   response @0 :ResponseType;
 }
 
+struct SingletonPutRequest {
+  key @0 :Text;
+  value @1 :Text;
+  singleton @2 :Bool;
+  forwardCount @3 : UInt64;
+}
+
 struct Packet {
   data :union {
     putRequest @0 :PutRequest;
@@ -52,6 +59,7 @@ struct Packet {
     rdmaSetupResponse @5: RdmaSetupResponse;
     clientSyncRequest @6: ClientSyncRequest;
     clientSyncResponse @7: ClientSyncResponse;
+    singletonPutRequest @8: SingletonPutRequest;
   }
 }
 

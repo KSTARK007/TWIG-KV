@@ -32,6 +32,7 @@ CAPNP_DECLARE_SCHEMA(eb67a0eae928bb61);
 CAPNP_DECLARE_SCHEMA(d8f2d86285d59919);
 CAPNP_DECLARE_SCHEMA(d92927b00c6d5396);
 CAPNP_DECLARE_SCHEMA(9736b56e253cba13);
+CAPNP_DECLARE_SCHEMA(d74e917dbcd881cb);
 CAPNP_DECLARE_SCHEMA(b36ecfe36db7d4ef);
 CAPNP_DECLARE_SCHEMA(a9a1635b25f07a7b);
 CAPNP_DECLARE_SCHEMA(9cc4c008dd1d858e);
@@ -162,6 +163,21 @@ struct ClientSyncResponse {
   };
 };
 
+struct SingletonPutRequest {
+  SingletonPutRequest() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d74e917dbcd881cb, 2, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct Packet {
   Packet() = delete;
 
@@ -193,6 +209,7 @@ struct Packet::Data {
     RDMA_SETUP_RESPONSE,
     CLIENT_SYNC_REQUEST,
     CLIENT_SYNC_RESPONSE,
+    SINGLETON_PUT_REQUEST,
   };
 
   struct _capnpPrivate {
@@ -873,6 +890,107 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class SingletonPutRequest::Reader {
+public:
+  typedef SingletonPutRequest Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasKey() const;
+  inline  ::capnp::Text::Reader getKey() const;
+
+  inline bool hasValue() const;
+  inline  ::capnp::Text::Reader getValue() const;
+
+  inline bool getSingleton() const;
+
+  inline  ::uint64_t getForwardCount() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class SingletonPutRequest::Builder {
+public:
+  typedef SingletonPutRequest Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasKey();
+  inline  ::capnp::Text::Builder getKey();
+  inline void setKey( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initKey(unsigned int size);
+  inline void adoptKey(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownKey();
+
+  inline bool hasValue();
+  inline  ::capnp::Text::Builder getValue();
+  inline void setValue( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initValue(unsigned int size);
+  inline void adoptValue(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownValue();
+
+  inline bool getSingleton();
+  inline void setSingleton(bool value);
+
+  inline  ::uint64_t getForwardCount();
+  inline void setForwardCount( ::uint64_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class SingletonPutRequest::Pipeline {
+public:
+  typedef SingletonPutRequest Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Packet::Reader {
 public:
   typedef Packet Reads;
@@ -1000,6 +1118,10 @@ public:
   inline bool hasClientSyncResponse() const;
   inline  ::ClientSyncResponse::Reader getClientSyncResponse() const;
 
+  inline bool isSingletonPutRequest() const;
+  inline bool hasSingletonPutRequest() const;
+  inline  ::SingletonPutRequest::Reader getSingletonPutRequest() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -1092,6 +1214,14 @@ public:
   inline  ::ClientSyncResponse::Builder initClientSyncResponse();
   inline void adoptClientSyncResponse(::capnp::Orphan< ::ClientSyncResponse>&& value);
   inline ::capnp::Orphan< ::ClientSyncResponse> disownClientSyncResponse();
+
+  inline bool isSingletonPutRequest();
+  inline bool hasSingletonPutRequest();
+  inline  ::SingletonPutRequest::Builder getSingletonPutRequest();
+  inline void setSingletonPutRequest( ::SingletonPutRequest::Reader value);
+  inline  ::SingletonPutRequest::Builder initSingletonPutRequest();
+  inline void adoptSingletonPutRequest(::capnp::Orphan< ::SingletonPutRequest>&& value);
+  inline ::capnp::Orphan< ::SingletonPutRequest> disownSingletonPutRequest();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -1462,6 +1592,102 @@ inline  ::ResponseType ClientSyncResponse::Builder::getResponse() {
 inline void ClientSyncResponse::Builder::setResponse( ::ResponseType value) {
   _builder.setDataField< ::ResponseType>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool SingletonPutRequest::Reader::hasKey() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool SingletonPutRequest::Builder::hasKey() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader SingletonPutRequest::Reader::getKey() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder SingletonPutRequest::Builder::getKey() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void SingletonPutRequest::Builder::setKey( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder SingletonPutRequest::Builder::initKey(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void SingletonPutRequest::Builder::adoptKey(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> SingletonPutRequest::Builder::disownKey() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool SingletonPutRequest::Reader::hasValue() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool SingletonPutRequest::Builder::hasValue() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader SingletonPutRequest::Reader::getValue() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder SingletonPutRequest::Builder::getValue() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void SingletonPutRequest::Builder::setValue( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder SingletonPutRequest::Builder::initValue(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void SingletonPutRequest::Builder::adoptValue(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> SingletonPutRequest::Builder::disownValue() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool SingletonPutRequest::Reader::getSingleton() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline bool SingletonPutRequest::Builder::getSingleton() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void SingletonPutRequest::Builder::setSingleton(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint64_t SingletonPutRequest::Reader::getForwardCount() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t SingletonPutRequest::Builder::getForwardCount() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void SingletonPutRequest::Builder::setForwardCount( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
 inline typename Packet::Data::Reader Packet::Reader::getData() const {
@@ -1918,6 +2144,60 @@ inline ::capnp::Orphan< ::ClientSyncResponse> Packet::Data::Builder::disownClien
   KJ_IREQUIRE((which() == Packet::Data::CLIENT_SYNC_RESPONSE),
               "Must check which() before get()ing a union member.");
   return ::capnp::_::PointerHelpers< ::ClientSyncResponse>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isSingletonPutRequest() const {
+  return which() == Packet::Data::SINGLETON_PUT_REQUEST;
+}
+inline bool Packet::Data::Builder::isSingletonPutRequest() {
+  return which() == Packet::Data::SINGLETON_PUT_REQUEST;
+}
+inline bool Packet::Data::Reader::hasSingletonPutRequest() const {
+  if (which() != Packet::Data::SINGLETON_PUT_REQUEST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasSingletonPutRequest() {
+  if (which() != Packet::Data::SINGLETON_PUT_REQUEST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::SingletonPutRequest::Reader Packet::Data::Reader::getSingletonPutRequest() const {
+  KJ_IREQUIRE((which() == Packet::Data::SINGLETON_PUT_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::SingletonPutRequest>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::SingletonPutRequest::Builder Packet::Data::Builder::getSingletonPutRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::SINGLETON_PUT_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::SingletonPutRequest>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setSingletonPutRequest( ::SingletonPutRequest::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::SINGLETON_PUT_REQUEST);
+  ::capnp::_::PointerHelpers< ::SingletonPutRequest>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::SingletonPutRequest::Builder Packet::Data::Builder::initSingletonPutRequest() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::SINGLETON_PUT_REQUEST);
+  return ::capnp::_::PointerHelpers< ::SingletonPutRequest>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptSingletonPutRequest(
+    ::capnp::Orphan< ::SingletonPutRequest>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::SINGLETON_PUT_REQUEST);
+  ::capnp::_::PointerHelpers< ::SingletonPutRequest>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::SingletonPutRequest> Packet::Data::Builder::disownSingletonPutRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::SINGLETON_PUT_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::SingletonPutRequest>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
