@@ -6,6 +6,13 @@
 #include "heap.h"
 #include "async_rdma.h"
 
+#define CACHE_INDEX_LOG_PORT 50100
+#define KEY_VALUE_STORAGE_PORT 50200
+#define CACHE_INDEXES_PORT 50300
+
+constexpr auto RDMA_CACHE_INDEX_KEY_VALUE_SIZE = 100;
+constexpr auto CacheIndexValueQueueSize = 50000;
+
 struct RDMABufferAndToken
 {
   infinity::memory::Buffer* buffer;
@@ -206,9 +213,6 @@ struct RDMACacheIndex2
   bool is_local = false;
 };
 
-constexpr auto RDMA_CACHE_INDEX_KEY_VALUE_SIZE = 100;
-constexpr auto RDMA_CACHE_INDEX_KEY_QUEUE_SIZE = 100;
-
 struct RDMACacheIndexKeyValue
 {
   uint64_t key_index;
@@ -236,10 +240,6 @@ struct MachineCacheIndexLog
   CacheIndexLogEntries cache_index_log_entries;
   CopyableAtomic<uint64_t> index;
 };
-
-#define CACHE_INDEX_LOG_PORT 50100
-#define KEY_VALUE_STORAGE_PORT 50200
-#define CACHE_INDEXES_PORT 50300
 
 struct CacheIndexLogs : public RDMAData
 {
@@ -302,8 +302,6 @@ struct CacheIndexLogs : public RDMAData
   std::vector<MachineCacheIndexLog> machine_cache_index_logs;
   MPMCQueue<std::shared_ptr<infinity::requests::RequestToken>> pending_write_queue;
 };
-
-constexpr auto CacheIndexValueQueueSize = 1000;
 
 struct KeyValueStorage : public RDMADataWithQueue<RDMACacheIndexKeyValue>
 {
