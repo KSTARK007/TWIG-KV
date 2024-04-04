@@ -611,9 +611,8 @@ int main(int argc, char *argv[])
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        while (count_expected != count_finished)
+        while (count_expected * (rdma_nodes.size() - 1) != count_finished)
         {
-          info("{} {}", count_expected, count_finished);
           std::this_thread::yield();
         }
         finished_running_keys = true;
