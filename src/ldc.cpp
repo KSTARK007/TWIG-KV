@@ -362,11 +362,11 @@ void server_worker(
                 LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
                 if (remote_machine_index_to_rdma != base_index)
                 {
+                  total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
                     rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
-                      total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                       uint64_t key_index = kv.key_index;
                       auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
                       LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
