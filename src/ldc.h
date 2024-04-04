@@ -481,12 +481,16 @@ struct RDMAKeyValueCache : public RDMAData
     }
   }
 
-  template<typename F>
-  void execute_pending(F&& f)
+  inline static void default_function()
   {
-    cache_index_logs->execute_pending([](){});
-    cache_indexes->execute_pending([](){});
-    key_value_storage->execute_pending(f);
+  }
+
+  template<typename F, typename FF>
+  void execute_pending(F&& on_key_value_storage_read, FF&& on_cache_index_write = default_function)
+  {
+    cache_index_logs->execute_pending(default_function);
+    cache_indexes->execute_pending(std::forward<FF>(on_cache_index_write));
+    key_value_storage->execute_pending(std::forward<F>(on_key_value_storage_read));
   }
 
 private:

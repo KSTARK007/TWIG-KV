@@ -256,7 +256,7 @@ void server_worker(
           //   // TODO: read from disk instead, we need to know expected key
           //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
           // }
-        });
+        }, [](){});
       }
     });
     rdma_key_value_cache_workers.emplace_back(std::move(t));
@@ -567,7 +567,8 @@ int main(int argc, char *argv[])
               const auto& [kv, _, remote_index, __] = v;
               auto key_index = kv->key_index;
               auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
-              LOG_RDMA_DATA("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+              info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+            }, [&](){
               count_finished++;
             });
           }
@@ -612,6 +613,7 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         while (count_expected != count_finished)
         {
+          info("{} {}", count_expected, count_finished);
           std::this_thread::yield();
         }
         finished_running_keys = true;
