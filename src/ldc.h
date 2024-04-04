@@ -12,6 +12,7 @@
 
 constexpr auto RDMA_CACHE_INDEX_KEY_VALUE_SIZE = 100;
 constexpr auto CacheIndexValueQueueSize = 50000;
+constexpr auto RDMA_SETUP_SYNC_SLEEP_MS = 1000;
 
 struct RDMABufferAndToken
 {
@@ -261,7 +262,7 @@ struct CacheIndexLogs : public RDMAData
         while(!start_accepting_connections)
         {
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(RDMA_SETUP_SYNC_SLEEP_MS));
         RDMAData::connect(CACHE_INDEX_LOG_PORT + i);
       });
       cache_index_log_entries_size = cache_index_log_entries.size() * sizeof(CacheIndexLogEntry);
@@ -319,7 +320,7 @@ struct KeyValueStorage : public RDMADataWithQueue<RDMACacheIndexKeyValue>
       while(!start_accepting_connections)
       {
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      std::this_thread::sleep_for(std::chrono::milliseconds(RDMA_SETUP_SYNC_SLEEP_MS));
       connect(KEY_VALUE_STORAGE_PORT);
     });
     listen(KEY_VALUE_STORAGE_PORT, key_value_buffer, key_value_buffer_size);
@@ -372,7 +373,7 @@ struct CacheIndexes : public RDMAData
         while(!start_accepting_connections)
         {
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(RDMA_SETUP_SYNC_SLEEP_MS));
         RDMAData::connect(CACHE_INDEXES_PORT + i);
       });
       auto size = rdma_kv_storage->get_allocated_cache_index_size();
