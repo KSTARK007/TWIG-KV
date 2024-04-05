@@ -49,6 +49,10 @@ struct SingletonPutRequest {
   forwardCount @3 : UInt64;
 }
 
+struct DeleteRequest {
+  key @0 :Text;
+}
+
 struct Packet {
   data :union {
     putRequest @0 :PutRequest;
@@ -60,6 +64,7 @@ struct Packet {
     clientSyncRequest @6: ClientSyncRequest;
     clientSyncResponse @7: ClientSyncResponse;
     singletonPutRequest @8: SingletonPutRequest;
+    deleteRequest @9: DeleteRequest;
   }
 }
 

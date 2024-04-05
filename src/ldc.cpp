@@ -392,7 +392,11 @@ void server_worker(
           else if (data.isSingletonPutRequest())
           {
             auto p = data.getSingletonPutRequest();
-          }          
+          }
+          else if (data.isDeleteRequest())
+          {
+            auto p = data.getDeleteRequest();
+          }
         });
   }
 }

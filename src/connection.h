@@ -188,6 +188,7 @@ struct Server : public Connection
   void rdma_setup_response(int index, ResponseType response_type);
   void singleton_put_request(int index, int port, std::string_view key,
                              std::string_view value, bool singleton, uint64_t forward_count);
+  void delete_request(int index, int port, std::string_view key);
 
   void execute_pending_operations() override;
   void append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
