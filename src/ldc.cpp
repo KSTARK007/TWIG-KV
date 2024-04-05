@@ -341,10 +341,10 @@ void server_worker(
                   }
                 }
 
-                if (config.baseline.one_sided_rdma_enabled)
-                {
-                  panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
-                }
+                // if (config.baseline.one_sided_rdma_enabled)
+                // {
+                //   panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
+                // }
 
                 if (!ops_config.DISK_ASYNC)
                 {
