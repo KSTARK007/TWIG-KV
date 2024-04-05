@@ -335,7 +335,7 @@ void server_worker(
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
-                    auto& rdma_node = rdma_nodes[1];
+                    auto& rdma_node = std::begin(rdma_nodes)->second;
                     found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
         }
 
         bool finished_running_keys = false;
-        auto& rdma_node = rdma_nodes[1];
+        auto& rdma_node = std::begin(rdma_nodes)->second;
         auto count_expected = 0;
         auto count_finished = 0;
         std::thread t([&](){
@@ -761,7 +761,7 @@ int main(int argc, char *argv[])
   std::vector<std::thread> rdma_key_value_cache_workers;
   if (is_server)
   {
-    auto& rdma_node = rdma_nodes[1];
+    auto& rdma_node = std::begin(rdma_nodes)->second;
     if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
     {
       for (auto i = 0; i < 4; i++)
