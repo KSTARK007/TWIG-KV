@@ -375,10 +375,14 @@ void server_worker(
                       {
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                         if(config.policy_type == "nchance"){
-                          auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
-                          auto tmp_data = static_cast<CacheLayerData<std::string, std::string>*>(tmp_ptr);
                           int remote_index_to_forward = (remote_index + 1) % 3;
-                          server.singleton_put_request(remote_index_to_forward, remote_port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                          auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
+                          
+                          if (!tmp_ptr){
+                            info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, remote_index, key_index, value);
+                            auto tmp_data = static_cast<CacheLayerData<std::string, std::string>*>(tmp_ptr);
+                            server.singleton_put_request(remote_index_to_forward, remote_port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                          }
                         }
                         server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
                       }
