@@ -542,6 +542,8 @@ int main(int argc, char *argv[])
       {
         printRDMAConnect(t.second);
       }
+      info("print RDMA Connect completed"); 
+
 
       if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
       {
