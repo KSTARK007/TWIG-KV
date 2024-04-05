@@ -378,7 +378,7 @@ void server_worker(
                           int remote_index_to_forward = (base_index + 1) % 3;
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
-                          if (!tmp_ptr){
+                          if (tmp_ptr != nullptr){
                             info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
                             info("Singleton put request key = {} value = {} singleton = {} forward_count = {}",
