@@ -381,6 +381,8 @@ void server_worker(
                           if (!tmp_ptr){
                             info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                             auto tmp_data = static_cast<CacheLayerData<std::string, std::string>*>(tmp_ptr);
+                            info("Singleton put request key = {} value = {} singleton = {} forward_count = {}",
+                                tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                             server.singleton_put_request(remote_index_to_forward, remote_port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
                         }

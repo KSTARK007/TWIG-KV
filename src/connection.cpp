@@ -419,18 +419,28 @@ void Server::singleton_put_request(int index, int port, std::string_view key,
                                    std::string_view value, bool singleton, uint64_t forward_count)
 {
   ::capnp::MallocMessageBuilder message;
+  info("building packets");
   Packets::Builder packets = message.initRoot<Packets>();
+  info("building packets list");
   ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
+  info("building data");
   Packet::Data::Builder data = packet[0].initData();
+  info("building singleton put request");
   SingletonPutRequest::Builder request = data.initSingletonPutRequest();
+  info("adding key to request");
   request.setKey(std::string(key));
+  info("adding value to request");
   request.setValue(std::string(value));
+  info("adding singleton to request");
   request.setSingleton(singleton);
+  info("adding forward_count to request");
   request.setForwardCount(forward_count);
+  info("messageToFlatArray");
   auto m = capnp::messageToFlatArray(message);
+  info("converting to chars");
   auto p = m.asChars();
 
-  LOG_STATE("[{}-{}] Singleton Put Request [{}]", machine_index, index,
+  info("[{}-{}] Singleton Put Request [{}]", machine_index, index,
             kj::str(message.getRoot<Packets>()).cStr());
 
   send(index, port, std::string_view(p.begin(), p.end())); 
