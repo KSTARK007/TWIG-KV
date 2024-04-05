@@ -666,3 +666,12 @@ inline void printBlockCacheConfig(const BlockCacheConfig &config)
   }
   std::cout << "}" << std::endl;
 }
+template<typename KeyType, typename ValueType>
+struct CacheLayerData
+{
+    KeyType key;
+    ValueType value;
+    bool singleton;
+    uint64_t forward_count;
+    int replica_count;
+};
