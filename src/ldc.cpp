@@ -365,7 +365,7 @@ void server_worker(
                   total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
-                    rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
+                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       uint64_t key_index = kv.key_index;
                       auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
@@ -385,9 +385,9 @@ void server_worker(
                   else
                   {
                     read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
+                    found_in_rdma = true;
                   }
 
-                  found_in_rdma = true;
                   if (!ops_config.RDMA_ASYNC)
                   {
                     auto buffer = std::string_view(static_cast<char *>(read_buffer), ops_config.VALUE_SIZE);

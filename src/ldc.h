@@ -485,7 +485,7 @@ struct RDMAKeyValueCache : public RDMAData
     key_value_storage->read(rdma_index, {}, ci);
   }
 
-  void read_callback(uint64_t key_index, DataWithRequestCallback<RDMACacheIndexKeyValue> callback)
+  bool read_callback(uint64_t key_index, DataWithRequestCallback<RDMACacheIndexKeyValue> callback)
   {
     bool found_remote_machine_with_possible_value = false;
     for (auto i = 0; i < server_configs.size(); i++)
@@ -506,10 +506,7 @@ struct RDMAKeyValueCache : public RDMAData
         break;
       }
     }
-    if (!found_remote_machine_with_possible_value)
-    {
-      panic("Could not find remote machine with key {}", key_index);
-    }
+    return found_remote_machine_with_possible_value;
   }
 
   inline static void default_function()
