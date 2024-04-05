@@ -359,7 +359,7 @@ void server_worker(
                   panic("Supports only ingest_block_index being enabled!");
                 }
 
-                LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
+                info("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
                 if (remote_machine_index_to_rdma != base_index)
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
