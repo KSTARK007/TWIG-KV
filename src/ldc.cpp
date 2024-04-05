@@ -341,10 +341,10 @@ void server_worker(
                   }
                 }
 
-                if (config.baseline.one_sided_rdma_enabled)
-                {
-                  panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
-                }
+                // if (config.baseline.one_sided_rdma_enabled)
+                // {
+                //   panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
+                // }
 
                 if (!ops_config.DISK_ASYNC)
                 {
@@ -364,7 +364,7 @@ void server_worker(
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
-                    rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
+                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                       uint64_t key_index = kv.key_index;
@@ -396,9 +396,9 @@ void server_worker(
                   else
                   {
                     read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
+                    found_in_rdma = true;
                   }
 
-                  found_in_rdma = true;
                   if (!ops_config.RDMA_ASYNC)
                   {
                     auto buffer = std::string_view(static_cast<char *>(read_buffer), ops_config.VALUE_SIZE);
@@ -429,8 +429,15 @@ void server_worker(
           }
           else if (data.isSingletonPutRequest())
           {
+            info("Singleton put request");
             auto p = data.getSingletonPutRequest();
+            std::string keyStr = p.getKey().cStr();  // Convert capnp::Text::Reader to std::string
+            std::string valueStr = p.getValue().cStr();
+            info("Singleton put request key = {} value = {} singleton = {} forward_count = {}",
+                 keyStr, valueStr, p.getSingleton(), p.getForwardCount());
             block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
+            info("Singleton put request done ");
+            // server.singleton_put_response(remote_index, ResponseType::OK);
           }          
         });
   }
