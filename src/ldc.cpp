@@ -377,7 +377,7 @@ void server_worker(
                         if(config.policy_type == "nchance"){
                           int remote_index_to_forward = (remote_index + 1) % 3;
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
-                          
+
                           if (!tmp_ptr){
                             info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, remote_index, key_index, value);
                             auto tmp_data = static_cast<CacheLayerData<std::string, std::string>*>(tmp_ptr);
@@ -496,7 +496,7 @@ int main(int argc, char *argv[])
     auto start_keys = server_index * (static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / ops_config.NUM_NODES);
     auto end_keys = (server_index + 1) * (static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / ops_config.NUM_NODES);
 
-    LOG_STATE("[{}] Loading database for server index {} starting at key {} and ending at {}", machine_index, server_index, start_keys, end_keys);
+    info("[{}] Loading database for server index {} starting at key {} and ending at {}", machine_index, server_index, start_keys, end_keys);
     std::vector<std::string> keys = readKeysFromFile(ops_config.DATASET_FILE);
     if (keys.empty())
     {
@@ -545,6 +545,7 @@ int main(int argc, char *argv[])
 
       if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
       {
+        info("if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)");
         auto device_name = find_nic_containing(ops_config.infinity_bound_nic);
         auto *context1 = new infinity::core::Context(*device_name, ops_config.infinity_bound_device_port);
         infinity::memory::Buffer *buffer_to_receive1 = new infinity::memory::Buffer(context1, 4096 * sizeof(char));
@@ -594,6 +595,7 @@ int main(int argc, char *argv[])
           }
         });
 
+        info("adding keys to the blockcache");
         for (const auto &k : keys)
         {
           auto key_index = std::stoi(k);
@@ -640,6 +642,7 @@ int main(int argc, char *argv[])
       }
       else
       {
+        info("adding keys to the blockcache in the else part");
         for (const auto &k : keys)
         {
           auto key_index = std::stoi(k);
