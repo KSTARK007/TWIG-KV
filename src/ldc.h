@@ -441,10 +441,10 @@ struct RDMAKeyValueCache : public RDMAData
       LOG_RDMA_DATA("[RDMAKeyValueCache] Writing callback on cache index {} {}", key, value);
       cache_indexes->write_remote(key, value);
     });
-    cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
+    // cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
       // LOG_RDMA_DATA("[RDMAKeyValueCache] Eviction callback on cache index {} {}", key, value);
       // cache_indexes->write_remote(key, value);
-    });
+    // });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
 
