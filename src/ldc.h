@@ -178,6 +178,7 @@ struct RDMADataWithQueue : public RDMAData
     {
       auto data = std::make_shared<T>();
       DataWithRequestToken data_with_token{std::move(data), nullptr};
+      get_buffer(data_with_token.data.get(), sizeof(T));
       free_queue.enqueue(data_with_token);
     }
   }
