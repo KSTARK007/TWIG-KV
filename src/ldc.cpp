@@ -754,27 +754,6 @@ int main(int argc, char *argv[])
     info("Setup client done {} {}", client_futures.size(), clients.size());
   }
 
-  for (auto i = 0; i < FLAGS_threads; i++)
-  {
-    info("Running {} thread {}", i, i);
-    if (is_server)
-    {
-      auto server = servers[i];
-      std::thread t(server_worker, server, config, ops_config, machine_index, i,
-                    block_cache, rdma_nodes);
-      worker_threads.emplace_back(std::move(t));
-    }
-    else
-    {
-      for (auto j = 0; j < FLAGS_clients_per_threads; j++)
-      {
-        auto client = clients[i * FLAGS_clients_per_threads + j];
-        std::thread t(client_worker, client, config, ops_config, FLAGS_machine_index, i, ops, j);
-        worker_threads.emplace_back(std::move(t));
-      }
-    }
-  }
-
   std::vector<std::thread> rdma_key_value_cache_workers;
   auto& rdma_node = rdma_nodes[1];
   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
@@ -804,6 +783,27 @@ int main(int argc, char *argv[])
         }
       });
       rdma_key_value_cache_workers.emplace_back(std::move(t));
+    }
+  }
+
+  for (auto i = 0; i < FLAGS_threads; i++)
+  {
+    info("Running {} thread {}", i, i);
+    if (is_server)
+    {
+      auto server = servers[i];
+      std::thread t(server_worker, server, config, ops_config, machine_index, i,
+                    block_cache, rdma_nodes);
+      worker_threads.emplace_back(std::move(t));
+    }
+    else
+    {
+      for (auto j = 0; j < FLAGS_clients_per_threads; j++)
+      {
+        auto client = clients[i * FLAGS_clients_per_threads + j];
+        std::thread t(client_worker, client, config, ops_config, FLAGS_machine_index, i, ops, j);
+        worker_threads.emplace_back(std::move(t));
+      }
     }
   }
 
