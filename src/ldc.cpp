@@ -760,7 +760,7 @@ int main(int argc, char *argv[])
     auto& rdma_node = rdma_nodes[1];
     if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
     {
-      for (auto i = 0; i < 1; i++)
+      for (auto i = 0; i < 4; i++)
       {
         std::thread t([&](){
           while (!g_stop)
