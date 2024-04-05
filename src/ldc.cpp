@@ -368,11 +368,14 @@ void server_worker(
                     {
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                       uint64_t key_index = kv.key_index;
-                      auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
+                      auto value_view = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
+                      std::string value(value_view);
                       LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
                       if (key_index == expected_key)
                       {
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
+                        block_cache->get_cache()->put(std::to_string(key_index), value);
+                        //singleton_put_request(int index, int port, std::string_view key,std::string_view value, bool singleton, uint64_t forward_count);
                         server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
                       }
                       else
@@ -419,6 +422,7 @@ void server_worker(
           else if (data.isSingletonPutRequest())
           {
             auto p = data.getSingletonPutRequest();
+            block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
           }          
         });
   }
