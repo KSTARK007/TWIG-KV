@@ -386,6 +386,8 @@ void server_worker(
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                         if(config.policy_type == "nchance"){
                           int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
+                          info("remote_index_to_forward {} base_index {} server_start_index {}", 
+                          remote_index_to_forward, base_index, server_start_index);
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
                           if (tmp_ptr != nullptr){
