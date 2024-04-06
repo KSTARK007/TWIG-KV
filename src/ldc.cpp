@@ -224,6 +224,7 @@ void server_worker(
   auto &server = *server_;
 
   void *read_buffer = malloc(BLKSZ);
+  int num_servers = 0;
 
   int server_start_index;
   for (auto i = 0; i < config.remote_machine_configs.size(); i++)
@@ -233,6 +234,15 @@ void server_worker(
     {
       server_start_index = config.remote_machine_configs[i].index;
       break;
+    }
+  }
+
+  for (auto j = 0; j < config.remote_machine_configs.size(); j++)
+  {
+    // std::cout <<"i " << i << " config.remote_machine_configs[i].index " << config.remote_machine_configs[i].index << std::endl;
+    if (config.remote_machine_configs[j].server)
+    {
+      num_servers++;
     }
   }
 
@@ -296,7 +306,7 @@ void server_worker(
               bool found_in_rdma = false;
 
               auto key_index = std::stoi(key);
-              auto division_of_key_value_pairs = static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / 3.0;
+              auto division_of_key_value_pairs = static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / num_servers;
               auto remote_machine_index_to_rdma = static_cast<int>(
                   static_cast<float>(key_index) / division_of_key_value_pairs);
 
@@ -375,7 +385,7 @@ void server_worker(
                       {
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                         if(config.policy_type == "nchance"){
-                          int remote_index_to_forward = (base_index + 1) % 3;
+                          int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
                           if (tmp_ptr != nullptr){
