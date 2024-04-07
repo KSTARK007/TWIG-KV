@@ -369,7 +369,7 @@ void server_worker(
                   panic("Supports only ingest_block_index being enabled!");
                 }
 
-                info("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
+                // info("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
                 if (remote_machine_index_to_rdma != base_index)
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
@@ -391,10 +391,10 @@ void server_worker(
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
                           if (tmp_ptr != nullptr){
-                            info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
+                            // info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
-                            info("Singleton put request key = {} value = {} singleton = {} forward_count = {}",
-                                tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                            info("Singleton put request key = {} singleton = {} forward_count = {}",
+                                tmp_data->key, tmp_data->singleton, tmp_data->forward_count);
                             server.singleton_put_request(remote_index_to_forward, remote_port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
                         }
@@ -443,14 +443,14 @@ void server_worker(
           }
           else if (data.isSingletonPutRequest())
           {
-            info("Singleton put request");
+            info("[Server] Singleton put request");
             auto p = data.getSingletonPutRequest();
             std::string keyStr = p.getKey().cStr();  // Convert capnp::Text::Reader to std::string
             std::string valueStr = p.getValue().cStr();
-            info("Singleton put request key = {} value = {} singleton = {} forward_count = {}",
+            info("[Server] Singleton put request key = {} value = {} singleton = {} forward_count = {}",
                  keyStr, valueStr, p.getSingleton(), p.getForwardCount());
             block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
-            info("Singleton put request done ");
+            info("[Server] Singleton put request done");
             // server.singleton_put_response(remote_index, ResponseType::OK);
           }          
         });
