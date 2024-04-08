@@ -320,6 +320,13 @@ Server::Server(BlockCacheConfig config, Configuration ops_config, int machine_in
     : Connection(config, ops_config, machine_index, thread_index), block_cache(block_cache_)
 {
   listen();
+  for (auto i = 0; i < config.remote_machine_configs.size(); i++)
+  {
+    if (i != machine_index && config.remote_machine_configs[i].server)
+    {
+      connect_to_remote_machine(i);
+    }
+  }
 }
 
 void Server::put_response(int index, int port, ResponseType response_type)

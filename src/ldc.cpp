@@ -342,6 +342,7 @@ void server_worker(
                       uint64_t key_index = kv.key_index;
                       auto value = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
                       LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
+                      // server.singleton_put_request(2, 8000, key, value, false, 0);
                       if (key_index == expected_key)
                       {
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
@@ -392,6 +393,8 @@ void server_worker(
           else if (data.isSingletonPutRequest())
           {
             auto p = data.getSingletonPutRequest();
+            LOG_STATE("[{}-{}:{}] Put response [{}]", machine_index, remote_index, remote_port,
+              kj::str(data).cStr());
           }
           else if (data.isDeleteRequest())
           {
