@@ -355,7 +355,14 @@ void executeOperations(
     // Timer latency_timer;
     std::string v;
     auto index = Node;
-    v = client.get(index + client_start_index, 0, key);
+    if (op == READ_OP)
+    {
+      v = client.get(index + client_start_index, 0, key);
+    }
+    else if (op == INSERT_OP || op == UPDATE_OP)
+    {
+      client.put(index + client_start_index, 0, key, value);
+    }
     // static const auto& baseline = config.baseline.selected;
     // if (baseline == "random")
     // {
