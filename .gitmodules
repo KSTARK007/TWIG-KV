@@ -11,3 +11,4 @@
 [submodule "third_party/YCSB"]
 	path = third_party/YCSB
 	url = https://github.com/dassl-uiuc/ycsb-tracegen
+	branch = sequential-keys
