@@ -375,7 +375,7 @@ void server_worker(
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
                     auto& rdma_node = std::begin(rdma_nodes)->second;
-                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
+                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, &fetch_from_disk, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       auto& server = *server_;
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
