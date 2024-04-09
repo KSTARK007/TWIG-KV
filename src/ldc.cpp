@@ -398,6 +398,9 @@ void server_worker(
                             server.singleton_put_request(remote_index_to_forward, 50100, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
                         }
+                        if(config.policy_type == "access_rate"){
+                          block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value);
+                        }
                         server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
                       }
                       else
