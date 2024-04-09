@@ -453,6 +453,23 @@ void Server::singleton_put_request(int index, int port, std::string_view key,
   send(index, port, std::string_view(p.begin(), p.end())); 
 }
 
+void Server::delete_request(int index, int port, std::string_view key)
+{
+  ::capnp::MallocMessageBuilder message;
+  Packets::Builder packets = message.initRoot<Packets>();
+  ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
+  Packet::Data::Builder data = packet[0].initData();
+  DeleteRequest::Builder request = data.initDeleteRequest();
+  request.setKey(std::string(key));
+  auto m = capnp::messageToFlatArray(message);
+  auto p = m.asChars();
+
+  LOG_STATE("[{}-{}] Delete Request [{}]", machine_index, index,
+            kj::str(message.getRoot<Packets>()).cStr());
+
+  send(index, port, std::string_view(p.begin(), p.end())); 
+}
+
 void Server::execute_pending_operations()
 {
   Connection::execute_pending_operations();

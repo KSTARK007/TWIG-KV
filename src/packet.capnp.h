@@ -33,6 +33,7 @@ CAPNP_DECLARE_SCHEMA(d8f2d86285d59919);
 CAPNP_DECLARE_SCHEMA(d92927b00c6d5396);
 CAPNP_DECLARE_SCHEMA(9736b56e253cba13);
 CAPNP_DECLARE_SCHEMA(d74e917dbcd881cb);
+CAPNP_DECLARE_SCHEMA(f90a05fd026809ad);
 CAPNP_DECLARE_SCHEMA(b36ecfe36db7d4ef);
 CAPNP_DECLARE_SCHEMA(a9a1635b25f07a7b);
 CAPNP_DECLARE_SCHEMA(9cc4c008dd1d858e);
@@ -178,6 +179,21 @@ struct SingletonPutRequest {
   };
 };
 
+struct DeleteRequest {
+  DeleteRequest() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(f90a05fd026809ad, 0, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct Packet {
   Packet() = delete;
 
@@ -210,6 +226,7 @@ struct Packet::Data {
     CLIENT_SYNC_REQUEST,
     CLIENT_SYNC_RESPONSE,
     SINGLETON_PUT_REQUEST,
+    DELETE_REQUEST,
   };
 
   struct _capnpPrivate {
@@ -991,6 +1008,87 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class DeleteRequest::Reader {
+public:
+  typedef DeleteRequest Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasKey() const;
+  inline  ::capnp::Text::Reader getKey() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class DeleteRequest::Builder {
+public:
+  typedef DeleteRequest Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasKey();
+  inline  ::capnp::Text::Builder getKey();
+  inline void setKey( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initKey(unsigned int size);
+  inline void adoptKey(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownKey();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class DeleteRequest::Pipeline {
+public:
+  typedef DeleteRequest Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Packet::Reader {
 public:
   typedef Packet Reads;
@@ -1122,6 +1220,10 @@ public:
   inline bool hasSingletonPutRequest() const;
   inline  ::SingletonPutRequest::Reader getSingletonPutRequest() const;
 
+  inline bool isDeleteRequest() const;
+  inline bool hasDeleteRequest() const;
+  inline  ::DeleteRequest::Reader getDeleteRequest() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -1222,6 +1324,14 @@ public:
   inline  ::SingletonPutRequest::Builder initSingletonPutRequest();
   inline void adoptSingletonPutRequest(::capnp::Orphan< ::SingletonPutRequest>&& value);
   inline ::capnp::Orphan< ::SingletonPutRequest> disownSingletonPutRequest();
+
+  inline bool isDeleteRequest();
+  inline bool hasDeleteRequest();
+  inline  ::DeleteRequest::Builder getDeleteRequest();
+  inline void setDeleteRequest( ::DeleteRequest::Reader value);
+  inline  ::DeleteRequest::Builder initDeleteRequest();
+  inline void adoptDeleteRequest(::capnp::Orphan< ::DeleteRequest>&& value);
+  inline ::capnp::Orphan< ::DeleteRequest> disownDeleteRequest();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -1688,6 +1798,40 @@ inline  ::uint64_t SingletonPutRequest::Builder::getForwardCount() {
 inline void SingletonPutRequest::Builder::setForwardCount( ::uint64_t value) {
   _builder.setDataField< ::uint64_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool DeleteRequest::Reader::hasKey() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool DeleteRequest::Builder::hasKey() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader DeleteRequest::Reader::getKey() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder DeleteRequest::Builder::getKey() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void DeleteRequest::Builder::setKey( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder DeleteRequest::Builder::initKey(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void DeleteRequest::Builder::adoptKey(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> DeleteRequest::Builder::disownKey() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
 inline typename Packet::Data::Reader Packet::Reader::getData() const {
@@ -2198,6 +2342,60 @@ inline ::capnp::Orphan< ::SingletonPutRequest> Packet::Data::Builder::disownSing
   KJ_IREQUIRE((which() == Packet::Data::SINGLETON_PUT_REQUEST),
               "Must check which() before get()ing a union member.");
   return ::capnp::_::PointerHelpers< ::SingletonPutRequest>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Packet::Data::Reader::isDeleteRequest() const {
+  return which() == Packet::Data::DELETE_REQUEST;
+}
+inline bool Packet::Data::Builder::isDeleteRequest() {
+  return which() == Packet::Data::DELETE_REQUEST;
+}
+inline bool Packet::Data::Reader::hasDeleteRequest() const {
+  if (which() != Packet::Data::DELETE_REQUEST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Packet::Data::Builder::hasDeleteRequest() {
+  if (which() != Packet::Data::DELETE_REQUEST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::DeleteRequest::Reader Packet::Data::Reader::getDeleteRequest() const {
+  KJ_IREQUIRE((which() == Packet::Data::DELETE_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::DeleteRequest>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::DeleteRequest::Builder Packet::Data::Builder::getDeleteRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::DELETE_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::DeleteRequest>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::setDeleteRequest( ::DeleteRequest::Reader value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::DELETE_REQUEST);
+  ::capnp::_::PointerHelpers< ::DeleteRequest>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::DeleteRequest::Builder Packet::Data::Builder::initDeleteRequest() {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::DELETE_REQUEST);
+  return ::capnp::_::PointerHelpers< ::DeleteRequest>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Packet::Data::Builder::adoptDeleteRequest(
+    ::capnp::Orphan< ::DeleteRequest>&& value) {
+  _builder.setDataField<Packet::Data::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Packet::Data::DELETE_REQUEST);
+  ::capnp::_::PointerHelpers< ::DeleteRequest>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::DeleteRequest> Packet::Data::Builder::disownDeleteRequest() {
+  KJ_IREQUIRE((which() == Packet::Data::DELETE_REQUEST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::DeleteRequest>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

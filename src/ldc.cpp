@@ -374,6 +374,7 @@ void server_worker(
                 {
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
+                    auto& rdma_node = std::begin(rdma_nodes)->second;
                     found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
@@ -381,6 +382,7 @@ void server_worker(
                       auto value_view = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
                       std::string value(value_view);
                       LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
+                      // server.singleton_put_request(2, 8000, key, value, false, 0);
                       if (key_index == expected_key)
                       {
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
@@ -415,6 +417,7 @@ void server_worker(
                   }
                   else
                   {
+                    total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
                     read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
                     found_in_rdma = true;
                   }
@@ -449,6 +452,8 @@ void server_worker(
           }
           else if (data.isSingletonPutRequest())
           {
+            LOG_STATE("[{}-{}:{}] Put response [{}]", machine_index, remote_index, remote_port,
+              kj::str(data).cStr());
             info("[Server] Singleton put request");
             auto p = data.getSingletonPutRequest();
             std::string keyStr = p.getKey().cStr();  // Convert capnp::Text::Reader to std::string
@@ -458,13 +463,12 @@ void server_worker(
             block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
             info("[Server] Singleton put request done");
             // server.singleton_put_response(remote_index, ResponseType::OK);
-          }          
+          }
+          else if (data.isDeleteRequest())
+          {
+            auto p = data.getDeleteRequest();
+          }
         });
-  }
-
-  for (auto& t : rdma_key_value_cache_workers)
-  {
-    t.join();
   }
 }
 
@@ -606,7 +610,7 @@ int main(int argc, char *argv[])
         }
 
         bool finished_running_keys = false;
-        auto& rdma_node = rdma_nodes[1];
+        auto& rdma_node = std::begin(rdma_nodes)->second;
         auto count_expected = 0;
         auto count_finished = 0;
         std::thread t([&](){
@@ -830,6 +834,41 @@ int main(int argc, char *argv[])
     info("Setup client done {} {}", client_futures.size(), clients.size());
   }
 
+  std::vector<std::thread> rdma_key_value_cache_workers;
+  if (is_server)
+  {
+    auto& rdma_node = std::begin(rdma_nodes)->second;
+    if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
+    {
+      for (auto i = 0; i < 4; i++)
+      {
+        std::thread t([&](){
+          while (!g_stop)
+          {
+            rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
+            {
+              // const auto& [kv, _, remote_index, remote_port] = v;
+              // auto key_index = kv->key_index;
+              // auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
+              // info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+              // auto expected_key = 0;
+              // if (key_index == expected_key)
+              // {
+              //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+              // }
+              // else
+              // {
+              //   // TODO: read from disk instead, we need to know expected key
+              //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+              // }
+            }, [](){});
+          }
+        });
+        rdma_key_value_cache_workers.emplace_back(std::move(t));
+      }
+    }
+  }
+
   for (auto i = 0; i < FLAGS_threads; i++)
   {
     info("Running {} thread {}", i, i);
@@ -857,6 +896,11 @@ int main(int argc, char *argv[])
   }
 
   for (auto &t : pollingThread)
+  {
+    t.join();
+  }
+
+  for (auto& t : rdma_key_value_cache_workers)
   {
     t.join();
   }

@@ -11,6 +11,7 @@
 #define CACHE_INDEXES_PORT 50300
 
 constexpr auto RDMA_CACHE_INDEX_KEY_VALUE_SIZE = 100;
+constexpr auto FreeRequestTokenQueueSize = 50000;
 constexpr auto CacheIndexValueQueueSize = 50000;
 constexpr auto RDMA_SETUP_SYNC_SLEEP_MS = 1000;
 
@@ -41,6 +42,12 @@ struct RDMAData
         my_server_config = server_configs[i];
         break;
       }
+    }
+
+    for (auto i = 0; i < FreeRequestTokenQueueSize; i++)
+    {
+      auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
+      free_request_token_queue.enqueue(request_token);
     }
   }
 
@@ -81,6 +88,22 @@ struct RDMAData
     is_server = false;
   }
 
+  std::shared_ptr<infinity::requests::RequestToken> get_request_token()
+  {
+    std::shared_ptr<infinity::requests::RequestToken> request_token;
+    while (!free_request_token_queue.try_dequeue(request_token))
+    {
+      panic("Free request token queue out of tokens!");
+    }
+    request_token->reset();
+    return request_token;
+  }
+
+  void free_request_token(std::shared_ptr<infinity::requests::RequestToken> request_token)
+  {
+    free_request_token_queue.enqueue(request_token);
+  }
+
   std::shared_ptr<infinity::requests::RequestToken> read(int remote_index, void* buffer, uint64_t buffer_size, uint64_t local_offset, uint64_t remote_offset, uint64_t size_in_bytes)
   {
     auto& [read_write_buffer, _] = get_buffer(buffer, buffer_size);
@@ -89,7 +112,7 @@ struct RDMAData
     LOG_RDMA_DATA("[RDMAData] Read from remote machine [{}/{}] Local {} Remote {} Size {}", remote_index, qps.size(), local_offset, remote_offset, size_in_bytes);
     auto qp = qps[remote_index];
     auto region_token = (infinity::memory::RegionToken *)qp->getUserData();
-    auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
+    std::shared_ptr<infinity::requests::RequestToken> request_token = get_request_token();
     qp->read(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
     return request_token;
   }
@@ -102,7 +125,7 @@ struct RDMAData
     LOG_RDMA_DATA("[RDMAData] Writing to remote machine [{}/{}] Local {} Remote {} Size {}", remote_index, qps.size(), local_offset, remote_offset, size_in_bytes);
     auto qp = qps[remote_index];
     auto region_token = (infinity::memory::RegionToken *)qp->getUserData();
-    auto request_token = std::make_shared<infinity::requests::RequestToken>(context);
+    std::shared_ptr<infinity::requests::RequestToken> request_token = get_request_token();
     qp->write(read_write_buffer, local_offset, region_token, remote_offset, size_in_bytes, infinity::queues::OperationFlags(), request_token.get());
     return request_token;
   }
@@ -139,6 +162,7 @@ struct RDMAData
   std::vector<infinity::queues::QueuePair*> qps;
   bool is_server;
   bool start_accepting_connections = false;
+  MPMCQueue<std::shared_ptr<infinity::requests::RequestToken>> free_request_token_queue;
 };
 
 template<typename T>
@@ -154,6 +178,7 @@ struct RDMADataWithQueue : public RDMAData
     {
       auto data = std::make_shared<T>();
       DataWithRequestToken data_with_token{std::move(data), nullptr};
+      get_buffer(data_with_token.data.get(), sizeof(T));
       free_queue.enqueue(data_with_token);
     }
   }
@@ -190,6 +215,7 @@ struct RDMADataWithQueue : public RDMAData
       {
         data_with_request_token.callback(*data_with_request_token.data);
       }
+      free_request_token(std::move(data_with_request_token.token));
       free_queue.enqueue(std::move(data_with_request_token));
     }
   }
@@ -295,6 +321,7 @@ struct CacheIndexLogs : public RDMAData
     {
       token->waitUntilCompleted();
       f();
+      free_request_token(std::move(token));
     }
   }
 
@@ -413,6 +440,7 @@ struct CacheIndexes : public RDMAData
     {
       token->waitUntilCompleted();
       f();
+      free_request_token(std::move(token));
     }
   }
 
@@ -478,10 +506,6 @@ struct RDMAKeyValueCache : public RDMAData
         found_remote_machine_with_possible_value = true;
         break;
       }
-    }
-    if (!found_remote_machine_with_possible_value)
-    {
-      info("Could not find remote machine with key {}", key_index);
     }
     return found_remote_machine_with_possible_value;
   }
