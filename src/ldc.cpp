@@ -395,7 +395,7 @@ void server_worker(
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
                             info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                                 tmp_data->key, tmp_data->singleton, tmp_data->forward_count, remote_port);
-                            server.singleton_put_request(remote_index_to_forward, 50100, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                            server.singleton_put_request(remote_index_to_forward, 8000, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
                         }
                         if(config.policy_type == "access_rate"){
