@@ -399,9 +399,9 @@ void server_worker(
                           }
                         }
                         if(config.policy_type == "access_rate"){
-                          if(block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value)){
-                            block_cache->cache_freq_addition++;
-                          }
+                          // if(block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value)){
+                          //   block_cache->cache_freq_addition++;
+                          // }
                         }
                         server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
                       }
