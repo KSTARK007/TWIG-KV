@@ -91,7 +91,7 @@ int generateDatabaseAndOperationSet(Configuration &ops_config)
   createAndWriteDataset(ops_config.DATASET_FILE, ops_config.NUM_KEY_VALUE_PAIRS,
                         ops_config.KEY_SIZE, ops_config.VALUE_SIZE);
   std::vector<std::string> keys = readKeysFromFile(ops_config.DATASET_FILE);
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   switch (ops_config.DISTRIBUTION_TYPE)
   {
   case RANDOM_DISTRIBUTION:
@@ -132,7 +132,7 @@ int generateDatabaseAndOperationSet(Configuration &ops_config)
 int issueOps(BlockCacheConfig config, Configuration &ops_config, std::vector<std::string> &keys,
              Client client)
 {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   switch (ops_config.DISTRIBUTION_TYPE)
   {
   case RANDOM_DISTRIBUTION:

@@ -1,17 +1,17 @@
 #include "ldc.h"
 
 // Function to generate the operation set
-std::vector<std::pair<std::string, int>>
+Operations
 generateRandomOperationSet(const std::vector<std::string> &keys,
                            Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
 
   for (int i = 0; i < totalOps; i++) {
     const std::string &key = keys[rand() % keys.size()];
     int randomNode = rand() % numNodes + 1; // Node numbers start from 1
-    operationSet.push_back(std::make_pair(key, randomNode));
+    operationSet.push_back({key, randomNode, READ_OP});
   }
 
   dumpOperationSetToFile(operationSet);
@@ -19,10 +19,10 @@ generateRandomOperationSet(const std::vector<std::string> &keys,
 }
 
 // Function to generate a partitioned operation set
-std::vector<std::pair<std::string, int>>
+Operations
 generatePartitionedOperationSet(const std::vector<std::string> &keys,
                                 Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
 
@@ -34,7 +34,7 @@ generatePartitionedOperationSet(const std::vector<std::string> &keys,
                    static_cast<double>(std::stoi(key)) / keysPerNode))) %
                    numNodes +
                1;
-    operationSet.push_back(std::make_pair(key, node));
+    operationSet.push_back({key, node, READ_OP});
   }
 
   dumpOperationSetToFile(operationSet);
@@ -42,10 +42,10 @@ generatePartitionedOperationSet(const std::vector<std::string> &keys,
 }
 
 // Function to generate a Zipfian-distributed operation set
-std::vector<std::pair<std::string, int>>
+Operations
 generateZipfianOperationSet(const std::vector<std::string> &keys,
                             Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numKeys = keys.size();
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
@@ -76,7 +76,7 @@ generateZipfianOperationSet(const std::vector<std::string> &keys,
 
     const std::string &key = keys[randomIndex];
     int randomNode = rand() % numNodes + 1;
-    operationSet.push_back(std::make_pair(key, randomNode));
+    operationSet.push_back({key, randomNode, READ_OP});
   }
 
   dumpOperationSetToFile(operationSet);
@@ -84,10 +84,10 @@ generateZipfianOperationSet(const std::vector<std::string> &keys,
 }
 
 // Function to generate a Zipfian-distributed partitioned operation set
-std::vector<std::pair<std::string, int>>
+Operations
 generateZipfianPartitionedOperationSet(const std::vector<std::string> &keys,
                                        Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numKeys = keys.size();
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
@@ -121,17 +121,17 @@ generateZipfianPartitionedOperationSet(const std::vector<std::string> &keys,
                    static_cast<double>(std::stoi(key)) / keysPerNode))) %
                    numNodes +
                1;
-    operationSet.push_back(std::make_pair(key, node));
+    operationSet.push_back({key, node, READ_OP});
   }
 
   dumpOperationSetToFile(operationSet);
   return operationSet;
 }
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetData(const std::vector<std::string> &keys,
                      Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numKeys = keys.size();
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
@@ -177,17 +177,17 @@ singleNodeHotSetData(const std::vector<std::string> &keys,
     // randomIndex: " << randomIndex << "\n";
 
     int randomNode = rand() % numNodes + 1;
-    operationSet.push_back(std::make_pair(key, randomNode));
+    operationSet.push_back({key, randomNode, READ_OP});
   }
 
   dumpOperationSetToFile(operationSet);
   return operationSet;
 }
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataToSecondNodeOnly(const std::vector<std::string> &keys,
                      Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numKeys = keys.size();
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
@@ -230,17 +230,17 @@ singleNodeHotSetDataToSecondNodeOnly(const std::vector<std::string> &keys,
     const std::string &key = keyOrder[randomIndex];
     
     int randomNode = 2;
-    operationSet.push_back(std::make_pair(key, randomNode));
+    operationSet.push_back({key, randomNode, READ_OP});
   }
 
   dumpOperationSetToFile(operationSet);
   return operationSet;
 }
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataToSecondNodeOnlyRDMA(const std::vector<std::string> &keys,
                      Configuration &config) {
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   int numKeys = keys.size();
   int numNodes = config.NUM_NODES;
   int totalOps = config.TOTAL_OPERATIONS;
@@ -283,7 +283,7 @@ singleNodeHotSetDataToSecondNodeOnlyRDMA(const std::vector<std::string> &keys,
     const std::string &key = keyOrder[randomIndex];
     
     int randomNode = 1;
-    operationSet.push_back(std::make_pair(key, randomNode));
+    operationSet.push_back({key, randomNode, READ_OP});
     LOG_STATE("key {} node {}", key, randomNode);
   }
 
@@ -291,7 +291,7 @@ singleNodeHotSetDataToSecondNodeOnlyRDMA(const std::vector<std::string> &keys,
   return operationSet;
 }
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataTo80SecondNode20Other(const std::vector<std::string> &keys,
                                           Configuration &config) {
   srand(static_cast<unsigned>(time(0)));
@@ -301,7 +301,7 @@ singleNodeHotSetDataTo80SecondNode20Other(const std::vector<std::string> &keys,
   int opsPerThread = config.TOTAL_OPERATIONS / totalThreads;
   int adjustedTotalOps = opsPerThread * totalThreads;
 
-  std::vector<std::pair<std::string, int>> operationSet;
+  Operations operationSet;
   operationSet.reserve(adjustedTotalOps);
 
   // Shuffle thread identifiers
@@ -332,7 +332,7 @@ singleNodeHotSetDataTo80SecondNode20Other(const std::vector<std::string> &keys,
 
 // Function to execute the operation set
 void executeOperations(
-    const std::vector<std::pair<std::string, int>> &operationSet, int client_start_index,
+    const Operations &operationSet, int client_start_index,
     BlockCacheConfig config, Configuration &ops_config, Client& client, int client_index_per_thread, int machine_index) {
   std::vector<long long> timeStamps;
   int operationNumber = 1;
@@ -346,8 +346,7 @@ void executeOperations(
 
   for (const auto &operation : operationSet) {
     io_start = std::chrono::high_resolution_clock::now();
-    const std::string &key = operation.first;
-    int Node = operation.second;
+    const auto &[key, Node, op] = operation;
     // std::cout << "Operation " << operationNumber << ": Sending key=" << key
     //           << " to Node " << Node << std::endl;
     if (Node > ops_config.NUM_NODES) {
@@ -401,8 +400,8 @@ void executeOperations(
   // dump_per_thread_latency_to_file(timeStamps , client_index_per_thread, machine_index);
 }
 
-std::vector<std::vector<std::pair<std::string, int>>> divideOperationSetPerThread(const std::vector<std::pair<std::string, int>> &operationSet , int total_threads) {
-  std::vector<std::vector<std::pair<std::string, int>>> dividedSets(total_threads);
+std::vector<Operations> divideOperationSetPerThread(const Operations &operationSet , int total_threads) {
+  std::vector<Operations> dividedSets(total_threads);
   
   // Check if the total_threads is positive
     if (total_threads <= 0) {
@@ -430,7 +429,7 @@ std::vector<std::vector<std::pair<std::string, int>>> divideOperationSetPerThrea
 }
 
 void dumpOperationSetToFile(
-    const std::vector<std::pair<std::string, int>> &operationSet) {
+    const Operations &operationSet) {
   std::ofstream file("operations.txt");
   if (!file.is_open()) {
     std::cerr << "Failed to open operation set file: "
@@ -439,14 +438,15 @@ void dumpOperationSetToFile(
   }
 
   for (const auto &operation : operationSet) {
-    file << operation.first << ' ' << operation.second << '\n';
+    const auto& [key, node, op] = operation;
+    file << key << ' ' << node << ' ' << op << '\n';
   }
 
   file.close();
 }
 
-std::vector<std::pair<std::string, int>> loadOperationSetFromFile(std::string p) {
-  std::vector<std::pair<std::string, int>> operationSet;
+Operations loadOperationSetFromFile(std::string p) {
+  Operations operationSet;
   std::ifstream file(p);
   if (!file.is_open()) {
     std::cerr << "Failed to open operation set file: "
@@ -456,8 +456,9 @@ std::vector<std::pair<std::string, int>> loadOperationSetFromFile(std::string p)
 
   std::string key;
   int node;
-  while (file >> key >> node) {
-    operationSet.push_back(std::make_pair(key, node));
+  char op;
+  while (file >> key >> node >> op) {
+    operationSet.push_back({key, node, op});
   }
 
   file.close();

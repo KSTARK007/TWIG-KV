@@ -87,7 +87,7 @@ std::vector<T> get_chunk(std::vector<T> const &vec, std::size_t n, std::size_t i
   return std::vector<T>(begin, end);
 }
 
-void execute_operations(Client &client, const std::vector<std::pair<std::string, int>> &operation_set, int client_start_index, BlockCacheConfig config, Configuration &ops_config,
+void execute_operations(Client &client, const Operations &operation_set, int client_start_index, BlockCacheConfig config, Configuration &ops_config,
                         int client_index_per_thread, int machine_index, int thread_index)
 {
 #ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
@@ -128,8 +128,7 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
     for (const auto &operation : operation_set)
     {
       io_start = std::chrono::high_resolution_clock::now();
-      const std::string &key = operation.first;
-      int index = operation.second;
+      const auto& [key, index, op] = operation;
       if (index > ops_config.NUM_NODES)
       {
         panic("Invalid node number {}", index);
@@ -178,7 +177,7 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
 }
 
 void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Configuration ops_config,
-                   int machine_index, int thread_index, std::vector<std::pair<std::string, int>> ops,
+                   int machine_index, int thread_index, Operations ops,
                    int client_index_per_thread)
 {
   auto &client = *client_;
@@ -196,7 +195,7 @@ void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Con
   }
 
   auto client_index = (thread_index * FLAGS_clients_per_threads) + client_index_per_thread;
-  std::vector<std::pair<std::string, int>> ops_chunk;
+  Operations ops_chunk;
   if (ops_config.DISTRIBUTION_TYPE != DistributionType::YCSB) {
     ops_chunk = get_chunk(ops, FLAGS_threads * FLAGS_clients_per_threads, client_index);
   } else {
@@ -673,7 +672,7 @@ int main(int argc, char *argv[])
   auto ret = machnet_init();
   assert_with_msg(ret == 0, "machnet_init() failed");
 
-  std::vector<std::pair<std::string, int>> ops = loadOperationSetFromFile(ops_config.OP_FILE);
+  Operations ops = loadOperationSetFromFile(ops_config.OP_FILE);
 
   std::vector<std::thread> worker_threads;
   std::vector<std::thread> RDMA_Server_threads;

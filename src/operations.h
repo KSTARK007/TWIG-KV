@@ -50,6 +50,20 @@ struct Configuration
   bool operations_pollute_cache;
 };
 
+struct Operation
+{
+  std::string key;
+  int node;
+  char op;
+};
+using Operations = std::vector<Operation>;
+
+constexpr char INSERT_OP = 'I';
+constexpr char READ_OP = 'R';
+constexpr char UPDATE_OP = 'U';
+constexpr char DELETE_OP = 'D';
+constexpr char PUT_OP = 'P';
+
 std::ostream &operator<<(std::ostream &os, const Configuration &config);
 
 Configuration parseConfigFile(const std::string &configFile);
@@ -57,44 +71,44 @@ Configuration parseConfigFile(const std::string &configFile);
 void createAndWriteDataset(const std::string &datasetFile, int numKeyValue,
                            int keySize, int valueSize);
 
-std::vector<std::pair<std::string, int>>
+Operations
 generateRandomOperationSet(const std::vector<std::string> &keys,
                            Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 generatePartitionedOperationSet(const std::vector<std::string> &keys,
                                 Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 generateZipfianOperationSet(const std::vector<std::string> &keys,
                             Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 generateZipfianPartitionedOperationSet(const std::vector<std::string> &keys,
                                        Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetData(const std::vector<std::string> &keys,
                      Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataToSecondNodeOnly(const std::vector<std::string> &keys,
                                      Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataToSecondNodeOnlyRDMA(const std::vector<std::string> &keys,
                      Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataToSecondNodeOnlyRDMA(const std::vector<std::string> &keys,
                      Configuration &config);
 
-std::vector<std::pair<std::string, int>>
+Operations
 singleNodeHotSetDataTo80SecondNode20Other(const std::vector<std::string> &keys,
                                           Configuration &config);
 
 void dumpOperationSetToFile(
-    const std::vector<std::pair<std::string, int>> &operationSet);
+    const Operations &operationSet);
 
 std::vector<std::string> readKeysFromFile(const std::string &datasetFile);
-std::vector<std::pair<std::string, int>> loadOperationSetFromFile(std::string p);
+Operations loadOperationSetFromFile(std::string p);
