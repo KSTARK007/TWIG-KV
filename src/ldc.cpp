@@ -399,7 +399,7 @@ void server_worker(
                           }
                         }
                         if(config.policy_type == "access_rate"){
-                          block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value)
+                          block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value);
                           // if(block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value)){
                           //   block_cache->cache_freq_addition++;
                           // }
