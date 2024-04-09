@@ -322,7 +322,7 @@ void server_worker(
                     block_cache->increment_cache_miss();
                     block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key, block_cache](auto value) {
                       // Add to cache
-                      // block_cache->get_cache()->put(key, value);
+                      block_cache->get_cache()->put(key, value);
 
                       // Send the response
                       server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
