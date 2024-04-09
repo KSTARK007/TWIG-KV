@@ -260,6 +260,7 @@ void server_worker(
               // Return the correct key in local cache
               auto value = block_cache->get(key, false, exists_in_cache);
               server.get_response(remote_index, remote_port, ResponseType::OK, value);
+              total_ops_executed.fetch_add(1, std::memory_order::relaxed);
             }
             else
             {
@@ -320,6 +321,7 @@ void server_worker(
                 if (!ops_config.DISK_ASYNC)
                 {
                   server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                  total_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 }
               };
 
@@ -331,9 +333,9 @@ void server_worker(
                 }
 
                 LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
-                if (remote_machine_index_to_rdma != base_index)
+                if (config.baseline.one_sided_rdma_enabled)
                 {
-                  if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
+                  if (config.baseline.use_cache_indexing)
                   {
                     auto& rdma_node = std::begin(rdma_nodes)->second;
                     found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
@@ -361,18 +363,20 @@ void server_worker(
                     read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
                     found_in_rdma = true;
                   }
+                }
 
-                  if (!ops_config.RDMA_ASYNC)
-                  {
-                    auto buffer = std::string_view(static_cast<char *>(read_buffer), ops_config.VALUE_SIZE);
-                    server.get_response(remote_index, remote_port, ResponseType::OK, buffer);
-                  }
+                if (!ops_config.RDMA_ASYNC)
+                {
+                  auto buffer = std::string_view(static_cast<char *>(read_buffer), ops_config.VALUE_SIZE);
+                  server.get_response(remote_index, remote_port, ResponseType::OK, buffer);
+                  total_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 }
               }
 
               if (!found_in_rdma)
               {
                 fetch_from_disk();
+                total_ops_executed.fetch_add(1, std::memory_order::relaxed);
               }
             }
           }
@@ -680,13 +684,17 @@ int main(int argc, char *argv[])
   {
     static std::thread background_monitoring_thread([&]()
     {
+      uint64_t last_ops_executed = 0;
       uint64_t last_rdma_executed = 0;
       while (!g_stop)
       {
         auto current_rdma_executed = total_rdma_executed.load(std::memory_order::relaxed);
         auto diff_rdma_executed = current_rdma_executed - last_rdma_executed;
-        info("RDMA executed [{}] +[{}]", current_rdma_executed, diff_rdma_executed);
+        auto current_ops_executed = total_ops_executed.load(std::memory_order::relaxed);
+        auto diff_ops_executed = current_ops_executed - last_ops_executed;
+        info("RDMA executed [{}] +[{}] | Ops executed [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed);
         last_rdma_executed = current_rdma_executed;
+        last_ops_executed = current_ops_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
