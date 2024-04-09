@@ -375,14 +375,15 @@ void server_worker(
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
                     auto& rdma_node = std::begin(rdma_nodes)->second;
-                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [&, remote_index, remote_port, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
+                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
+                      auto& server = *server_;
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
+
                       uint64_t key_index = kv.key_index;
                       auto value_view = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
                       std::string value(value_view);
                       LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
-                      // server.singleton_put_request(2, 8000, key, value, false, 0);
                       if (key_index == expected_key)
                       {
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
@@ -397,7 +398,7 @@ void server_worker(
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
                             info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                                 tmp_data->key, tmp_data->singleton, tmp_data->forward_count, remote_port);
-                            server.singleton_put_request(remote_index_to_forward, 8000, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                            server.append_singleton_put_request(remote_index_to_forward, 8000, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
                         }
                         if(config.policy_type == "access_rate"){

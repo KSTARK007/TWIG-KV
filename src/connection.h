@@ -196,6 +196,8 @@ struct Server : public Connection
   json get_stats();
   void append_to_rdma_block_cache_request_queue(int index, int port, ResponseType response_type,
                                                 std::string_view key, std::string_view value);
+  void append_singleton_put_request(int index, int port, std::string_view key,
+                                    std::string_view value, bool singleton, uint64_t forward_count);
   void increment_async_disk_requests() { async_disk_requests++; }
 
   auto get_block_cache() { return block_cache; }
@@ -218,6 +220,17 @@ public:
     std::string value;
   };
 
+  struct AppendSingletonPutRequest
+  {
+    int index;
+    int port;
+    ResponseType response_type;
+    std::string key;
+    std::string value;
+    bool singleton;
+    uint64_t forward_count;
+  };
+
 private:
   MPMCQueue<RDMAGetResponse> rdma_get_response_queue;
   uint64_t remote_rdma_cache_hits{};
@@ -225,4 +238,6 @@ private:
   std::shared_ptr<BlockCache<std::string, std::string>> block_cache;
   MPMCQueue<BlockCacheRequest> block_cache_request_queue;
   uint64_t async_disk_requests{};
+
+  MPMCQueue<AppendSingletonPutRequest> singleton_put_request_queue;
 };

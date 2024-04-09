@@ -504,6 +504,18 @@ void Server::execute_pending_operations()
       get_response(index, port, response_type, value);
     }
   }
+
+  AppendSingletonPutRequest request;
+  while (singleton_put_request_queue.try_dequeue(request))
+  {
+    auto [index, port, response_type, key, value, singleton, forward_count] = request;
+    if (response_type != ResponseType::OK)
+    {
+      panic("Singleton put failed");
+    }
+    LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
+    singleton_put_request(index, port, key, value, singleton, forward_count);
+  }
 }
 
 void Server::append_to_rdma_get_response_queue(int index, int port, ResponseType response_type,
@@ -529,4 +541,11 @@ void Server::append_to_rdma_block_cache_request_queue(int index, int port, Respo
   block_cache_request_queue.enqueue(request);
 
   async_disk_requests++;
+}
+
+void Server::append_singleton_put_request(int index, int port, std::string_view key,
+                                  std::string_view value, bool singleton, uint64_t forward_count)
+{
+  auto request = Server::AppendSingletonPutRequest{index, port, ResponseType::OK, std::string(key), std::string(value), singleton, forward_count};
+  singleton_put_request_queue.enqueue(request);
 }
