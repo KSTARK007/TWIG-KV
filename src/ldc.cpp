@@ -312,9 +312,8 @@ void server_worker(
 
               auto base_index = machine_index - server_start_index;
 
-              auto fetch_from_disk = [=]()
+              auto fetch_from_disk = [&]()
               {
-                auto& server = *server_;
                 std::string value;
                 if (ops_config.operations_pollute_cache)
                 {
