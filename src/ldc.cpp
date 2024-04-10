@@ -122,6 +122,8 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
   }
   long long run_time = 0;
   auto op_start = std::chrono::high_resolution_clock::now();
+  auto now = std::chrono::high_resolution_clock::now();
+  auto op_end = now - op_start;
   do
   {
     auto io_start = std::chrono::high_resolution_clock::now();
@@ -148,10 +150,15 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
       timeStamps.push_back(nanoseconds);
       total_ops_executed.fetch_add(1, std::memory_order::relaxed);
       client_thread_ops_executed[client_index]++;
-
+      now = std::chrono::high_resolution_clock::now();
+      op_end = now - op_start;
+      run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
+      if(run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS){
+        break;
+      }
     }
-    auto now = std::chrono::high_resolution_clock::now();
-    auto op_end = now - op_start;
+    now = std::chrono::high_resolution_clock::now();
+    op_end = now - op_start;
     run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
   } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
   info("[{}] [{}] Client done executing {}", machine_index, client_index, timeStamps.size());
@@ -360,14 +367,14 @@ void server_worker(
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                         if(config.policy_type == "nchance"){
                           int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
-                          info("remote_index_to_forward {} base_index {} server_start_index {}", 
+                          LOG_STATE("remote_index_to_forward {} base_index {} server_start_index {}", 
                           remote_index_to_forward, base_index, server_start_index);
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
                           if (tmp_ptr != nullptr){
-                            info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
+                            LOG_STATE("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
-                            info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
+                            LOG_STATE("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                                 tmp_data->key, tmp_data->singleton, tmp_data->forward_count, remote_port);
                             server.append_singleton_put_request(remote_index_to_forward, 8000, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
