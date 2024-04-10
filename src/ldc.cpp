@@ -312,7 +312,7 @@ void server_worker(
 
               auto base_index = machine_index - server_start_index;
 
-              auto fetch_from_disk = [&]()
+              auto fetch_from_disk = [=, server=server_]()
               {
                 std::string value;
                 if (ops_config.operations_pollute_cache)
@@ -320,12 +320,12 @@ void server_worker(
                   if (ops_config.DISK_ASYNC) {
                     // Cache miss
                     block_cache->increment_cache_miss();
-                    block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key, block_cache](auto value) {
+                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, key, block_cache](auto value) {
                       // Add to cache
                       block_cache->get_cache()->put(key, value);
 
                       // Send the response
-                      server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
                     });
                   } else {
                     LOG_STATE("Fetching from cache/disk {} {}", key, value);
@@ -335,7 +335,7 @@ void server_worker(
                 else
                 {
                   auto value = default_value;
-                  server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                  server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
                   // // Cache miss
                   // LOG_STATE("Fetching from disk {} {}", key, value);
                   // block_cache->increment_cache_miss();
@@ -360,7 +360,7 @@ void server_worker(
 
                 if (!ops_config.DISK_ASYNC)
                 {
-                  server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                  server->get_response(remote_index, remote_port, ResponseType::OK, value);
                 }
               };
 
