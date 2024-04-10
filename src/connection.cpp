@@ -383,6 +383,26 @@ void Server::get_response(int index, ResponseType response_type, std::string_vie
   get_response(index, port, response_type, value);
 }
 
+void Server::pass_write_to_server_request(int index, int port, std::string_view key)
+{
+  // ::capnp::MallocMessageBuilder message;
+  // Packets::Builder packets = message.initRoot<Packets>();
+  // ::capnp::List<Packet>::Builder packet = packets.initPackets(1);
+  // Packet::Data::Builder data = packet[0].initData();
+  // SingletonPutRequest::Builder request = data.initSingletonPutRequest();
+  // request.setKey(std::string(key));
+  // request.setValue(std::string(value));
+  // request.setSingleton(singleton);
+  // request.setForwardCount(forward_count);
+  // auto m = capnp::messageToFlatArray(message);
+  // auto p = m.asChars();
+
+  // LOG_STATE("[{}-{}] Singleton Put Request [{}]", machine_index, index,
+  //           kj::str(message.getRoot<Packets>()).cStr());
+
+  // send(index, port, std::string_view(p.begin(), p.end())); 
+}
+
 void Server::rdma_setup_request(int index, int my_index, uint64_t start_address,
                                 uint64_t size)
 {
