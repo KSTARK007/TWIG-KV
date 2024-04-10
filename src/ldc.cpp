@@ -334,21 +334,23 @@ void server_worker(
                 }
                 else
                 {
-                  // Cache miss
-                  LOG_STATE("Fetching from disk {} {}", key, value);
-                  block_cache->increment_cache_miss();
-                  if (ops_config.DISK_ASYNC) {
-                    block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key](auto value) {
-                      // Send the response
-                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
-                    });
-                  } else {
-                    if (auto result_or_err = block_cache->get_db()->get(key)) {
-                      value = result_or_err.value();
-                    } else {
-                      panic("Failed to get value from db for key {}", key);
-                    }
-                  }
+                  auto value = default_value;
+                  server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                  // // Cache miss
+                  // LOG_STATE("Fetching from disk {} {}", key, value);
+                  // block_cache->increment_cache_miss();
+                  // if (ops_config.DISK_ASYNC) {
+                  //   block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key](auto value) {
+                  //     // Send the response
+                  //     server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                  //   });
+                  // } else {
+                  //   if (auto result_or_err = block_cache->get_db()->get(key)) {
+                  //     value = result_or_err.value();
+                  //   } else {
+                  //     panic("Failed to get value from db for key {}", key);
+                  //   }
+                  // }
                 }
 
                 // if (config.baseline.one_sided_rdma_enabled)
