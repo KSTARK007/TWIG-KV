@@ -391,14 +391,14 @@ void server_worker(
                         LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                         if(config.policy_type == "nchance"){
                           int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
-                          LOG_STATE("remote_index_to_forward {} base_index {} server_start_index {}", 
+                          info("remote_index_to_forward {} base_index {} server_start_index {}", 
                           remote_index_to_forward, base_index, server_start_index);
                           auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
                           if (tmp_ptr != nullptr){
                             info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
-                            LOG_STATE("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
+                            info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                                 tmp_data->key, tmp_data->singleton, tmp_data->forward_count, remote_port);
                             server.append_singleton_put_request(remote_index_to_forward, 8000, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
