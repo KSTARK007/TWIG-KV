@@ -447,7 +447,7 @@ void Server::singleton_put_request(int index, int port, std::string_view key,
   // info("converting to chars");
   auto p = m.asChars();
 
-  info("[{}-{}] Singleton Put Request [{}]", machine_index, index,
+  LOG_STATE("[{}-{}] Singleton Put Request [{}]", machine_index, index,
             kj::str(message.getRoot<Packets>()).cStr());
 
   send(index, port, std::string_view(p.begin(), p.end())); 

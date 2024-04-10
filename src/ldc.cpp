@@ -163,7 +163,7 @@ void execute_operations(Client &client, const std::vector<std::pair<std::string,
   } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
   info("[{}] [{}] Client done executing {}", machine_index, client_index, timeStamps.size());
   dump_per_thread_latency_to_file(timeStamps, client_index_per_thread, machine_index, thread_index);
-  LOG_STATE("wrong_values till now {}", wrong_value);
+  info("wrong_values till now {}", wrong_value);
 
 #ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
   total_clients_done.fetch_add(1, std::memory_order::relaxed);
@@ -390,7 +390,7 @@ void server_worker(
                       }
                       else
                       {
-                        LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
+                        info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                         fetch_from_disk();
                       }
                     });
