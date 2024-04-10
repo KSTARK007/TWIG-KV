@@ -367,9 +367,10 @@ void server_worker(
                           if (tmp_ptr != nullptr){
                             info("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                             auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
+                            auto port = config.remote_machine_configs[machine_index].port + thread_index;
                             info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
-                                tmp_data->key, tmp_data->singleton, tmp_data->forward_count, remote_port);
-                            server.append_singleton_put_request(remote_index_to_forward, 8000, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                                tmp_data->key, tmp_data->singleton, tmp_data->forward_count, port);
+                            server.append_singleton_put_request(remote_index_to_forward, port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           }
                         }
                         if(config.policy_type == "access_rate"){
