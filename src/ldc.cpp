@@ -311,7 +311,6 @@ void server_worker(
                   if (ops_config.DISK_ASYNC) {
                     block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey](auto value) {
                       // Send the response
-                      info("AADSD Sending response to {} {} {}", remote_index, remote_port, skey);
                       server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
                   } else {
