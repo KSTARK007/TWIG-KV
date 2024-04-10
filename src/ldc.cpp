@@ -291,12 +291,12 @@ void server_worker(
                   if (ops_config.DISK_ASYNC) {
                     // Cache miss
                     block_cache->increment_cache_miss();
-                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, key, block_cache](auto value) {
+                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, skey=std::string(key), block_cache](auto value) {
                       // Add to cache
                       block_cache->get_cache()->put(key, value);
 
                       // Send the response
-                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
                   } else {
                     LOG_STATE("Fetching from cache/disk {} {}", key, value);
@@ -309,9 +309,9 @@ void server_worker(
                   LOG_STATE("Fetching from disk {} {}", key, value);
                   block_cache->increment_cache_miss();
                   if (ops_config.DISK_ASYNC) {
-                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, key](auto value) {
+                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, skey=std::string(key)](auto value) {
                       // Send the response
-                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
                   } else {
                     if (auto result_or_err = block_cache->get_db()->get(key)) {
