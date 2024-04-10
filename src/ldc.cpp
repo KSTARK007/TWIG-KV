@@ -311,7 +311,7 @@ void server_worker(
                   if (ops_config.DISK_ASYNC) {
                     block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key](auto value) {
                       // Send the response
-                      server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
                     });
                   } else {
                     if (auto result_or_err = block_cache->get_db()->get(key)) {
