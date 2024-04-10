@@ -246,35 +246,6 @@ void server_worker(
     }
   }
 
-  std::vector<std::thread> rdma_key_value_cache_workers;
-  auto& rdma_node = rdma_nodes[1];
-  if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
-  {
-    std::thread t([&](){
-      while (!g_stop)
-      {
-        rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
-        {
-          // const auto& [kv, _, remote_index, remote_port] = v;
-          // auto key_index = kv->key_index;
-          // auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
-          // info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
-          // auto expected_key = 0;
-          // if (key_index == expected_key)
-          // {
-          //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-          // }
-          // else
-          // {
-          //   // TODO: read from disk instead, we need to know expected key
-          //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-          // }
-        }, [](){});
-      }
-    });
-    rdma_key_value_cache_workers.emplace_back(std::move(t));
-  }
-
   while (!g_stop)
   {
     server.loop(
