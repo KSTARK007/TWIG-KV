@@ -334,23 +334,21 @@ void server_worker(
                 }
                 else
                 {
-                  auto value = default_value;
-                  server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
-                  // // Cache miss
-                  // LOG_STATE("Fetching from disk {} {}", key, value);
-                  // block_cache->increment_cache_miss();
-                  // if (ops_config.DISK_ASYNC) {
-                  //   block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key](auto value) {
-                  //     // Send the response
-                  //     server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
-                  //   });
-                  // } else {
-                  //   if (auto result_or_err = block_cache->get_db()->get(key)) {
-                  //     value = result_or_err.value();
-                  //   } else {
-                  //     panic("Failed to get value from db for key {}", key);
-                  //   }
-                  // }
+                  // Cache miss
+                  LOG_STATE("Fetching from disk {} {}", key, value);
+                  block_cache->increment_cache_miss();
+                  if (ops_config.DISK_ASYNC) {
+                    block_cache->get_db()->get_async(key, [&server, remote_index, remote_port, key](auto value) {
+                      // Send the response
+                      server.append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, key, value);
+                    });
+                  } else {
+                    if (auto result_or_err = block_cache->get_db()->get(key)) {
+                      value = result_or_err.value();
+                    } else {
+                      panic("Failed to get value from db for key {}", key);
+                    }
+                  }
                 }
 
                 // if (config.baseline.one_sided_rdma_enabled)
@@ -377,7 +375,7 @@ void server_worker(
                   if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
                   {
                     auto& rdma_node = std::begin(rdma_nodes)->second;
-                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, &fetch_from_disk, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
+                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                     {
                       auto& server = *server_;
                       total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
