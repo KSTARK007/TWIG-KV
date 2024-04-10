@@ -283,7 +283,7 @@ void server_worker(
 
               auto base_index = machine_index - server_start_index;
 
-              auto fetch_from_disk = [=, server=server_]()
+              auto fetch_from_disk = [=, skey=std::string(key), server=server_]()
               {
                 std::string value;
                 if (ops_config.operations_pollute_cache)
@@ -291,7 +291,7 @@ void server_worker(
                   if (ops_config.DISK_ASYNC) {
                     // Cache miss
                     block_cache->increment_cache_miss();
-                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, skey=std::string(key), block_cache](auto value) {
+                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, skey, block_cache](auto value) {
                       // Add to cache
                       block_cache->get_cache()->put(skey, value);
 
@@ -309,8 +309,9 @@ void server_worker(
                   LOG_STATE("Fetching from disk {} {}", key, value);
                   block_cache->increment_cache_miss();
                   if (ops_config.DISK_ASYNC) {
-                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, skey=std::string(key)](auto value) {
+                    block_cache->get_db()->get_async(key, [server, remote_index, remote_port, skey](auto value) {
                       // Send the response
+                      info("AADSD Sending response to {} {} {}", remote_index, remote_port, skey);
                       server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
                   } else {
