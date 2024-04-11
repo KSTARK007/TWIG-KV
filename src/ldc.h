@@ -430,6 +430,27 @@ struct CacheIndexes : public RDMAData
     }
   }
 
+  void dealloc_remote(const std::string& key)
+  {
+    auto key_index = std::stoi(key);
+    for (auto i = 0; i < server_configs.size(); i++)
+    {
+      const auto& server_config = server_configs[i];
+      if (machine_index == i)
+      {
+        continue;
+      }
+      auto size = rdma_kv_storage->get_allocated_cache_index_size();
+      auto offset = key_index * sizeof(RDMACacheIndex);
+      auto& rdma_cache_index = rdma_cache_indexes[machine_index];
+      rdma_cache_index[key_index] = RDMACacheIndex{ (uintptr_t)-1 };
+      auto rdma_index = (machine_index * server_configs.size()) + i;
+      LOG_RDMA_DATA("[CacheIndexes] Dealloc remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
+      auto request_token = RDMAData::write(rdma_index, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));
+      pending_write_queue.enqueue(request_token);
+    }
+  }
+
   auto& get_cache_index(int index) { return rdma_cache_indexes[index]; }
 
   template<typename F>
@@ -469,10 +490,9 @@ struct RDMAKeyValueCache : public RDMAData
       LOG_RDMA_DATA("[RDMAKeyValueCache] Writing callback on cache index {} {}", key, value);
       cache_indexes->write_remote(key, value);
     });
-    // cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
-      // LOG_RDMA_DATA("[RDMAKeyValueCache] Eviction callback on cache index {} {}", key, value);
-      // cache_indexes->write_remote(key, value);
-    // });
+    cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
+      cache_indexes->dealloc_remote(data.key);
+    });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
 
