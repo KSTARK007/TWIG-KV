@@ -7,10 +7,11 @@
 	branch = replicated
 [submodule "third_party/RDMA"]
 	path = third_party/RDMA
-	url = https://github.com/dassl-uiuc/RDMA.git
+	url = git@github.com:dassl-uiuc/RDMA.git
 [submodule "third_party/YCSB"]
 	path = third_party/YCSB
-	url = https://github.com/dassl-uiuc/ycsb-tracegen
+	url = git@github.com:dassl-uiuc/ycsb-tracegen
+	branch = sequential-keys
 [submodule "third_party/Lazylog"]
 	path = third_party/Lazylog
 	url = git@github.com:dassl-uiuc/LazyLog.git

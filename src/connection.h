@@ -182,7 +182,7 @@ struct Server : public Connection
                     std::string_view value);
   void get_response(int index, ResponseType response_type,
                     std::string_view value);
-
+  void pass_write_to_server_request(int index, int port, std::string_view key);
   void rdma_setup_request(int index, int my_index, uint64_t start_address,
                           uint64_t size);
   void rdma_setup_response(int index, ResponseType response_type);

@@ -589,7 +589,7 @@ std::vector<std::string> load_database(Configuration &ops_config,
                                        Client &client);
 int generateDatabaseAndOperationSet(Configuration &ops_config);
 void executeOperations(
-    const std::vector<std::pair<std::string, int>> &operationSet, int client_start_index,
+    const Operations &operationSet, int client_start_index,
     BlockCacheConfig config, Configuration &ops_config, Client &client, int client_index_per_thread, int machine_index);
 
 void dump_per_thread_latency_to_file(const std::vector<long long> &timestamps, int client_index_per_thread, int machine_index, int thread_index);
