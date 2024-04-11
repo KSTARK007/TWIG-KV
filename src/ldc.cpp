@@ -336,7 +336,7 @@ void server_worker(
 
                 if (!ops_config.DISK_ASYNC)
                 {
-                  server.get_response(remote_index, remote_port, ResponseType::OK, value);
+                  server->get_response(remote_index, remote_port, ResponseType::OK, value);
                   total_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 }
               };
