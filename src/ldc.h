@@ -424,6 +424,10 @@ struct CacheIndexes : public RDMAData
       auto offset = key_index * sizeof(RDMACacheIndex);
       const auto& rdma_cache_index = rdma_cache_indexes[machine_index];
       auto rdma_index = (machine_index * server_configs.size()) + i;
+      if (rdma_cache_index[key_index].key_value_ptr_offset == KEY_VALUE_PTR_INVALID)
+      {
+        panic("[{}-{}] Invalid key value ptr offset - key {} offset {}", machine_index, rdma_index, key_index, rdma_cache_index[key_index].key_value_ptr_offset);
+      }
       info("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
       auto request_token = RDMAData::write(rdma_index, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));
       pending_write_queue.enqueue(request_token);
@@ -521,7 +525,7 @@ struct RDMAKeyValueCache : public RDMAData
       const auto& ci = cache_index[key_index];
       if (ci.key_value_ptr_offset == KEY_VALUE_PTR_INVALID)
       {
-        panic("[{}-{}] Invalid key value ptr offset - key {} offset {}", machine_index, rdma_index, key_index, ci.key_value_ptr_offset);
+        continue;
       }
       // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
       LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
