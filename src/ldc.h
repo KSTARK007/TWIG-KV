@@ -519,14 +519,15 @@ struct RDMAKeyValueCache : public RDMAData
       }
       RDMACacheIndex* cache_index = cache_indexes->get_cache_index(rdma_index);
       const auto& ci = cache_index[key_index];
-      // if (ci.key_value_ptr_offset != KEY_VALUE_PTR_INVALID)
+      if (ci.key_value_ptr_offset == KEY_VALUE_PTR_INVALID)
       {
-        // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
-        LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
-        key_value_storage->read(rdma_index, callback, ci);
-        found_remote_machine_with_possible_value = true;
-        break;
+        panic("[{}-{}] Invalid key value ptr offset - key {} offset {}", machine_index, rdma_index, key_index, ci.key_value_ptr_offset);
       }
+      // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
+      LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
+      key_value_storage->read(rdma_index, callback, ci);
+      found_remote_machine_with_possible_value = true;
+      break;
     }
     return found_remote_machine_with_possible_value;
   }
