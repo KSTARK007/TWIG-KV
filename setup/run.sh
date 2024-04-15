@@ -46,7 +46,7 @@ iterate_and_execute() {
     for ((num_clients=num_clients_start; num_clients<=num_clients_end; num_clients++)); do
         for ((num_threads=num_threads_start; num_threads<=num_threads_end; num_threads++)); do
             for ((num_clients_per_thread=num_clients_per_thread_start; num_clients_per_thread<=num_clients_per_thread_end; num_clients_per_thread++)); do
-                execute_cmd $num_clients $num_threads $num_clients_per_thread 13 $distribution $system_name
+                # execute_cmd $num_clients $num_threads $num_clients_per_thread 13 $distribution $system_name
                 execute_cmd $num_clients $num_threads $num_clients_per_thread 12 $distribution $system_name
             done
         done
