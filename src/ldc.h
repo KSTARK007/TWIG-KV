@@ -428,7 +428,7 @@ struct CacheIndexes : public RDMAData
       {
         panic("[{}-{}] Invalid key value ptr offset - key {} offset {}", machine_index, rdma_index, key_index, rdma_cache_index[key_index].key_value_ptr_offset);
       }
-      info("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
+      LOG_RDMA_DATA("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
       auto request_token = RDMAData::write(rdma_index, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));
       pending_write_queue.enqueue(request_token);
     }
@@ -495,7 +495,7 @@ struct RDMAKeyValueCache : public RDMAData
       cache_indexes->write_remote(key, value);
     });
     cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
-      info("Evicted {}", data.key);
+      LOG_RDMA_DATA("Evicted {}", data.key);
       cache_indexes->dealloc_remote(data.key);
     });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");

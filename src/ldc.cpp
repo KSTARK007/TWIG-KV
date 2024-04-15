@@ -366,15 +366,15 @@ void server_worker(
                       LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
                       if(config.policy_type == "nchance"){
                         int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
-                        LOG_STATE("remote_index_to_forward {} base_index {} server_start_index {}", 
+                        LOG_RDMA_DATA("remote_index_to_forward {} base_index {} server_start_index {}", 
                         remote_index_to_forward, base_index, server_start_index);
                         auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
 
                         if (tmp_ptr != nullptr){
-                          LOG_STATE("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
+                          LOG_RDMA_DATA("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
                           auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
                           auto port = config.remote_machine_configs[machine_index].port + thread_index;
-                          info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
+                          LOG_RDMA_DATA("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                               tmp_data->key, tmp_data->singleton, tmp_data->forward_count, port);
                           server.append_singleton_put_request(remote_index_to_forward, port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                         }
@@ -389,7 +389,7 @@ void server_worker(
                     }
                     else
                     {
-                      info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
+                      LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                       fetch_from_disk();
                     }
                   });
@@ -434,14 +434,14 @@ void server_worker(
           {
             LOG_STATE("[{}-{}:{}] Put response [{}]", machine_index, remote_index, remote_port,
               kj::str(data).cStr());
-            info("[Server] Singleton put request");
+            LOG_RDMA_DATA("[Server] Singleton put request");
             auto p = data.getSingletonPutRequest();
             std::string keyStr = p.getKey().cStr();  // Convert capnp::Text::Reader to std::string
             std::string valueStr = p.getValue().cStr();
-            info("[Server] Singleton put request key = {} value = {} singleton = {} forward_count = {}",
+            LOG_RDMA_DATA("[Server] Singleton put request key = {} value = {} singleton = {} forward_count = {}",
                  keyStr, valueStr, p.getSingleton(), p.getForwardCount());
             block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
-            info("[Server] Singleton put request done");
+            LOG_RDMA_DATA("[Server] Singleton put request done");
             // server.singleton_put_response(remote_index, ResponseType::OK);
           }
           else if (data.isDeleteRequest())
