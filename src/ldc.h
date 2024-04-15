@@ -710,6 +710,9 @@ inline void printBlockCacheConfig(const BlockCacheConfig &config)
     printRemoteMachineConfig(remoteConfig);
   }
   std::cout << "}" << std::endl;
+  std::cout << "access_rate: " << config.access_rate << std::endl;
+  std::cout << "access_per_itr: " << config.access_per_itr << std::endl;
+  
 }
 template<typename KeyType, typename ValueType>
 struct CacheLayerData

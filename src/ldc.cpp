@@ -391,7 +391,7 @@ void server_worker(
                       }
                       else
                       {
-                        info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
+                        // info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                         fetch_from_disk();
                       }
                     });
