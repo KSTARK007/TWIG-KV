@@ -516,11 +516,11 @@ void Server::execute_pending_operations()
         panic("Disk get failed");
       }
       LOG_STATE("[{}-{}] Execute pending operation [{}]", machine_index, index, value);
-      if (ops_config.operations_pollute_cache)
-      {
-        // Put the value in the cache
-        block_cache->get_cache()->put(key, value, true);
-      }
+      // if (ops_config.operations_pollute_cache)
+      // {
+      //   // Put the value in the cache
+      //   block_cache->get_cache()->put(key, value, true);
+      // }
       get_response(index, port, response_type, value);
     }
   }
