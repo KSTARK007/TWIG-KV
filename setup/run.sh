@@ -6,7 +6,11 @@ IDENTITY_FILE="--identity_file /users/Khombal2/.ssh/id_rsa"
 USERNAME="--username Khombal2"
 GIT_SSH_KEY_PATH="--git_ssh_key_path /users/Khombal2/.ssh/id_rsa"
 NUM_SERVERS="--num_servers 3"
+# CACHE_SIZE=(0.10 0.20 0.25 0.30 0.334 0.35)
+# SYSTEM_NAMES=("A" "B" "C" "D")
 
+CACHE_SIZE=(0.334)
+SYSTEM_NAMES=("A")
 # A : Cache Unaware Routing + Admit + Disk
 # B : Cache Unaware Routing + no-Admit + Disk
 # C : Cache Unaware Routing + no-Admit + RDMA = old(LDC)
@@ -22,10 +26,12 @@ execute_cmd() {
     local step=$4
     local distribution=$5
     local system_name=$6
-
-    CMD="$PROGRAM_PATH $IDENTITY_FILE $USERNAME $GIT_SSH_KEY_PATH --step $step $NUM_SERVERS \
+    #itr throu
+    for cache_size in "${CACHE_SIZE[@]}"; do
+        CMD="$PROGRAM_PATH $IDENTITY_FILE $USERNAME $GIT_SSH_KEY_PATH --step $step $NUM_SERVERS \
 --num_threads $num_threads --system_type $system_name --distribution $distribution --num_clients $num_clients \
---num_clients_per_thread $num_clients_per_thread"
+--num_clients_per_thread $num_clients_per_thread --git_branch nchance-addition --cache_size $cache_size"
+    done
 
     echo "Executing: $CMD"
     eval $CMD
@@ -54,6 +60,8 @@ iterate_and_execute() {
 }
 
 # Execute with specified ranges and steps
-iterate_and_execute 3 3 5 5 1 5 "hotspot" $SYS_NAME
-iterate_and_execute 3 3 5 5 1 5 "uniform" $SYS_NAME
-iterate_and_execute 3 3 5 5 1 5 "zipfian" $SYS_NAME
+for system_name in "${SYSTEM_NAMES[@]}"; do
+    iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name
+    iterate_and_execute 3 3 8 8 2 2 "uniform" $system_name
+    iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name
+done
