@@ -21,6 +21,9 @@ std::atomic<uint64_t> total_ops_executed;
 // Background log for total amount of rdmas executed
 std::atomic<uint64_t> total_rdma_executed;
 
+// Total disks executed
+std::atomic<uint64_t> total_disk_ops_executed;
+
 #ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
 // Total clients ready/done for syncing clients with workloads
 std::atomic<uint64_t> total_clients_ready{};
@@ -276,7 +279,6 @@ void server_worker(
               // Return the correct key in local cache
               auto value = block_cache->get(key, false, exists_in_cache);
               server.get_response(remote_index, remote_port, ResponseType::OK, value);
-              total_ops_executed.fetch_add(1, std::memory_order::relaxed);
             }
             else
             {
@@ -334,10 +336,10 @@ void server_worker(
                 //   panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
                 // }
 
+                total_disk_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 if (!ops_config.DISK_ASYNC)
                 {
                   server->get_response(remote_index, remote_port, ResponseType::OK, value);
-                  total_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 }
               };
 
@@ -405,16 +407,15 @@ void server_worker(
                 {
                   auto buffer = std::string_view(static_cast<char *>(read_buffer), ops_config.VALUE_SIZE);
                   server.get_response(remote_index, remote_port, ResponseType::OK, buffer);
-                  total_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 }
               }
 
               if (!found_in_rdma)
               {
                 fetch_from_disk();
-                total_ops_executed.fetch_add(1, std::memory_order::relaxed);
               }
             }
+            total_ops_executed.fetch_add(1, std::memory_order::relaxed);
           }
           else if (data.isRdmaSetupRequest())
           {
@@ -744,7 +745,9 @@ int main(int argc, char *argv[])
         auto diff_rdma_executed = current_rdma_executed - last_rdma_executed;
         auto current_ops_executed = total_ops_executed.load(std::memory_order::relaxed);
         auto diff_ops_executed = current_ops_executed - last_ops_executed;
-        info("RDMA executed [{}] +[{}] | Ops executed [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed);
+        auto current_disk_ops_executed = total_disk_ops_executed.load(std::memory_order::relaxed);
+        auto diff_disk_ops_executed = current_ops_executed - last_ops_executed;
+        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk ops [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed, current_disk_ops_executed, diff_disk_ops_executed);
         last_rdma_executed = current_rdma_executed;
         last_ops_executed = current_ops_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
