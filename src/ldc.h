@@ -460,34 +460,37 @@ struct CacheIndexLogs : public RDMAData
 
     static std::thread background_worker([this, machine_index]()
     {
-      // Apply to states
-      for (auto i = 0; i < server_configs.size(); i++)
+      while (!g_stop)
       {
-        const auto& server_config = server_configs[i];
-        if (machine_index == i)
+        // Apply to states
+        for (auto i = 0; i < server_configs.size(); i++)
         {
-          continue;
-        }
-        auto& cache_indexes = this->cache_indexes->get_cache_index(i);
-        auto& [cache_index_log_entries, log_index] = machine_cache_index_logs[i];
-        for (auto j = 0; j < MAX_CACHE_INDEX_LOG_SIZE; j++)
-        {
-          auto& cache_index_log_entry = cache_index_log_entries[j];
-          if (!cache_index_log_entry.filled)
+          const auto& server_config = server_configs[i];
+          if (machine_index == i)
           {
             continue;
           }
-          auto key_index = cache_index_log_entry.key;
-          auto cache_index = cache_index_log_entry.cache_index;
-          cache_index_log_entry.filled = false;
-          if (key_index == KEY_VALUE_PTR_INVALID)
+          auto& cache_indexes = this->cache_indexes->get_cache_index(i);
+          auto& [cache_index_log_entries, log_index] = machine_cache_index_logs[i];
+          for (auto j = 0; j < MAX_CACHE_INDEX_LOG_SIZE; j++)
           {
-            continue;
+            auto& cache_index_log_entry = cache_index_log_entries[j];
+            if (!cache_index_log_entry.filled)
+            {
+              continue;
+            }
+            auto key_index = cache_index_log_entry.key;
+            auto cache_index = cache_index_log_entry.cache_index;
+            cache_index_log_entry.filled = false;
+            if (key_index == KEY_VALUE_PTR_INVALID)
+            {
+              continue;
+            }
+            info("[CacheIndexLogs] [{}] Applied key {} with ptr {}", i, key_index, cache_index.key_value_ptr_offset);
+            cache_indexes[key_index] = cache_index;
           }
-          info("[CacheIndexLogs] [{}] Applied key {} with ptr {}", i, key_index, cache_index.key_value_ptr_offset);
-          cache_indexes[key_index] = cache_index;
+          cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE].filled = false;
         }
-        cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE].filled = false;
       }
     });
     background_worker.detach();
