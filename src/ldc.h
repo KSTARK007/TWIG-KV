@@ -479,9 +479,13 @@ struct CacheIndexLogs : public RDMAData
           }
           auto key_index = cache_index_log_entry.key;
           auto cache_index = cache_index_log_entry.cache_index;
+          cache_index_log_entry.filled = true;
+          if (key_index == KEY_VALUE_PTR_INVALID)
+          {
+            continue;
+          }
           info("[CacheIndexLogs] [{}] Applied key {} with ptr {}", i, key_index, cache_index.key_value_ptr_offset);
           cache_indexes[key_index] = cache_index;
-          cache_index_log_entry.filled = true;
         }
         cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE].filled = false;
       }
