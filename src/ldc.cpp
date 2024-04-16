@@ -751,6 +751,7 @@ int main(int argc, char *argv[])
         info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed, current_disk_executed, diff_disk_executed);
         last_rdma_executed = current_rdma_executed;
         last_ops_executed = current_ops_executed;
+        last_disk_executed = current_disk_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
