@@ -486,7 +486,7 @@ struct CacheIndexLogs : public RDMAData
             {
               continue;
             }
-            info("[CacheIndexLogs] [{}] Applied key {} with ptr {}", i, key_index, cache_index.key_value_ptr_offset);
+            LOG_RDMA_DATA("[CacheIndexLogs] [{}] Applied key {} with ptr {}", i, key_index, cache_index.key_value_ptr_offset);
             cache_indexes[key_index] = cache_index;
           }
           cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE].filled = false;
@@ -504,7 +504,7 @@ struct CacheIndexLogs : public RDMAData
     auto current_log_index = log_index.fetch_add(1, std::memory_order_relaxed) % MAX_CACHE_INDEX_LOG_SIZE;
     auto& cache_index_log_entry = cache_index_log_entries[current_log_index];
     cache_index_log_entry = entry;
-    info("[CacheIndexLogs] {} Writing keys to {}", current_log_index, entry.key);
+    LOG_RDMA_DATA("[CacheIndexLogs] {} Writing keys to {}", current_log_index, entry.key);
 
     if (current_log_index == 0)
     {
@@ -519,14 +519,14 @@ struct CacheIndexLogs : public RDMAData
         auto rdma_index = (i * server_configs.size()) + machine_index;
 
         // Check if first entry is not set
-        info("[CacheIndexLogs] Checking if remote [{}] is done {}", i, current_log_index);
+        LOG_RDMA_DATA("[CacheIndexLogs] Checking if remote [{}] is done {}", i, current_log_index);
         auto local_offset = MAX_CACHE_INDEX_LOG_SIZE * sizeof(CacheIndexLogEntry);
         auto token = RDMAData::read(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, local_offset, 0, sizeof(CacheIndexLogEntry));
         token->waitUntilCompleted();
         free_request_token(token);
 
         auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
-        info("[CacheIndexLogs] Checked if remote [{}] is done {} | {}", i, current_log_index, last_entry.filled);
+        LOG_RDMA_DATA("[CacheIndexLogs] Checked if remote [{}] is done {} | {}", i, current_log_index, last_entry.filled);
         if (!last_entry.filled)
         {
           machines_ready++;
@@ -547,10 +547,14 @@ struct CacheIndexLogs : public RDMAData
             continue;
           }
           auto rdma_index = (machine_index * server_configs.size()) + i;
-          info("[CacheIndexLogs] Wrote all keys to {}", i);
+          LOG_RDMA_DATA("[CacheIndexLogs] Wrote all keys to {}", i);
           auto request_token = RDMAData::write(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, 0, 0, cache_index_log_entries_size);      
           pending_write_queue.enqueue(request_token);
         }
+      }
+      else
+      {
+        info("[CacheIndexLogs] Unable to sync! Other nodes are not ready");
       }
     }
   }
