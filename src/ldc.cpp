@@ -607,7 +607,6 @@ int main(int argc, char *argv[])
               auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
               info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
             }, [&](){
-              count_finished++;
             });
           }
         });
@@ -652,6 +651,7 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         while (count_expected * (rdma_nodes.size() - 1) != count_finished)
         {
+          count_finished = rdma_node.rdma_key_value_cache->get_writes();
           std::this_thread::yield();
         }
         finished_running_keys = true;

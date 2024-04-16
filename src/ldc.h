@@ -600,11 +600,13 @@ struct RDMAKeyValueCache : public RDMAData
       LOG_RDMA_DATA("[RDMAKeyValueCache] Writing callback on cache index {} {}", key, value);
       // cache_indexes->write_remote(key, value);
       cache_index_logs->append_entry_k(key);
+      writes.fetch_add(1, std::memory_order::relaxed);
     });
     cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
       LOG_RDMA_DATA("Evicted {}", data.key);
       // cache_indexes->dealloc_remote(data.key);
       cache_index_logs->append_entry_k(data.key);
+      writes.fetch_add(1, std::memory_order::relaxed);
     });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
   }
@@ -656,10 +658,12 @@ struct RDMAKeyValueCache : public RDMAData
   template<typename F, typename FF>
   void execute_pending(F&& on_key_value_storage_read, FF&& on_cache_index_write = default_function)
   {
-    cache_index_logs->execute_pending(default_function);
+    cache_index_logs->execute_pending(on_cache_index_write);
     cache_indexes->execute_pending(std::forward<FF>(on_cache_index_write));
     key_value_storage->execute_pending(std::forward<F>(on_key_value_storage_read));
   }
+
+  uint64_t get_writes() const { return writes.load(std::memory_order::relaxed); }
 
 private:
   std::shared_ptr<BlockCache<std::string, std::string>> block_cache;
@@ -667,6 +671,7 @@ private:
   std::shared_ptr<CacheIndexes> cache_indexes;
   std::unique_ptr<CacheIndexLogs> cache_index_logs;
   std::unique_ptr<KeyValueStorage> key_value_storage;
+  CopyableAtomic<uint64_t> writes;
 };
 
 struct RDMA_connect
