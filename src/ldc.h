@@ -424,6 +424,10 @@ struct CacheIndexes : public RDMAData
       auto offset = key_index * sizeof(RDMACacheIndex);
       const auto& rdma_cache_index = rdma_cache_indexes[machine_index];
       auto rdma_index = (machine_index * server_configs.size()) + i;
+      if (rdma_cache_index[key_index].key_value_ptr_offset == KEY_VALUE_PTR_INVALID)
+      {
+        panic("[{}-{}] Invalid key value ptr offset - key {} offset {}", machine_index, rdma_index, key_index, rdma_cache_index[key_index].key_value_ptr_offset);
+      }
       LOG_RDMA_DATA("[CacheIndexes] Writing remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
       auto request_token = RDMAData::write(rdma_index, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));
       pending_write_queue.enqueue(request_token);
@@ -443,7 +447,7 @@ struct CacheIndexes : public RDMAData
       auto size = rdma_kv_storage->get_allocated_cache_index_size();
       auto offset = key_index * sizeof(RDMACacheIndex);
       auto& rdma_cache_index = rdma_cache_indexes[machine_index];
-      rdma_cache_index[key_index] = RDMACacheIndex{ (uintptr_t)-1 };
+      rdma_cache_index[key_index] = InvalidRDMACacheIndex;
       auto rdma_index = (machine_index * server_configs.size()) + i;
       LOG_RDMA_DATA("[CacheIndexes] Dealloc remote {} - [{}] key {} offset {} {}", i, rdma_index, key_index, (void*)&rdma_cache_index[key_index], rdma_cache_index[key_index].key_value_ptr_offset);
       auto request_token = RDMAData::write(rdma_index, rdma_cache_index, size, offset, offset, sizeof(RDMACacheIndex));
@@ -491,6 +495,7 @@ struct RDMAKeyValueCache : public RDMAData
       cache_indexes->write_remote(key, value);
     });
     cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
+      LOG_RDMA_DATA("Evicted {}", data.key);
       cache_indexes->dealloc_remote(data.key);
     });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
@@ -518,14 +523,15 @@ struct RDMAKeyValueCache : public RDMAData
       }
       RDMACacheIndex* cache_index = cache_indexes->get_cache_index(rdma_index);
       const auto& ci = cache_index[key_index];
-      if (ci.key_value_ptr_offset != -1)
+      if (ci.key_value_ptr_offset == KEY_VALUE_PTR_INVALID)
       {
-        // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
-        LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
-        key_value_storage->read(rdma_index, callback, ci);
-        found_remote_machine_with_possible_value = true;
-        break;
+        continue;
       }
+      // auto rdma_index = (machine_index * server_configs.size()) + remote_index;
+      LOG_RDMA_DATA("[RDMAKeyValueCache] Reading cache index {} key {} key_value_offset {}", rdma_index, key_index, (uint64_t)ci.key_value_ptr_offset);
+      key_value_storage->read(rdma_index, callback, ci);
+      found_remote_machine_with_possible_value = true;
+      break;
     }
     return found_remote_machine_with_possible_value;
   }

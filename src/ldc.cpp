@@ -349,59 +349,56 @@ void server_worker(
                 }
 
                 LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
-                if (config.baseline.one_sided_rdma_enabled)
+                if (config.baseline.use_cache_indexing)
                 {
-                  if (config.baseline.use_cache_indexing)
+                  auto& rdma_node = std::begin(rdma_nodes)->second;
+                  found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                   {
-                    auto& rdma_node = std::begin(rdma_nodes)->second;
-                    found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
-                    {
-                      auto& server = *server_;
-                      total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
-
-                      uint64_t key_index = kv.key_index;
-                      auto value_view = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
-                      std::string value(value_view);
-                      LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
-                      if (key_index == expected_key)
-                      {
-                        LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
-                        if(config.policy_type == "nchance"){
-                          int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
-                          LOG_STATE("remote_index_to_forward {} base_index {} server_start_index {}", 
-                          remote_index_to_forward, base_index, server_start_index);
-                          auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
-
-                          if (tmp_ptr != nullptr){
-                            LOG_STATE("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
-                            auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
-                            auto port = config.remote_machine_configs[machine_index].port + thread_index;
-                            info("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
-                                tmp_data->key, tmp_data->singleton, tmp_data->forward_count, port);
-                            server.append_singleton_put_request(remote_index_to_forward, port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
-                          }
-                        }
-                        if(config.policy_type == "access_rate"){
-                          // block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value);
-                          if(block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value)){
-                            block_cache->cache_freq_addition++;
-                          }
-                        }
-                        server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
-                      }
-                      else
-                      {
-                        // info("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
-                        fetch_from_disk();
-                      }
-                    });
-                  }
-                  else
-                  {
+                    auto& server = *server_;
                     total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
-                    read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
-                    found_in_rdma = true;
-                  }
+
+                    uint64_t key_index = kv.key_index;
+                    auto value_view = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
+                    std::string value(value_view);
+                    LOG_RDMA_DATA("[Read RDMA Callback] [{}] key {} value {}", remote_index, key_index, value);
+                    if (key_index == expected_key)
+                    {
+                      LOG_RDMA_DATA("[Read RDMA Callback] Expected! key {} value {}", key_index, value);
+                      if(config.policy_type == "nchance"){
+                        int remote_index_to_forward = ((base_index + 1) % num_servers) + server_start_index;
+                        LOG_RDMA_DATA("remote_index_to_forward {} base_index {} server_start_index {}", 
+                        remote_index_to_forward, base_index, server_start_index);
+                        auto tmp_ptr = block_cache->get_cache()->put_nchance(std::to_string(key_index), value);
+
+                        if (tmp_ptr != nullptr){
+                          LOG_RDMA_DATA("singleton forward to index {} from index {} key {} value {} to cache", remote_index_to_forward, base_index, key_index, value);
+                          auto tmp_data = static_cast<EvictionCallbackData<std::string, std::string> *>(tmp_ptr);
+                          auto port = config.remote_machine_configs[machine_index].port + thread_index;
+                          LOG_RDMA_DATA("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
+                              tmp_data->key, tmp_data->singleton, tmp_data->forward_count, port);
+                          server.append_singleton_put_request(remote_index_to_forward, port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                        }
+                      }
+                      if(config.policy_type == "access_rate"){
+                        // block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value);
+                        if(block_cache->get_cache()->put_access_rate_match(std::to_string(key_index), value)){
+                          block_cache->cache_freq_addition++;
+                        }
+                      }
+                      server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
+                    }
+                    else
+                    {
+                      LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
+                      fetch_from_disk();
+                    }
+                  });
+                }
+                else
+                {
+                  total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
+                  read_correct_node(ops_config, rdma_nodes, server_start_index, key_index, read_buffer, &server, remote_index, remote_port);
+                  found_in_rdma = true;
                 }
 
                 if (!ops_config.RDMA_ASYNC)
@@ -437,14 +434,14 @@ void server_worker(
           {
             LOG_STATE("[{}-{}:{}] Put response [{}]", machine_index, remote_index, remote_port,
               kj::str(data).cStr());
-            info("[Server] Singleton put request");
+            LOG_RDMA_DATA("[Server] Singleton put request");
             auto p = data.getSingletonPutRequest();
             std::string keyStr = p.getKey().cStr();  // Convert capnp::Text::Reader to std::string
             std::string valueStr = p.getValue().cStr();
-            info("[Server] Singleton put request key = {} value = {} singleton = {} forward_count = {}",
+            LOG_RDMA_DATA("[Server] Singleton put request key = {} value = {} singleton = {} forward_count = {}",
                  keyStr, valueStr, p.getSingleton(), p.getForwardCount());
             block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
-            info("[Server] Singleton put request done");
+            LOG_RDMA_DATA("[Server] Singleton put request done");
             // server.singleton_put_response(remote_index, ResponseType::OK);
           }
           else if (data.isDeleteRequest())
