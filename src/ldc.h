@@ -473,13 +473,13 @@ struct CacheIndexLogs : public RDMAData
         for (auto j = 0; j < MAX_CACHE_INDEX_LOG_SIZE; j++)
         {
           auto& cache_index_log_entry = cache_index_log_entries[j];
-          if (cache_index_log_entry.filled)
+          if (!cache_index_log_entry.filled)
           {
             continue;
           }
           auto key_index = cache_index_log_entry.key;
           auto cache_index = cache_index_log_entry.cache_index;
-          cache_index_log_entry.filled = true;
+          cache_index_log_entry.filled = false;
           if (key_index == KEY_VALUE_PTR_INVALID)
           {
             continue;
