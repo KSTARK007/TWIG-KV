@@ -739,15 +739,16 @@ int main(int argc, char *argv[])
     {
       uint64_t last_ops_executed = 0;
       uint64_t last_rdma_executed = 0;
+      uint64_t last_disk_executed = 0;
       while (!g_stop)
       {
         auto current_rdma_executed = total_rdma_executed.load(std::memory_order::relaxed);
         auto diff_rdma_executed = current_rdma_executed - last_rdma_executed;
         auto current_ops_executed = total_ops_executed.load(std::memory_order::relaxed);
         auto diff_ops_executed = current_ops_executed - last_ops_executed;
-        auto current_disk_ops_executed = total_disk_ops_executed.load(std::memory_order::relaxed);
-        auto diff_disk_ops_executed = current_ops_executed - last_ops_executed;
-        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk ops [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed, current_disk_ops_executed, diff_disk_ops_executed);
+        auto current_disk_executed = total_disk_ops_executed.load(std::memory_order::relaxed);
+        auto diff_disk_executed = current_disk_executed - last_disk_executed;
+        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed, current_disk_executed, diff_disk_executed);
         last_rdma_executed = current_rdma_executed;
         last_ops_executed = current_ops_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
