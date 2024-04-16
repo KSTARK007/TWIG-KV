@@ -271,6 +271,8 @@ void server_worker(
           {
             auto p = data.getGetRequest();
 
+            total_ops_executed.fetch_add(1, std::memory_order::relaxed);
+
             auto key_ = p.getKey();
             auto key = key_.cStr();
             auto exists_in_cache = block_cache->exists_in_cache(key);
@@ -299,7 +301,6 @@ void server_worker(
                 {
                   if (ops_config.DISK_ASYNC) {
                     // Cache miss
-                    block_cache->increment_cache_miss();
                     block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey, block_cache](auto value) {
                       // Add to cache
                       block_cache->get_cache()->put(skey, value);
@@ -316,7 +317,6 @@ void server_worker(
                 {
                   // Cache miss
                   LOG_STATE("Fetching from disk {} {}", skey, value);
-                  block_cache->increment_cache_miss();
                   if (ops_config.DISK_ASYNC) {
                     block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey](auto value) {
                       // Send the response
@@ -415,7 +415,6 @@ void server_worker(
                 fetch_from_disk();
               }
             }
-            total_ops_executed.fetch_add(1, std::memory_order::relaxed);
           }
           else if (data.isRdmaSetupRequest())
           {
@@ -735,11 +734,14 @@ int main(int argc, char *argv[])
 
   if (is_server)
   {
-    static std::thread background_monitoring_thread([&]()
+    static std::thread background_monitoring_thread([&, block_cache]()
     {
       uint64_t last_ops_executed = 0;
       uint64_t last_rdma_executed = 0;
       uint64_t last_disk_executed = 0;
+      uint64_t last_cache_reads = 0;
+      uint64_t last_cache_hits = 0;
+      uint64_t last_cache_misses = 0;
       while (!g_stop)
       {
         auto current_rdma_executed = total_rdma_executed.load(std::memory_order::relaxed);
@@ -748,10 +750,28 @@ int main(int argc, char *argv[])
         auto diff_ops_executed = current_ops_executed - last_ops_executed;
         auto current_disk_executed = total_disk_ops_executed.load(std::memory_order::relaxed);
         auto diff_disk_executed = current_disk_executed - last_disk_executed;
-        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}]", current_rdma_executed, diff_rdma_executed, current_ops_executed, diff_ops_executed, current_disk_executed, diff_disk_executed);
+
+        auto cache_info = block_cache->dump_cache_info_as_json();
+        auto current_cache_reads = cache_info["reads"];
+        auto current_cache_hits = cache_info["cache_hit"];
+        auto current_cache_misses = cache_info["cache_miss"];
+
+        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}] | C Read [{}] +[{}] | C Hit [{}] +[{}] | C Miss [{}] +[{}]", 
+            current_rdma_executed, diff_rdma_executed,
+            current_ops_executed, diff_ops_executed,
+            current_disk_executed, diff_disk_executed,
+            current_cache_reads, last_cache_reads,
+            current_cache_hits, last_cache_hits,
+            current_cache_misses, last_cache_misses,
+        );
+
         last_rdma_executed = current_rdma_executed;
         last_ops_executed = current_ops_executed;
         last_disk_executed = current_disk_executed;
+        last_cache_reads = current_cache_reads;
+        last_cache_hits = current_cache_hits;
+        last_cache_misses = current_cache_misses;
+
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
