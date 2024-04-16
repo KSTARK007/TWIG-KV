@@ -656,8 +656,8 @@ struct RDMAKeyValueCache : public RDMAData
 private:
   std::shared_ptr<BlockCache<std::string, std::string>> block_cache;
   RDMAKeyValueStorage* kv_storage;
-  std::unique_ptr<CacheIndexLogs> cache_index_logs;
   std::shared_ptr<CacheIndexes> cache_indexes;
+  std::unique_ptr<CacheIndexLogs> cache_index_logs;
   std::unique_ptr<KeyValueStorage> key_value_storage;
 };
 
