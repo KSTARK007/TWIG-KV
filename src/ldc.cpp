@@ -752,9 +752,12 @@ int main(int argc, char *argv[])
         auto diff_disk_executed = current_disk_executed - last_disk_executed;
 
         auto cache_info = block_cache->dump_cache_info_as_json();
-        auto current_cache_reads = cache_info["reads"].template get<uint64_t>();
-        auto current_cache_hits = cache_info["cache_hit"].template get<uint64_t>();
-        auto current_cache_misses = cache_info["cache_miss"].template get<uint64_t>();
+        uint64_t current_cache_reads{};
+        uint64_t current_cache_hits{};
+        uint64_t current_cache_misses{};
+        cache_info.at("reads").get_to(current_cache_reads);
+        cache_info.at("cache_hit").get_to(current_cache_hits);
+        cache_info.at("cache_miss").get_to(current_cache_misses);
 
         info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}] | C Read [{}] +[{}] | C Hit [{}] +[{}] | C Miss [{}] +[{}]", 
             current_rdma_executed, diff_rdma_executed,
