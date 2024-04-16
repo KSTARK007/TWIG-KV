@@ -495,11 +495,13 @@ struct CacheIndexLogs : public RDMAData
 
   void append_entry(CacheIndexLogEntry entry)
   {
+    entry.filled = true;
+
+    info("[CacheIndexLogs] Writing keys to {}", entry.key);
     auto& [cache_index_log_entries, log_index] = machine_cache_index_logs[machine_index];
     auto current_log_index = log_index.fetch_add(1, std::memory_order_relaxed) % MAX_CACHE_INDEX_LOG_SIZE;
     auto& cache_index_log_entry = cache_index_log_entries[current_log_index];
     cache_index_log_entry = entry;
-    entry.filled = true;
 
     if (current_log_index == 0)
     {
@@ -514,12 +516,14 @@ struct CacheIndexLogs : public RDMAData
         auto rdma_index = (i * server_configs.size()) + machine_index;
 
         // Check if first entry is not set
+        info("[CacheIndexLogs] Checking if remote [{}] is done {}", i, current_log_index);
         auto local_offset = MAX_CACHE_INDEX_LOG_SIZE * sizeof(CacheIndexLogEntry);
         auto token = RDMAData::read(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, local_offset, 0, sizeof(CacheIndexLogEntry));
         token->waitUntilCompleted();
         free_request_token(token);
 
         auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
+        info("[CacheIndexLogs] Checked if remote [{}] is done {} | {}", i, current_log_index, last_entry.filled);
         if (!last_entry.filled)
         {
           machines_ready++;
