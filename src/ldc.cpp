@@ -762,7 +762,7 @@ int main(int argc, char *argv[])
             current_disk_executed, diff_disk_executed,
             current_cache_reads, last_cache_reads,
             current_cache_hits, last_cache_hits,
-            current_cache_misses, last_cache_misses,
+            current_cache_misses, last_cache_misses
         );
 
         last_rdma_executed = current_rdma_executed;
