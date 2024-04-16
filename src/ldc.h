@@ -434,6 +434,23 @@ struct CacheIndexes : public RDMAData
     }
   }
 
+  void update_local_key(uint64_t expected_key, uint64_t key, const std::string& value)
+  {
+    auto expected_key_index = expected_key;
+    auto key_index = key;
+    const auto& my_rdma_cache_index = rdma_cache_indexes[machine_index];
+    for (auto i = 0; i < server_configs.size(); i++)
+    {
+      const auto& server_config = server_configs[i];
+      if (machine_index == i)
+      {
+        continue;
+      }
+      auto& rdma_cache_index = rdma_cache_indexes[i];
+      rdma_cache_index[key_index] = my_rdma_cache_index[expected_key_index]; 
+    }
+  }
+
   void dealloc_remote(const std::string& key)
   {
     auto key_index = std::stoi(key);
@@ -538,6 +555,11 @@ struct RDMAKeyValueCache : public RDMAData
 
   inline static void default_function()
   {
+  }
+
+  void update_local_key(uint64_t expected_key, uint64_t key, const std::string& value)
+  {
+    cache_indexes->update_local_key(expected_key, key, value);
   }
 
   template<typename F, typename FF>

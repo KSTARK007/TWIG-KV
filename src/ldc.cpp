@@ -391,6 +391,7 @@ void server_worker(
                     }
                     else
                     {
+                      rdma_node.rdma_key_value_cache->update_local_key(expected_key, key_index, value);
                       LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                       fetch_from_disk();
                     }
