@@ -341,6 +341,7 @@ void server_worker(
                 {
                   server->get_response(remote_index, remote_port, ResponseType::OK, value);
                 }
+                block_cache->increment_cache_miss();
               };
 
               if (config.baseline.one_sided_rdma_enabled)
