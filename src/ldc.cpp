@@ -24,6 +24,12 @@ std::atomic<uint64_t> total_rdma_executed;
 // Total disks executed
 std::atomic<uint64_t> total_disk_ops_executed;
 
+// Remote disks access
+std::atomic<uint64_t> remote_disk_access;
+
+// Local disks access
+std::atomic<uint64_t> local_disk_access;
+
 #ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
 // Total clients ready/done for syncing clients with workloads
 std::atomic<uint64_t> total_clients_ready{};
@@ -392,6 +398,7 @@ void server_worker(
                     }
                     else
                     {
+                      remote_disk_access.fetch_add(1, std::memory_order::relaxed);
                       rdma_node.rdma_key_value_cache->update_local_key(expected_key, key_index, value);
                       LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                       fetch_from_disk();
@@ -414,6 +421,7 @@ void server_worker(
 
               if (!found_in_rdma)
               {
+                local_disk_access.fetch_add(1, std::memory_order::relaxed);
                 fetch_from_disk();
               }
             }
@@ -744,6 +752,8 @@ int main(int argc, char *argv[])
       uint64_t last_cache_reads = 0;
       uint64_t last_cache_hits = 0;
       uint64_t last_cache_misses = 0;
+      uint64_t last_remote_disk_access = 0;
+      uint64_t last_local_disk_access = 0;
       while (!g_stop)
       {
         auto current_rdma_executed = total_rdma_executed.load(std::memory_order::relaxed);
@@ -752,6 +762,10 @@ int main(int argc, char *argv[])
         auto diff_ops_executed = current_ops_executed - last_ops_executed;
         auto current_disk_executed = total_disk_ops_executed.load(std::memory_order::relaxed);
         auto diff_disk_executed = current_disk_executed - last_disk_executed;
+        auto current_remote_disk_access = remote_disk_access.load(std::memory_order::relaxed);
+        auto diff_remote_disk_access = current_disk_executed - last_remote_disk_access;
+        auto current_local_disk_access = local_disk_access.load(std::memory_order::relaxed);
+        auto diff_local_disk_access = current_disk_executed - last_local_disk_access;
 
         auto cache_info = block_cache->dump_cache_info_as_json();
         uint64_t current_cache_reads{};
@@ -764,13 +778,15 @@ int main(int argc, char *argv[])
         auto diff_cache_hits = current_cache_hits - last_cache_hits;
         auto diff_cache_misses = current_cache_misses - last_cache_misses;
 
-        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}] | C Read [{}] +[{}] | C Hit [{}] +[{}] | C Miss [{}] +[{}]", 
+        info("Ops [{}] +[{}] | RDMA [{}] +[{}] | Disk [{}] +[{}] | C Read [{}] +[{}] | C Hit [{}] +[{}] | C Miss [{}] +[{}] | R Disk [{}] +[{}] | L Disk [{}] +[{}]", 
             current_rdma_executed, diff_rdma_executed,
             current_ops_executed, diff_ops_executed,
             current_disk_executed, diff_disk_executed,
             current_cache_reads, diff_cache_reads,
             current_cache_hits, diff_cache_hits,
-            current_cache_misses, diff_cache_misses
+            current_cache_misses, diff_cache_misses,
+            current_remote_disk_access, diff_remote_disk_access,
+            current_local_disk_access, diff_local_disk_access
         );
 
         last_rdma_executed = current_rdma_executed;
@@ -779,6 +795,8 @@ int main(int argc, char *argv[])
         last_cache_reads = current_cache_reads;
         last_cache_hits = current_cache_hits;
         last_cache_misses = current_cache_misses;
+        last_remote_disk_access = current_remote_disk_access;
+        last_local_disk_access = current_local_disk_access;
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
