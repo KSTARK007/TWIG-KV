@@ -436,13 +436,18 @@ struct CacheIndexLogs : public RDMAData
     infinity::queues::QueuePairFactory* qp_factory, std::shared_ptr<CacheIndexes> cache_indexes_) :
     RDMAData(block_cache_config, ops_config, machine_index, context, qp_factory), cache_indexes(cache_indexes_)
   {
+    if (!ops_config.use_cache_logs)
+    {
+      return;
+    }
+    max_cache_log_index = ops_config.cache_log_sync_every_x_operations;
     LOG_RDMA_DATA("[CacheIndexLogs] Initializing");
     machine_cache_index_logs.resize(server_configs.size());
     for (auto i = 0; i < server_configs.size(); i++)
     {
       auto server_config = server_configs[i];
       // TODO: add to config
-      auto cache_index_log_size = MAX_CACHE_INDEX_LOG_SIZE;
+      auto cache_index_log_size = max_cache_log_index;
       auto& cache_index_log_entries = machine_cache_index_logs[i].cache_index_log_entries;
       cache_index_log_entries.resize(cache_index_log_size + 1);
       auto done_connect = std::async(std::launch::async, [&] {
@@ -472,7 +477,7 @@ struct CacheIndexLogs : public RDMAData
           }
           auto& cache_indexes = this->cache_indexes->get_cache_index(i);
           auto& [cache_index_log_entries, log_index] = machine_cache_index_logs[i];
-          for (auto j = 0; j < MAX_CACHE_INDEX_LOG_SIZE; j++)
+          for (auto j = 0; j < max_cache_log_index; j++)
           {
             auto& cache_index_log_entry = cache_index_log_entries[j];
             if (!cache_index_log_entry.filled)
@@ -489,7 +494,7 @@ struct CacheIndexLogs : public RDMAData
             LOG_RDMA_DATA("[CacheIndexLogs] [{}] Applied key {} with ptr {}", i, key_index, cache_index.key_value_ptr_offset);
             cache_indexes[key_index] = cache_index;
           }
-          cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE].filled = false;
+          cache_index_log_entries[max_cache_log_index].filled = false;
         }
       }
     });
@@ -501,7 +506,7 @@ struct CacheIndexLogs : public RDMAData
     entry.filled = true;
 
     auto& [cache_index_log_entries, log_index] = machine_cache_index_logs[machine_index];
-    auto current_log_index = log_index.fetch_add(1, std::memory_order_relaxed) % MAX_CACHE_INDEX_LOG_SIZE;
+    auto current_log_index = log_index.fetch_add(1, std::memory_order_relaxed) % max_cache_log_index;
     auto& cache_index_log_entry = cache_index_log_entries[current_log_index];
     cache_index_log_entry = entry;
     LOG_RDMA_DATA("[CacheIndexLogs] {} Writing keys to {}", current_log_index, entry.key);
@@ -523,12 +528,12 @@ struct CacheIndexLogs : public RDMAData
 
           // Check if first entry is not set
           LOG_RDMA_DATA("[CacheIndexLogs] Checking if remote [{}] is done {}", i, current_log_index);
-          auto local_offset = MAX_CACHE_INDEX_LOG_SIZE * sizeof(CacheIndexLogEntry);
+          auto local_offset = max_cache_log_index * sizeof(CacheIndexLogEntry);
           auto token = RDMAData::read(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, local_offset, 0, sizeof(CacheIndexLogEntry));
           token->waitUntilCompleted();
           free_request_token(token);
 
-          auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
+          auto& last_entry = cache_index_log_entries[max_cache_log_index];
           LOG_RDMA_DATA("[CacheIndexLogs] Checked if remote [{}] is done {} | {}", i, current_log_index, last_entry.filled);
           if (!last_entry.filled)
           {
@@ -538,7 +543,7 @@ struct CacheIndexLogs : public RDMAData
 
         if (machines_ready == server_configs.size() - 1)
         {
-          auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
+          auto& last_entry = cache_index_log_entries[max_cache_log_index];
           last_entry.filled = true;
 
           // Write to remote machines
@@ -587,7 +592,7 @@ struct CacheIndexLogs : public RDMAData
     }
   }
 
-  const uint64_t MAX_CACHE_INDEX_LOG_SIZE = 10000;
+  uint64_t max_cache_log_index = 0;
   uint64_t cache_index_log_entries_size = 0;
   std::vector<MachineCacheIndexLog> machine_cache_index_logs;
   MPMCQueue<std::shared_ptr<infinity::requests::RequestToken>> pending_write_queue;
@@ -860,4 +865,139 @@ struct CacheLayerData
     bool singleton;
     uint64_t forward_count;
     int replica_count;
+};
+
+struct SnapshotEntry
+{
+  uint64_t key_index;
+  uint64_t total_accesses;
+  uint64_t cache_hits;
+  uint64_t cache_miss;
+  uint64_t evicted;
+  uint64_t disk_access;
+  uint64_t local_disk_access;
+  uint64_t remote_disk_access;
+};
+
+inline void to_json(json& j, const SnapshotEntry& e)
+{
+  j = json{
+    { "key_index", e.key_index },
+    { "total_accesses", e.total_accesses },
+    { "cache_hits", e.cache_hits },
+    { "cache_miss", e.cache_miss },
+    { "evicted", e.evicted },
+    { "disk_access", e.disk_access },
+    { "local_disk_access", e.local_disk_access },
+    { "remote_disk_access", e.remote_disk_access }
+  };
+}
+
+struct Snapshot
+{
+  explicit Snapshot(BlockCacheConfig block_cache_config_, Configuration ops_config_) :
+    block_cache_config(block_cache_config_), ops_config(ops_config_)
+  {
+    entries.resize(ops_config.NUM_KEY_VALUE_PAIRS);
+    for (auto i = 0; i < entries.size(); i++)
+    {
+      entries[i].key_index = i;
+    }
+
+    // Background thread
+    static std::thread background_thread([this]()
+    {
+      while (!g_stop)
+      {
+        this->dump();
+        std::this_thread::sleep_for(std::chrono::milliseconds(ops_config.dump_snapshot_period_ms));        
+      }
+    });
+    background_thread.detach();
+  }
+
+  bool enabled() const
+  {
+    return ops_config.dump_snapshot_period_ms != 0;
+  }
+
+  SnapshotEntry& get_entry(const std::string& key)
+  {
+    auto i = std::stoi(key);
+    return entries[i];
+  }
+
+  void update_total_access(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.total_accesses++;
+  }
+
+  void update_cache_hits(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.cache_hits++;
+  }
+
+  void update_cache_miss(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.cache_miss++;
+  }
+
+  void update_evicted(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.evicted++;
+  }
+
+  void update_disk_access(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.disk_access++;
+  }
+
+  void update_local_disk_access(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.local_disk_access++;
+  }
+
+  void update_remote_disk_access(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.remote_disk_access++;
+  }
+
+  void dump()
+  {
+    auto p = ops_config.dump_snapshot_file + std::to_string(index);
+    std::ofstream o(p, std::ios::app);
+    if (!o)
+    {
+      panic("Cannot open path to {}", p);
+    }
+
+    index++;
+    json j;
+    for (const auto& e : entries)
+    {
+      j.push_back(e);
+    }
+    o << std::setw(4) << j << std::endl;
+  }
+
+private:
+  BlockCacheConfig block_cache_config;
+  Configuration ops_config;
+  std::vector<SnapshotEntry> entries;
+
+  CopyableAtomic<uint64_t> index;
 };

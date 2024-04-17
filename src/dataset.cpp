@@ -245,5 +245,9 @@ Configuration parseConfigFile(const std::string &configFile)
   config.infinity_bound_nic = jsonData["infinity_bound_nic"];
   config.infinity_bound_device_port = jsonData["infinity_bound_device_port"];
   config.operations_pollute_cache = jsonData["operations_pollute_cache"];
+  config.use_cache_logs = jsonData["use_cache_logs"];
+  config.cache_log_sync_every_x_operations = jsonData["cache_log_sync_every_x_operations"];
+  config.dump_snapshot_period_ms = jsonData["dump_snapshot_period_ms"];
+  config.dump_snapshot_file = jsonData["dump_snapshot_file"];
   return config;
 }

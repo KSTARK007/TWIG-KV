@@ -48,6 +48,10 @@ struct Configuration
   std::string infinity_bound_nic;
   int infinity_bound_device_port;
   bool operations_pollute_cache;
+  bool use_cache_logs;
+  int cache_log_sync_every_x_operations;
+  int dump_snapshot_period_ms;
+  std::string dump_snapshot_file;
 };
 
 struct Operation
