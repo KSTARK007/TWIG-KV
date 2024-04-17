@@ -765,7 +765,7 @@ int main(int argc, char *argv[])
         auto current_remote_disk_access = remote_disk_access.load(std::memory_order::relaxed);
         auto diff_remote_disk_access = current_disk_executed - last_remote_disk_access;
         auto current_local_disk_access = local_disk_access.load(std::memory_order::relaxed);
-        auto diff_local_disk_access = current_disk_executed - last_local_disk_access;
+        auto diff_local_disk_access = current_local_disk_access - last_local_disk_access;
 
         auto cache_info = block_cache->dump_cache_info_as_json();
         uint64_t current_cache_reads{};
