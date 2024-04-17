@@ -508,37 +508,10 @@ struct CacheIndexLogs : public RDMAData
 
     if (current_log_index == 0)
     {
-      auto machines_ready = 0;
-      for (auto i = 0; i < server_configs.size(); i++)
+      bool done = false;
+      while (!done)
       {
-        const auto& server_config = server_configs[i];
-        if (machine_index == i)
-        {
-          continue;
-        }
-        auto rdma_index = (i * server_configs.size()) + machine_index;
-
-        // Check if first entry is not set
-        LOG_RDMA_DATA("[CacheIndexLogs] Checking if remote [{}] is done {}", i, current_log_index);
-        auto local_offset = MAX_CACHE_INDEX_LOG_SIZE * sizeof(CacheIndexLogEntry);
-        auto token = RDMAData::read(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, local_offset, 0, sizeof(CacheIndexLogEntry));
-        token->waitUntilCompleted();
-        free_request_token(token);
-
-        auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
-        LOG_RDMA_DATA("[CacheIndexLogs] Checked if remote [{}] is done {} | {}", i, current_log_index, last_entry.filled);
-        if (!last_entry.filled)
-        {
-          machines_ready++;
-        }
-      }
-
-      if (machines_ready == server_configs.size() - 1)
-      {
-        auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
-        last_entry.filled = true;
-
-        // Write to remote machines
+        auto machines_ready = 0;
         for (auto i = 0; i < server_configs.size(); i++)
         {
           const auto& server_config = server_configs[i];
@@ -546,15 +519,49 @@ struct CacheIndexLogs : public RDMAData
           {
             continue;
           }
-          auto rdma_index = (machine_index * server_configs.size()) + i;
-          LOG_RDMA_DATA("[CacheIndexLogs] Wrote all keys to {}", i);
-          auto request_token = RDMAData::write(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, 0, 0, cache_index_log_entries_size);      
-          pending_write_queue.enqueue(request_token);
+          auto rdma_index = (i * server_configs.size()) + machine_index;
+
+          // Check if first entry is not set
+          LOG_RDMA_DATA("[CacheIndexLogs] Checking if remote [{}] is done {}", i, current_log_index);
+          auto local_offset = MAX_CACHE_INDEX_LOG_SIZE * sizeof(CacheIndexLogEntry);
+          auto token = RDMAData::read(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, local_offset, 0, sizeof(CacheIndexLogEntry));
+          token->waitUntilCompleted();
+          free_request_token(token);
+
+          auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
+          LOG_RDMA_DATA("[CacheIndexLogs] Checked if remote [{}] is done {} | {}", i, current_log_index, last_entry.filled);
+          if (!last_entry.filled)
+          {
+            machines_ready++;
+          }
         }
-      }
-      else
-      {
-        info("[CacheIndexLogs] Unable to sync! Other nodes are not ready");
+
+        if (machines_ready == server_configs.size() - 1)
+        {
+          auto& last_entry = cache_index_log_entries[MAX_CACHE_INDEX_LOG_SIZE];
+          last_entry.filled = true;
+
+          // Write to remote machines
+          for (auto i = 0; i < server_configs.size(); i++)
+          {
+            const auto& server_config = server_configs[i];
+            if (machine_index == i)
+            {
+              continue;
+            }
+            auto rdma_index = (machine_index * server_configs.size()) + i;
+            LOG_RDMA_DATA("[CacheIndexLogs] Wrote all keys to {}", i);
+            auto request_token = RDMAData::write(rdma_index, cache_index_log_entries.data(), cache_index_log_entries_size, 0, 0, cache_index_log_entries_size);
+            request_token->waitUntilCompleted();
+            free_request_token(std::move(request_token));
+            // pending_write_queue.enqueue(request_token);
+          }
+          done = true;
+        }
+        else
+        {
+          info("[CacheIndexLogs] Unable to sync! Other nodes are not ready");
+        }
       }
     }
   }
