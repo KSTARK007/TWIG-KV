@@ -617,14 +617,26 @@ struct RDMAKeyValueCache : public RDMAData
     cache->add_callback_on_write([this](const std::string& key, const std::string& value){
       // Update the cache_indexes on remote nodes
       LOG_RDMA_DATA("[RDMAKeyValueCache] Writing callback on cache index {} {}", key, value);
-      // cache_indexes->write_remote(key, value);
-      cache_index_logs->append_entry_k(key);
+      if (ops_config.use_cache_logs)
+      {
+        cache_index_logs->append_entry_k(key);
+      }
+      else
+      {
+        cache_indexes->write_remote(key, value);
+      }
       writes.fetch_add(1, std::memory_order::relaxed);
     });
     cache->add_callback_on_eviction([this](EvictionCallbackData<std::string, std::string> data){
       LOG_RDMA_DATA("Evicted {}", data.key);
-      // cache_indexes->dealloc_remote(data.key);
-      cache_index_logs->append_entry_k(data.key);
+      if (ops_config.use_cache_logs)
+      {
+        cache_index_logs->append_entry_k(data.key);
+      }
+      else
+      {
+        cache_indexes->dealloc_remote(data.key);
+      }
       writes.fetch_add(1, std::memory_order::relaxed);
     });
     LOG_RDMA_DATA("[RDMAKeyValueCache] Initialized");
@@ -936,6 +948,10 @@ struct Snapshot
   void update_total_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_total_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
     auto& e = get_entry(key);
     e.total_accesses++;
   }
@@ -943,6 +959,11 @@ struct Snapshot
   void update_cache_hits(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_cache_hits] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.cache_hits++;
   }
@@ -950,6 +971,11 @@ struct Snapshot
   void update_cache_miss(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_cache_miss] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.cache_miss++;
   }
@@ -957,6 +983,11 @@ struct Snapshot
   void update_evicted(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_evicted] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.evicted++;
   }
@@ -964,6 +995,11 @@ struct Snapshot
   void update_disk_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.disk_access++;
   }
@@ -971,6 +1007,11 @@ struct Snapshot
   void update_local_disk_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_local_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.local_disk_access++;
   }
@@ -978,6 +1019,11 @@ struct Snapshot
   void update_remote_disk_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_remote_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.remote_disk_access++;
   }
@@ -985,6 +1031,11 @@ struct Snapshot
   void update_access_rate(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_access_rate] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.access_rate++;
   }
