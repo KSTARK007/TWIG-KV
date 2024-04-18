@@ -926,7 +926,10 @@ struct Snapshot
   SnapshotEntry& get_entry(uint64_t key)
   {
     auto i = key;
-    info("GOT {}", key);
+    if (i > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] Getting entry out of bounds {} > {}", i, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
     return entries[i];
   }
 
