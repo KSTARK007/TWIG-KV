@@ -283,21 +283,21 @@ void server_worker(
 
             auto key_ = p.getKey();
             auto key = key_.cStr();
+            auto key_index = std::stoi(key);
             auto exists_in_cache = block_cache->exists_in_cache(key);
             if (exists_in_cache)
             {
-              snapshot->update_cache_hits(key);
+              snapshot->update_cache_hits(key_index);
               // Return the correct key in local cache
               auto value = block_cache->get(key, false, exists_in_cache);
               server.get_response(remote_index, remote_port, ResponseType::OK, value);
             }
             else
             {
-              snapshot->update_cache_miss(key);
+              snapshot->update_cache_miss(key_index);
               // Otherwise, if RDMA is renabled, read from the correct node
               bool found_in_rdma = false;
 
-              auto key_index = std::stoi(key);
               auto division_of_key_value_pairs = static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / num_servers;
               auto remote_machine_index_to_rdma = static_cast<int>(
                   static_cast<float>(key_index) / division_of_key_value_pairs);
@@ -306,7 +306,7 @@ void server_worker(
 
               auto fetch_from_disk = [=, skey=std::string(key), server=server_]()
               {
-                snapshot->update_disk_access(skey);
+                snapshot->update_disk_access(key_index);
                 std::string value;
                 if (ops_config.operations_pollute_cache)
                 {
@@ -391,16 +391,17 @@ void server_worker(
                           LOG_RDMA_DATA("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                               tmp_data->key, tmp_data->singleton, tmp_data->forward_count, port);
 
-                          snapshot->update_disk_access(tmp_data->key);
+                          snapshot->update_disk_access(std::stoi(tmp_data->key));
 
                           server.append_singleton_put_request(remote_index_to_forward, port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
+                          delete tmp_data;
                         }
                       }
                       if(config.policy_type == "access_rate"){
                         auto key = std::to_string(key_index);
                         if(block_cache->get_cache()->put_access_rate_match(key, value)){
                           block_cache->cache_freq_addition++;
-                          snapshot->update_access_rate(key);
+                          snapshot->update_access_rate(key_index);
                         }
                       }
                       server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
@@ -408,7 +409,7 @@ void server_worker(
                     else
                     {
                       remote_disk_access.fetch_add(1, std::memory_order::relaxed);
-                      snapshot->update_remote_disk_access(key);
+                      snapshot->update_remote_disk_access(key_index);
                       rdma_node.rdma_key_value_cache->update_local_key(expected_key, key_index, value);
                       LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                       fetch_from_disk();
@@ -432,12 +433,12 @@ void server_worker(
               if (!found_in_rdma)
               {
                 local_disk_access.fetch_add(1, std::memory_order::relaxed);
-                snapshot->update_local_disk_access(key);
+                snapshot->update_local_disk_access(key_index);
                 fetch_from_disk();
               }
             }
 
-            snapshot->update_total_access(key);
+            snapshot->update_total_access(key_index);
           }
           else if (data.isRdmaSetupRequest())
           {

@@ -923,62 +923,62 @@ struct Snapshot
     return ops_config.dump_snapshot_period_ms != 0;
   }
 
-  SnapshotEntry& get_entry(const std::string& key)
+  SnapshotEntry& get_entry(uint64_t key)
   {
-    auto i = std::stoi(key);
+    auto i = key;
     return entries[i];
   }
 
-  void update_total_access(const std::string& key)
+  void update_total_access(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.total_accesses++;
   }
 
-  void update_cache_hits(const std::string& key)
+  void update_cache_hits(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.cache_hits++;
   }
 
-  void update_cache_miss(const std::string& key)
+  void update_cache_miss(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.cache_miss++;
   }
 
-  void update_evicted(const std::string& key)
+  void update_evicted(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.evicted++;
   }
 
-  void update_disk_access(const std::string& key)
+  void update_disk_access(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.disk_access++;
   }
 
-  void update_local_disk_access(const std::string& key)
+  void update_local_disk_access(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.local_disk_access++;
   }
 
-  void update_remote_disk_access(const std::string& key)
+  void update_remote_disk_access(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
     e.remote_disk_access++;
   }
 
-  void update_access_rate(const std::string& key)
+  void update_access_rate(uint64_t key)
   {
     if (!enabled()) return;
     auto& e = get_entry(key);
