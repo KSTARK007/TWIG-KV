@@ -918,6 +918,10 @@ struct Snapshot
   explicit Snapshot(BlockCacheConfig block_cache_config_, Configuration ops_config_) :
     block_cache_config(block_cache_config_), ops_config(ops_config_)
   {
+    if (!enabled())
+    {
+      return;
+    }
     entries.resize(ops_config.NUM_KEY_VALUE_PAIRS);
     for (auto i = 0; i < entries.size(); i++)
     {
