@@ -361,6 +361,12 @@ struct CacheIndexes : public RDMAData
   {
     auto expected_key_index = expected_key;
     auto key_index = key;
+
+    if (key_index == KEY_VALUE_PTR_INVALID)
+    {
+      return;
+    }
+
     const auto& my_rdma_cache_index = rdma_cache_indexes[machine_index];
     for (auto i = 0; i < server_configs.size(); i++)
     {

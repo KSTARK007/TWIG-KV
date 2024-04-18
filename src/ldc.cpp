@@ -409,7 +409,7 @@ void server_worker(
                     else
                     {
                       remote_disk_access.fetch_add(1, std::memory_order::relaxed);
-                      snapshot->update_remote_disk_access(key_index);
+                      snapshot->update_remote_disk_access(expected_key);
                       rdma_node.rdma_key_value_cache->update_local_key(expected_key, key_index, value);
                       LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                       fetch_from_disk();
