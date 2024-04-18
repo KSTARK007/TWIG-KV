@@ -304,11 +304,11 @@ void server_worker(
 
               auto base_index = machine_index - server_start_index;
 
-              auto fetch_from_disk = [=, skey=std::string(key), server=server_]()
+              auto fetch_from_disk = [=, skey=std::string(key), server=server_](bool add_to_cache)
               {
                 snapshot->update_disk_access(key_index);
                 std::string value;
-                if (ops_config.operations_pollute_cache)
+                if (ops_config.operations_pollute_cache && add_to_cache)
                 {
                   if (ops_config.DISK_ASYNC) {
                     // Cache miss
@@ -410,7 +410,7 @@ void server_worker(
                       snapshot->update_remote_disk_access(expected_key);
                       rdma_node.rdma_key_value_cache->update_local_key(expected_key, key_index, value);
                       LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
-                      fetch_from_disk();
+                      fetch_from_disk(false);
                     }
                   });
                 }
@@ -432,7 +432,7 @@ void server_worker(
               {
                 local_disk_access.fetch_add(1, std::memory_order::relaxed);
                 snapshot->update_local_disk_access(key_index);
-                fetch_from_disk();
+                fetch_from_disk(true);
               }
             }
 
