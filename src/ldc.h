@@ -877,6 +877,7 @@ struct SnapshotEntry
   uint64_t disk_access;
   uint64_t local_disk_access;
   uint64_t remote_disk_access;
+  uint64_t access_rate;
 };
 
 inline void to_json(json& j, const SnapshotEntry& e)
@@ -889,7 +890,8 @@ inline void to_json(json& j, const SnapshotEntry& e)
     { "evicted", e.evicted },
     { "disk_access", e.disk_access },
     { "local_disk_access", e.local_disk_access },
-    { "remote_disk_access", e.remote_disk_access }
+    { "remote_disk_access", e.remote_disk_access },
+    { "access_rate", e.access_rate }
   };
 }
 
@@ -976,6 +978,13 @@ struct Snapshot
     e.remote_disk_access++;
   }
 
+  void update_access_rate(const std::string& key)
+  {
+    if (!enabled()) return;
+    auto& e = get_entry(key);
+    e.access_rate++;
+  }
+
   void dump()
   {
     auto p = ops_config.dump_snapshot_file + std::to_string(index);
@@ -1001,3 +1010,5 @@ private:
 
   CopyableAtomic<uint64_t> index;
 };
+
+extern std::shared_ptr<Snapshot> snapshot;
