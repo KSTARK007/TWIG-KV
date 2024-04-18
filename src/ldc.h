@@ -361,6 +361,12 @@ struct CacheIndexes : public RDMAData
   {
     auto expected_key_index = expected_key;
     auto key_index = key;
+
+    if (key_index == KEY_VALUE_PTR_INVALID)
+    {
+      return;
+    }
+
     const auto& my_rdma_cache_index = rdma_cache_indexes[machine_index];
     for (auto i = 0; i < server_configs.size(); i++)
     {
@@ -936,6 +942,10 @@ struct Snapshot
   void update_total_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_total_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
     auto& e = get_entry(key);
     e.total_accesses++;
   }
@@ -943,6 +953,11 @@ struct Snapshot
   void update_cache_hits(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_cache_hits] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.cache_hits++;
   }
@@ -950,6 +965,11 @@ struct Snapshot
   void update_cache_miss(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_cache_miss] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.cache_miss++;
   }
@@ -957,6 +977,11 @@ struct Snapshot
   void update_evicted(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_evicted] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.evicted++;
   }
@@ -964,6 +989,11 @@ struct Snapshot
   void update_disk_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.disk_access++;
   }
@@ -971,6 +1001,11 @@ struct Snapshot
   void update_local_disk_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_local_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.local_disk_access++;
   }
@@ -978,6 +1013,11 @@ struct Snapshot
   void update_remote_disk_access(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_remote_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.remote_disk_access++;
   }
@@ -985,6 +1025,11 @@ struct Snapshot
   void update_access_rate(uint64_t key)
   {
     if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_access_rate] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
     auto& e = get_entry(key);
     e.access_rate++;
   }
