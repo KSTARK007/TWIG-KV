@@ -6,6 +6,201 @@
 #include "heap.h"
 #include "async_rdma.h"
 
+
+
+struct SnapshotEntry
+{
+  uint64_t key_index;
+  uint64_t total_accesses;
+  uint64_t cache_hits;
+  uint64_t cache_miss;
+  uint64_t evicted;
+  uint64_t disk_access;
+  uint64_t local_disk_access;
+  uint64_t remote_disk_access;
+  uint64_t access_rate;
+};
+
+inline void to_json(json& j, const SnapshotEntry& e)
+{
+  j = json{
+    { "key_index", e.key_index },
+    { "total_accesses", e.total_accesses },
+    { "cache_hits", e.cache_hits },
+    { "cache_miss", e.cache_miss },
+    { "evicted", e.evicted },
+    { "disk_access", e.disk_access },
+    { "local_disk_access", e.local_disk_access },
+    { "remote_disk_access", e.remote_disk_access },
+    { "access_rate", e.access_rate }
+  };
+}
+
+struct Snapshot
+{
+  explicit Snapshot(BlockCacheConfig block_cache_config_, Configuration ops_config_) :
+    block_cache_config(block_cache_config_), ops_config(ops_config_)
+  {
+    if (!enabled())
+    {
+      return;
+    }
+    entries.resize(ops_config.NUM_KEY_VALUE_PAIRS);
+    for (auto i = 0; i < entries.size(); i++)
+    {
+      entries[i].key_index = i;
+    }
+
+    // Background thread
+    static std::thread background_thread([this]()
+    {
+      while (!g_stop)
+      {
+        this->dump();
+        std::this_thread::sleep_for(std::chrono::milliseconds(ops_config.dump_snapshot_period_ms));        
+      }
+    });
+    background_thread.detach();
+  }
+
+  bool enabled() const
+  {
+    return ops_config.dump_snapshot_period_ms != 0;
+  }
+
+  SnapshotEntry& get_entry(uint64_t key)
+  {
+    auto i = key;
+    if (i > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] Getting entry out of bounds {} > {}", i, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+    return entries[i];
+  }
+
+  void update_total_access(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_total_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+    auto& e = get_entry(key);
+    e.total_accesses++;
+  }
+
+  void update_cache_hits(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_cache_hits] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.cache_hits++;
+  }
+
+  void update_cache_miss(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_cache_miss] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.cache_miss++;
+  }
+
+  void update_evicted(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_evicted] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.evicted++;
+  }
+
+  void update_disk_access(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.disk_access++;
+  }
+
+  void update_local_disk_access(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_local_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.local_disk_access++;
+  }
+
+  void update_remote_disk_access(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_remote_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.remote_disk_access++;
+  }
+
+  void update_access_rate(uint64_t key)
+  {
+    if (!enabled()) return;
+    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
+    {
+      panic("[SnapshotEntry] [update_access_rate] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
+    }
+
+    auto& e = get_entry(key);
+    e.access_rate++;
+  }
+
+  void dump()
+  {
+    auto p = ops_config.dump_snapshot_file + std::to_string(index);
+    std::ofstream o(p, std::ios::trunc);
+    if (!o)
+    {
+      panic("Cannot open path to {}", p);
+    }
+
+    index++;
+    json j;
+    for (const auto& e : entries)
+    {
+      j.push_back(e);
+    }
+    o << j << std::endl;
+  }
+
+private:
+  BlockCacheConfig block_cache_config;
+  Configuration ops_config;
+  std::vector<SnapshotEntry> entries;
+
+  CopyableAtomic<uint64_t> index;
+};
+
+extern std::shared_ptr<Snapshot> snapshot;
+
 #define CACHE_INDEX_LOG_PORT 50100
 #define KEY_VALUE_STORAGE_PORT 50200
 #define CACHE_INDEXES_PORT 50300
@@ -635,6 +830,7 @@ struct RDMAKeyValueCache : public RDMAData
     });
     cache->add_callback_on_eviction([this, ops_config](EvictionCallbackData<std::string, std::string> data){
       LOG_RDMA_DATA("Evicted {}", data.key);
+      snapshot->update_evicted(std::stoi(data.key));
       if (ops_config.use_cache_logs)
       {
         cache_index_logs->append_entry_k(data.key);
@@ -884,196 +1080,3 @@ struct CacheLayerData
     uint64_t forward_count;
     int replica_count;
 };
-
-struct SnapshotEntry
-{
-  uint64_t key_index;
-  uint64_t total_accesses;
-  uint64_t cache_hits;
-  uint64_t cache_miss;
-  uint64_t evicted;
-  uint64_t disk_access;
-  uint64_t local_disk_access;
-  uint64_t remote_disk_access;
-  uint64_t access_rate;
-};
-
-inline void to_json(json& j, const SnapshotEntry& e)
-{
-  j = json{
-    { "key_index", e.key_index },
-    { "total_accesses", e.total_accesses },
-    { "cache_hits", e.cache_hits },
-    { "cache_miss", e.cache_miss },
-    { "evicted", e.evicted },
-    { "disk_access", e.disk_access },
-    { "local_disk_access", e.local_disk_access },
-    { "remote_disk_access", e.remote_disk_access },
-    { "access_rate", e.access_rate }
-  };
-}
-
-struct Snapshot
-{
-  explicit Snapshot(BlockCacheConfig block_cache_config_, Configuration ops_config_) :
-    block_cache_config(block_cache_config_), ops_config(ops_config_)
-  {
-    if (!enabled())
-    {
-      return;
-    }
-    entries.resize(ops_config.NUM_KEY_VALUE_PAIRS);
-    for (auto i = 0; i < entries.size(); i++)
-    {
-      entries[i].key_index = i;
-    }
-
-    // Background thread
-    static std::thread background_thread([this]()
-    {
-      while (!g_stop)
-      {
-        this->dump();
-        std::this_thread::sleep_for(std::chrono::milliseconds(ops_config.dump_snapshot_period_ms));        
-      }
-    });
-    background_thread.detach();
-  }
-
-  bool enabled() const
-  {
-    return ops_config.dump_snapshot_period_ms != 0;
-  }
-
-  SnapshotEntry& get_entry(uint64_t key)
-  {
-    auto i = key;
-    if (i > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] Getting entry out of bounds {} > {}", i, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-    return entries[i];
-  }
-
-  void update_total_access(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_total_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-    auto& e = get_entry(key);
-    e.total_accesses++;
-  }
-
-  void update_cache_hits(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_cache_hits] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.cache_hits++;
-  }
-
-  void update_cache_miss(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_cache_miss] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.cache_miss++;
-  }
-
-  void update_evicted(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_evicted] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.evicted++;
-  }
-
-  void update_disk_access(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.disk_access++;
-  }
-
-  void update_local_disk_access(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_local_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.local_disk_access++;
-  }
-
-  void update_remote_disk_access(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_remote_disk_access] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.remote_disk_access++;
-  }
-
-  void update_access_rate(uint64_t key)
-  {
-    if (!enabled()) return;
-    if (key > ops_config.NUM_KEY_VALUE_PAIRS)
-    {
-      panic("[SnapshotEntry] [update_access_rate] Getting entry out of bounds {} > {}", key, ops_config.NUM_KEY_VALUE_PAIRS);
-    }
-
-    auto& e = get_entry(key);
-    e.access_rate++;
-  }
-
-  void dump()
-  {
-    auto p = ops_config.dump_snapshot_file + std::to_string(index);
-    std::ofstream o(p, std::ios::app);
-    if (!o)
-    {
-      panic("Cannot open path to {}", p);
-    }
-
-    index++;
-    json j;
-    for (const auto& e : entries)
-    {
-      j.push_back(e);
-    }
-    o << j << std::endl;
-  }
-
-private:
-  BlockCacheConfig block_cache_config;
-  Configuration ops_config;
-  std::vector<SnapshotEntry> entries;
-
-  CopyableAtomic<uint64_t> index;
-};
-
-extern std::shared_ptr<Snapshot> snapshot;

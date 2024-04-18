@@ -391,8 +391,6 @@ void server_worker(
                           LOG_RDMA_DATA("Singleton put request key = {} singleton = {} forward_count = {} remote_port = {}",
                               tmp_data->key, tmp_data->singleton, tmp_data->forward_count, port);
 
-                          snapshot->update_disk_access(std::stoi(tmp_data->key));
-
                           server.append_singleton_put_request(remote_index_to_forward, port, tmp_data->key, tmp_data->value, tmp_data->singleton, tmp_data->forward_count);
                           delete tmp_data;
                         }
@@ -779,7 +777,7 @@ int main(int argc, char *argv[])
         auto current_disk_executed = total_disk_ops_executed.load(std::memory_order::relaxed);
         auto diff_disk_executed = current_disk_executed - last_disk_executed;
         auto current_remote_disk_access = remote_disk_access.load(std::memory_order::relaxed);
-        auto diff_remote_disk_access = current_disk_executed - last_remote_disk_access;
+        auto diff_remote_disk_access = current_remote_disk_access - last_remote_disk_access;
         auto current_local_disk_access = local_disk_access.load(std::memory_order::relaxed);
         auto diff_local_disk_access = current_local_disk_access - last_local_disk_access;
 
