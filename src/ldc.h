@@ -926,6 +926,7 @@ struct Snapshot
   SnapshotEntry& get_entry(uint64_t key)
   {
     auto i = key;
+    info("GOT {}", key);
     return entries[i];
   }
 
@@ -1000,7 +1001,7 @@ struct Snapshot
     {
       j.push_back(e);
     }
-    o << std::setw(4) << j << std::endl;
+    o << j << std::endl;
   }
 
 private:
