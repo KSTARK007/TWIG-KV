@@ -38,16 +38,16 @@ execute_cmd_with_timeout() {
     local cache_size_for_this_run=$8
     local access_rate=$9
 
-    echo "Executing for cache size: $cache_size_for_this_run and policy: $policy and system: $system_name and access rate: $access_rate"
+    echo "Executing for cache size: $cache_size_for_this_run and policy: $policy and system: $system_name and access rate: $access_rate and workload: $WORKLOAD"
     CMD="$PROGRAM_PATH $IDENTITY_FILE $USERNAME $GIT_SSH_KEY_PATH --step $step $NUM_SERVERS \
     --num_threads $num_threads --policy $policy --system_type $system_name --distribution $distribution --num_clients $num_clients \
     --num_clients_per_thread $num_clients_per_thread --git_branch nchance-addition --cache_size $cache_size_for_this_run --access_rate $access_rate --workload $WORKLOAD"
     echo "Executing: $CMD"
 
-    # timeout 15m bash -c "eval $CMD" || (
-    #     echo "Command timed out after 15 minutes. Restarting..."
-    #     execute_cmd_with_timeout $num_clients $num_threads $num_clients_per_thread $step $distribution $system_name $policy $cache_size_for_this_run $access_rate $WORKLOAD
-    # )
+    timeout 15m bash -c "eval $CMD" || (
+        echo "Command timed out after 15 minutes. Restarting..."
+        execute_cmd_with_timeout $num_clients $num_threads $num_clients_per_thread $step $distribution $system_name $policy $cache_size_for_this_run $access_rate $WORKLOAD
+    )
 }
 
 execute_cmd() {
@@ -77,7 +77,7 @@ iterate_and_execute() {
     local distribution=$7
     local system_name=$8
     local policy=$9
-    local access_rate=$10
+    local access_rate=${10}
     
     for ((num_clients=num_clients_start; num_clients<=num_clients_end; num_clients++)); do
         for ((num_threads=num_threads_start; num_threads<=num_threads_end; num_threads++)); do
@@ -91,7 +91,7 @@ iterate_and_execute() {
 CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
 SYSTEM_NAMES=("A" "B" "C")
 POLICY_TYPES=("thread_safe_lru" "nchance" "access_rate")
-ACCESS_RATE=(100 200 250 400 500 750 1000 1500 2000 2500 3000 3500 4000)
+ACCESS_RATE=(100 250 500 750 1000 1500 2000 2500 3000 4000)
 
 WORKLOAD="SINGLE_NODE_HOT_KEYS"
 # Execute with specified ranges and steps
@@ -113,7 +113,10 @@ for system_name in "${SYSTEM_NAMES[@]}"; do
     fi
 done
 
-
+CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
+SYSTEM_NAMES=("C")
+POLICY_TYPES=("access_rate")
+ACCESS_RATE=(100 250 500 750 1000 1500 2000 2500 3000 4000)
 
 WORKLOAD="YCSB"
 # Execute with specified ranges and steps
