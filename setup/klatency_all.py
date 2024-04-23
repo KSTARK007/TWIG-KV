@@ -6,13 +6,13 @@ import csv
 import argparse
 
 parser = argparse.ArgumentParser(description='Run code on cloudlab machines from xml config of cluster')
-parser.add_argument("-s", "--system", choices=["thread_safe_lru", "access_rate", "n_chance"], default="thread_safe_lru", help="Key distribution type (default: 'uniform')")
-parser.add_argument("-d", "--distribution", choices=['uniform', 'zipfian', 'hotspot'], default="zipfian", help="Key distribution type (default: 'uniform')")
+parser.add_argument("-s", "--system", choices=["thread_safe_lru", "access_rate", "nchance"], default="thread_safe_lru", help="Key distribution type (default: 'uniform')")
+parser.add_argument("-d", "--distribution", choices=['uniform', 'zipfian', 'hotspot'], default="none", help="Key distribution type (default: 'uniform')")
 args = parser.parse_args()
 
 def write_to_csv(sorted_results, filename='metrics_summary.csv'):
     """Write the aggregated metrics to a CSV file."""
-    headers = ['Server', 'Client', 'ClientsPerThread', 'Thread', 'Throughput', 'Latency50', 'Latency99']
+    headers = ['Server', 'Client', 'ClientsPerThread', 'Thread', 'Throughput', 'Avg Latency', 'Latency99', 'MissRate', 'RemoteHitRate', 'LocalHitRate', 'DataCoverage', 'Similarity', 'SorensenSimilarity']
     
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -26,10 +26,22 @@ def write_to_csv(sorted_results, filename='metrics_summary.csv'):
                 result['details']['num_threads'],
                 result['throughput'],
                 result['average_latency_us'],
-                result['average_tail_latency_us']
+                result['average_tail_latency_us'],
+                result['miss_rate'],
+                result['remote_hit_rate'],
+                result['local_hit_rate'],
+                result['data_coverage'],
+                result['similarity'],
+                result['sorensen_similarity']
             ]
             writer.writerow(row)
 
+def read_integers(file_path):
+    with open(file_path, 'r') as file:
+        integers = set(map(int, file.read().splitlines()))
+    return integers
+
+# base_directory = Path('backup/full_runs_backup')
 base_directory = Path('results')
 
 def average(lst):
@@ -41,13 +53,27 @@ system = args.system
 distribution = args.distribution
 
 for subdirectory in base_directory.iterdir():
-    if subdirectory.is_dir() and subdirectory.name.startswith(f'{args.system}'):
-        parts = subdirectory.name.split('_')
+    if(distribution == 'none'):
+        checkfile = subdirectory.is_dir() and subdirectory.name.startswith(f'{system}::C_')
+    else:
+        checkfile = subdirectory.is_dir() and subdirectory.name.startswith(f'{system}::C_{distribution}_Y')
+    if (checkfile):
+        system_type = subdirectory.name.split("::")[0]
+        parts = subdirectory.name.split("::")[1].split('_')
+        count = 0
+        for part in parts:
+            if(part.endswith('0')):
+                break
+            count += 1
+                
+
         details = {
-            'num_servers': int(parts[8][2:]),
-            'num_clients': int(parts[9][2:]),
-            'num_clients_per_thread': int(parts[10][4:]),
-            'num_threads': int(parts[11][2:])
+            'distribution': parts[1],
+            'cache_size': int(int(parts[count])/1000),
+            'num_servers': int(parts[count + 1][2:]),
+            'num_clients': int(parts[count + 2][2:]),
+            'num_clients_per_thread': int(parts[count + 3][4:]),
+            'num_threads': int(parts[count + 4][2:])
         }
 
         num_clients = details['num_clients']
@@ -56,6 +82,13 @@ for subdirectory in base_directory.iterdir():
         throughput = 0
         p50_latencies = []
         p99_latencies = []
+
+        total_reads = 0
+        misses = 0
+        remote_hits = 0
+        local_hits = 0
+
+        integer_sets = []
 
         # Read and aggregate metrics based on num_clients
         for i in range(num_clients):
@@ -66,10 +99,34 @@ for subdirectory in base_directory.iterdir():
                     throughput += data["total"].get("total_throughput", 0)  # Sum throughput
                     p50_latencies.append(data["total"].get("average_latency_us", 0))
                     p99_latencies.append(data["total"].get("average_tail_latency_us", 0))
+            cache_metrics_file = subdirectory / f'cache_metrics_{i + details["num_servers"]}.json'
+            if cache_metrics_file.exists():
+                with open(cache_metrics_file, 'r') as file:
+                    cache_data = json.load(file)
+                    remote_rdma_cache_hits_sum = sum(server["remote_rdma_cache_hits"] for server in cache_data["server_stats"])
+                    total_reads += remote_rdma_cache_hits_sum + cache_data["cache_miss"] + cache_data["cache_hit"]
+                    misses += cache_data["cache_miss"]
+                    remote_hits += remote_rdma_cache_hits_sum
+                    local_hits += cache_data["cache_hit"]
+            cache_dump_file = subdirectory / f'cache_dump_{i + details["num_servers"]}.txt'
+            if cache_dump_file.exists():
+                integer_sets.append(read_integers(cache_dump_file))
 
         # Calculate averages
         average_latency_us = average(p50_latencies)
         average_tail_latency_us = average(p99_latencies)
+        
+        if(total_reads == 0):
+            total_reads = -1
+        miss_rate = misses / total_reads
+        remote_hit_rate = remote_hits / total_reads
+        local_hit_rate = local_hits / total_reads
+
+        union_keys = set().union(*integer_sets)
+        intersection_keys = set(integer_sets[0]).intersection(*integer_sets[1:])
+        data_coverage = len(union_keys) / 100000
+        similarity = len(intersection_keys) / 100000
+        sorensen_similarity = (2 * len(intersection_keys)) / (sum(len(s) for s in integer_sets))
 
         # Add the folder details and metrics to the results list
         results.append({
@@ -77,7 +134,13 @@ for subdirectory in base_directory.iterdir():
             "details": details,
             "throughput": throughput,
             "average_latency_us": average_latency_us,
-            "average_tail_latency_us": average_tail_latency_us
+            "average_tail_latency_us": average_tail_latency_us,
+            "miss_rate": miss_rate,
+            "remote_hit_rate": remote_hit_rate,
+            "local_hit_rate": local_hit_rate,
+            "data_coverage": data_coverage,
+            "similarity": similarity,
+            "sorensen_similarity": sorensen_similarity
         })
 
 # Sort the results based on num_clients, num_threads, num_clients_per_thread
@@ -93,4 +156,11 @@ for result in sorted_by_throughput:
     print(f"Details: Servers={result['details']['num_servers']}, Clients={result['details']['num_clients']}, Clients/Thread={result['details']['num_clients_per_thread']}, Threads={result['details']['num_threads']}")
     print(f"Total tx_mps: {result['throughput']}")
     print(f"Avg average_latency_us: {result['average_latency_us']}")
-    print(f"Avg p99_latency_us: {result['average_tail_latency_us']}\n")
+    print(f"Avg p99_latency_us: {result['average_tail_latency_us']}")
+    print(f"Miss Rate: {result['miss_rate']}")
+    print(f"Remote Hit Rate: {result['remote_hit_rate']}")
+    print(f"Local Hit Rate: {result['local_hit_rate']}")
+    print(f"Data Coverage: {result['data_coverage']}")
+    print(f"Similarity: {result['similarity']}")
+    print(f"Sorensen Similarity: {result['sorensen_similarity']} \n")
+
