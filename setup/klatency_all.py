@@ -11,6 +11,16 @@ parser.add_argument("-s", "--system", choices=["thread_safe_lru", "access_rate",
 parser.add_argument("-d", "--distribution", choices=['uniform', 'zipfian', 'hotspot'], default="none", help="Key distribution type (default: 'uniform')")
 args = parser.parse_args()
 
+def calculate_sorensen_similarity(integer_sets):
+    nsets = len(integer_sets)
+    keys_union = set().union(*integer_sets)
+    keys_intersect = set().intersection(*integer_sets)
+    total_size = sum(len(s) for s in integer_sets)
+    nunique = len(keys_union)
+    scale = nsets / (nsets - 1)
+    sorensen_similarity = scale * (1 - (nunique / total_size))
+    return sorensen_similarity
+
 def write_to_csv(sorted_results, filename='metrics_summary.csv'):
     """Write the aggregated metrics to a CSV file."""
     headers = ['CacheSize', 'Throughput', 'Avg Latency', 'Latency99', 'MissRate', 'RemoteHitRate', 'LocalHitRate', 'DataCoverage', 'Similarity', 'SorensenSimilarity', 'AccessRate']
@@ -132,8 +142,9 @@ for subdirectory in base_directory.iterdir():
         else:
             intersection_keys = set(integer_sets[0]).intersection(*integer_sets[1:])
             data_coverage = len(union_keys) / 100000
-            similarity = len(intersection_keys) / 100000
-            sorensen_similarity = (2 * len(intersection_keys)) / (sum(len(s) for s in integer_sets))
+            similarity = len(intersection_keys) / len(integer_sets[0])
+            # sorensen_similarity = (2 * len(intersection_keys)) / (sum(len(s) for s in integer_sets))
+            sorensen_similarity = calculate_sorensen_similarity(integer_sets)
 
         # Add the folder details and metrics to the results list
         results.append({
