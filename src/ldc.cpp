@@ -290,7 +290,7 @@ void server_worker(
             auto elapsed = time_now - start_time;
             auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
             if (elapsed_seconds == WARMUP_TIME_IN_SECONDS){
-              block_cache->reset_cache_info()
+              block_cache->reset_cache_info();
               local_disk_access.store(0);
               remote_disk_access.store(0);
               total_disk_ops_executed.store(0);
