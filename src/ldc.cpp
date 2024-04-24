@@ -300,6 +300,7 @@ void server_worker(
             }
             else
             {
+              block_cache->increment_cache_miss();
               snapshot->update_cache_miss(key_index);
               // Otherwise, if RDMA is renabled, read from the correct node
               bool found_in_rdma = false;
@@ -358,7 +359,6 @@ void server_worker(
                 {
                   server->get_response(remote_index, remote_port, ResponseType::OK, value);
                 }
-                block_cache->increment_cache_miss();
               };
 
               if (config.baseline.one_sided_rdma_enabled)
@@ -973,6 +973,8 @@ int main(int argc, char *argv[])
       {
         j["server_stats"].push_back(servers[i]->get_stats());
       }
+      j["local_disk_access"] = local_disk_access.load();
+      j["remote_disk_access"] = remote_disk_access.load();
     }
     std::ofstream ofs(FLAGS_cache_metrics_path, std::ios::out | std::ios::trunc);
     if (!ofs) {
