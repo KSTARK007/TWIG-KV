@@ -127,6 +127,7 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
   int wrong_value = 0;
   std::string value;
   std::vector<long long> timeStamps;
+  bool dump_latency = false;
   for (int j = 0; j < ops_config.VALUE_SIZE; j++)
   {
     value += static_cast<char>('A');
@@ -157,13 +158,18 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
       auto now = std::chrono::high_resolution_clock::now();
       auto elapsed = now - io_start;
       long long nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count();
-      timeStamps.push_back(nanoseconds);
+      if(dump_latency){
+        timeStamps.push_back(nanoseconds);
+      }
       total_ops_executed.fetch_add(1, std::memory_order::relaxed);
       client_thread_ops_executed[client_index]++;
       now = std::chrono::high_resolution_clock::now();
       op_end = now - op_start;
       run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
-      if(run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS){
+      if(!dump_latency && run_time >= WARMUP_TIME_IN_SECONDS){
+        dump_latency = true;
+      }
+      if(run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS + WARMUP_TIME_IN_SECONDS){
         break;
       }
     }
