@@ -269,6 +269,8 @@ void server_worker(
     }
   }
 
+  auto start_time = std::chrono::high_resolution_clock::now();
+
   while (!g_stop)
   {
     server.loop(
@@ -284,6 +286,15 @@ void server_worker(
           else if (data.isGetRequest())
           {
             auto p = data.getGetRequest();
+            auto time_now = std::chrono::high_resolution_clock::now();
+            auto elapsed = time_now - start_time;
+            auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+            if (elapsed_seconds == WARMUP_TIME_IN_SECONDS){
+              block_cache->reset_cache_info()
+              local_disk_access.store(0);
+              remote_disk_access.store(0);
+              total_disk_ops_executed.store(0);
+            }
 
             total_ops_executed.fetch_add(1, std::memory_order::relaxed);
 
