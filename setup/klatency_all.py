@@ -34,7 +34,7 @@ def write_to_csv(sorted_results, filename='metrics_summary.csv'):
                 result['details']['cache_size'],
                 result['throughput'],
                 result['average_latency_us'],
-                result['average_tail_latency_us'],
+                result['p99_latency_us'],
                 result['miss_rate'],
                 result['remote_hit_rate'],
                 result['local_hit_rate'],
@@ -65,7 +65,7 @@ for subdirectory in base_directory.iterdir():
     if(distribution == 'none'):
         checkfile = subdirectory.is_dir() and subdirectory.name.startswith(f'{system}::{char}_')
     else:
-        checkfile = subdirectory.is_dir() and subdirectory.name.startswith(f'{system}::{char}_{distribution}_')
+        checkfile = subdirectory.is_dir() and subdirectory.name.startswith(f'{system}::{char}_{distribution}_Y')
     if (checkfile):
         system_type = subdirectory.name.split("::")[0]
         parts = subdirectory.name.split("::")[1].split('_')
@@ -90,6 +90,7 @@ for subdirectory in base_directory.iterdir():
         
         # Variables to accumulate metrics
         throughput = 0
+        average_latency = []
         p50_latencies = []
         p99_latencies = []
 
@@ -108,8 +109,9 @@ for subdirectory in base_directory.iterdir():
                 with open(metrics_file, 'r') as file:
                     data = json.load(file)
                     throughput += data["total"].get("total_throughput", 0)  # Sum throughput
-                    p50_latencies.append(data["total"].get("average_latency_us", 0))
-                    p99_latencies.append(data["total"].get("average_tail_latency_us", 0))
+                    average_latency.append(data["total"].get("average_latency_us", 0))
+                    p99_latencies.append(data["total"].get("p99", 0))
+                    p50_latencies.append(data["total"].get("p50", 0))
             cache_metrics_file = subdirectory / f'cache_metrics_{i + details["num_servers"]}.json'
             if cache_metrics_file.exists():
                 with open(cache_metrics_file, 'r') as file:
@@ -125,8 +127,9 @@ for subdirectory in base_directory.iterdir():
                 integer_sets.append(read_integers(cache_dump_file))
 
         # Calculate averages
-        average_latency_us = average(p50_latencies)
-        average_tail_latency_us = average(p99_latencies)
+        average_latency_us = average(average_latency)
+        p99_latency_us = average(p99_latencies)
+        p50_latency_us = average(p50_latencies)
         
         if(total_reads == 0):
             total_reads = -1
@@ -152,7 +155,8 @@ for subdirectory in base_directory.iterdir():
             "details": details,
             "throughput": throughput,
             "average_latency_us": average_latency_us,
-            "average_tail_latency_us": average_tail_latency_us,
+            "p99_latency": p99_latency_us,
+            "p50_latency": p50_latency_us,
             "miss_rate": miss_rate,
             "remote_hit_rate": remote_hit_rate,
             "local_hit_rate": local_hit_rate,
@@ -175,7 +179,7 @@ for result in sorted_by_throughput:
     print(f"Details: Servers={result['details']['num_servers']}, Clients={result['details']['num_clients']}, Clients/Thread={result['details']['num_clients_per_thread']}, Threads={result['details']['num_threads']}")
     print(f"Total tx_mps: {result['throughput']}")
     print(f"Avg average_latency_us: {result['average_latency_us']}")
-    print(f"Avg p99_latency_us: {result['average_tail_latency_us']}")
+    print(f"Avg p99_latency_us: {result['p99_latency_us']}")
     print(f"Miss Rate: {result['miss_rate']}")
     print(f"Remote Hit Rate: {result['remote_hit_rate']}")
     print(f"Local Hit Rate: {result['local_hit_rate']}")
