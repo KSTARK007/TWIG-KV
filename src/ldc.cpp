@@ -294,6 +294,8 @@ void server_worker(
               local_disk_access.store(0);
               remote_disk_access.store(0);
               total_disk_ops_executed.store(0);
+              total_ops_executed.store(0);
+              total_rdma_executed.store(0);
             }
 
             total_ops_executed.fetch_add(1, std::memory_order::relaxed);
