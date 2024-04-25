@@ -1080,3 +1080,31 @@ struct CacheLayerData
     uint64_t forward_count;
     int replica_count;
 };
+
+class LDCTimer {
+public:
+  LDCTimer() {
+    start();
+  }
+
+  void start() {
+    start_time = std::chrono::high_resolution_clock::now();
+  }
+
+  void stop() {
+    end_time = std::chrono::high_resolution_clock::now();
+  }
+
+  auto time_elapsed() const {
+    auto end = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration<uint64_t, std::nano>(end - start_time).count();
+  }
+
+  auto elapsed() const {
+    return std::chrono::duration<uint64_t, std::nano>(end_time - start_time).count();
+  }
+
+private:
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+  std::chrono::time_point<std::chrono::high_resolution_clock> end_time;
+};

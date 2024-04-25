@@ -30,6 +30,11 @@ std::atomic<uint64_t> remote_disk_access;
 // Local disks access
 std::atomic<uint64_t> local_disk_access;
 
+// Timer for disk
+uint64_t cache_ns;
+uint64_t disk_ns;
+uint64_t rdma_ns;
+
 #ifdef CLIENT_SYNC_WITH_OTHER_CLIENTS
 // Total clients ready/done for syncing clients with workloads
 std::atomic<uint64_t> total_clients_ready{};
@@ -308,7 +313,9 @@ void server_worker(
             {
               snapshot->update_cache_hits(key_index);
               // Return the correct key in local cache
+              LDCTimer cache_timer;
               auto value = block_cache->get(key, false, exists_in_cache);
+              cache_ns = cache_timer.time_elapsed();
               server.get_response(remote_index, remote_port, ResponseType::OK, value);
             }
             else
@@ -332,7 +339,10 @@ void server_worker(
                 {
                   if (ops_config.DISK_ASYNC) {
                     // Cache miss
-                    block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey, block_cache](auto value) {
+                    LDCTimer disk_timer;
+                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer](auto value) {
+                      disk_ns = disk_timer.time_elapsed();
+                      
                       // Add to cache
                       block_cache->get_cache()->put(skey, value);
 
@@ -349,7 +359,10 @@ void server_worker(
                   // Cache miss
                   LOG_STATE("Fetching from disk {} {}", skey, value);
                   if (ops_config.DISK_ASYNC) {
-                    block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey](auto value) {
+                    LDCTimer disk_timer;
+                    block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey, disk_timer](auto value) {
+                      disk_ns = disk_timer.time_elapsed();
+                      
                       // Send the response
                       server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
@@ -385,10 +398,13 @@ void server_worker(
                 if (config.baseline.use_cache_indexing)
                 {
                   auto& rdma_node = std::begin(rdma_nodes)->second;
+                  LDCTimer rdma_timer;
                   found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                   {
                     auto& server = *server_;
                     total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
+
+                    rdma_ns = rdma_timer.time_elapsed();
 
                     uint64_t key_index = kv.key_index;
                     auto value_view = std::string_view((const char*)kv.data, ops_config.VALUE_SIZE);
