@@ -597,6 +597,7 @@ struct CacheIndexes : public RDMAData
   }
 
   auto& get_cache_index(int index) { return rdma_cache_indexes[index]; }
+  auto& get_cache_indexes() { return rdma_cache_indexes; }
 
   template<typename F>
   void execute_pending(F&& f)
@@ -897,6 +898,7 @@ struct RDMAKeyValueCache : public RDMAData
   }
 
   uint64_t get_writes() const { return writes.load(std::memory_order::relaxed); }
+  auto get_cache_indexes() { return cache_indexes; }
 
 private:
   std::shared_ptr<BlockCache<std::string, std::string>> block_cache;

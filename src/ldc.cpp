@@ -265,13 +265,49 @@ void server_worker(
     }
   }
 
+  std::vector<RemoteMachineConfig> server_configs;
   for (auto j = 0; j < config.remote_machine_configs.size(); j++)
   {
     // std::cout <<"i " << i << " config.remote_machine_configs[i].index " << config.remote_machine_configs[i].index << std::endl;
     if (config.remote_machine_configs[j].server)
     {
+      server_configs.push_back(config.remote_machine_configs[j]);
       num_servers++;
     }
+  }
+
+  auto& rdma_node = std::begin(rdma_nodes)->second;
+  if (thread_index == 0)
+  {
+    // Handle if singletons exist on other servers
+    block_cache->get_cache()->add_callback_on_write([=, server = server_, &rdma_nodes](const std::string& key, const std::string& value){
+      auto& rdma_node = std::begin(rdma_nodes)->second;
+      auto key_index = std::stoi(key);
+
+      auto cache_indexes = rdma_node.rdma_key_value_cache->get_cache_indexes();
+      auto underlying_cache_indexes = cache_indexes->get_cache_indexes();
+
+      for (auto i = 0; i < underlying_cache_indexes.size(); i++)
+      {
+        if (i == machine_index - server_start_index)
+        {
+          continue;
+        }
+        auto& config = server_configs[i];
+
+        auto& cache_index = underlying_cache_indexes[i];
+        // If other key is singleton, delete it
+        auto& e = cache_index[key_index];
+        if (e.key_value_ptr_offset != KEY_VALUE_PTR_INVALID)
+        {
+          if (e.isSingleton)
+          {
+            auto port = config.port;
+            server->append_delete_request(i, port, key);
+          }
+        }
+      }
+    });
   }
 
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -397,7 +433,6 @@ void server_worker(
                 LOG_STATE("[{}] Reading remote index {}", machine_index, remote_machine_index_to_rdma);
                 if (config.baseline.use_cache_indexing)
                 {
-                  auto& rdma_node = std::begin(rdma_nodes)->second;
                   LDCTimer rdma_timer;
                   found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
                   {
@@ -504,6 +539,11 @@ void server_worker(
           else if (data.isDeleteRequest())
           {
             auto p = data.getDeleteRequest();
+            auto key_ = p.getKey();
+            auto key = key_.cStr();
+            auto key_index = std::stoi(key);
+
+            block_cache->get_cache()->delete_key(key);
           }
         });
   }
