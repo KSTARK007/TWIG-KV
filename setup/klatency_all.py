@@ -23,7 +23,7 @@ def calculate_sorensen_similarity(integer_sets):
 
 def write_to_csv(sorted_results, filename='metrics_summary.csv'):
     """Write the aggregated metrics to a CSV file."""
-    headers = ['CacheSize', 'Throughput', 'Avg Latency', 'Latency99', 'MissRate', 'RemoteHitRate', 'LocalHitRate', 'DataCoverage', 'Similarity', 'SorensenSimilarity', 'AccessRate']
+    headers = ['CacheSize', 'Throughput', 'Avg Latency', 'Latency50', 'Latency99', 'MissRate', 'RemoteHitRate', 'LocalHitRate', 'Disk_access', 'Remote_disk', 'DataCoverage', 'Similarity', 'SorensenSimilarity', 'AccessRate']
     
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -34,10 +34,13 @@ def write_to_csv(sorted_results, filename='metrics_summary.csv'):
                 result['details']['cache_size'],
                 result['throughput'],
                 result['average_latency_us'],
-                result['p99_latency_us'],
+                result['p50_latency'],
+                result['p99_latency'],
                 result['miss_rate'],
                 result['remote_hit_rate'],
                 result['local_hit_rate'],
+                result['disk_accesses'],
+                result['remote_disk_accesses'],
                 result['data_coverage'],
                 result['similarity'],
                 result['sorensen_similarity'],
@@ -99,6 +102,8 @@ for subdirectory in base_directory.iterdir():
         remote_hits = 0
         local_hits = 0
         freq_addition = 0
+        disk_accesses = 0
+        remote_disk_accesses = 0
 
         integer_sets = []
 
@@ -111,17 +116,19 @@ for subdirectory in base_directory.iterdir():
                     throughput += data["total"].get("total_throughput", 0)  # Sum throughput
                     average_latency.append(data["total"].get("average_latency_us", 0))
                     p99_latencies.append(data["total"].get("p99", 0))
-                    p50_latencies.append(data["total"].get("p50", 0))
+                    p50_latencies.append(data["total"].get("p50_latency_us", 0))
             cache_metrics_file = subdirectory / f'cache_metrics_{i + details["num_servers"]}.json'
             if cache_metrics_file.exists():
                 with open(cache_metrics_file, 'r') as file:
                     cache_data = json.load(file)
                     remote_rdma_cache_hits_sum = sum(server["remote_rdma_cache_hits"] for server in cache_data["server_stats"])
-                    total_reads += remote_rdma_cache_hits_sum + cache_data["cache_miss"] + cache_data["cache_hit"]
+                    total_reads += cache_data["total_reads"]
                     misses += cache_data["cache_miss"]
-                    remote_hits += remote_rdma_cache_hits_sum
+                    remote_hits += total_reads - misses - remote_disk_accesses
                     local_hits += cache_data["cache_hit"]
                     freq_addition += cache_data["cache_freq_addition"]
+                    disk_accesses += cache_data["local_disk_access"]
+                    remote_disk_accesses += cache_data["remote_disk_access"]
             cache_dump_file = subdirectory / f'cache_dump_{i + details["num_servers"]}.txt'
             if cache_dump_file.exists():
                 integer_sets.append(read_integers(cache_dump_file))
@@ -134,11 +141,13 @@ for subdirectory in base_directory.iterdir():
         if(total_reads == 0):
             total_reads = -1
         miss_rate = misses / total_reads
-        remote_hit_rate = remote_hits / total_reads
+        remote_hit_rate = (misses - disk_accesses - remote_disk_accesses) / misses
         local_hit_rate = local_hits / total_reads
+        disk_accesses = disk_accesses / total_reads
+        remote_disk_accesses = remote_disk_accesses / total_reads
 
         union_keys = set().union(*integer_sets)
-        if(len(integer_sets) == 0):
+        if(len(integer_sets) == 0 or len(integer_sets[0]) == 0):
             data_coverage = -1
             similarity = -1
             sorensen_similarity = -1
@@ -160,6 +169,8 @@ for subdirectory in base_directory.iterdir():
             "miss_rate": miss_rate,
             "remote_hit_rate": remote_hit_rate,
             "local_hit_rate": local_hit_rate,
+            "disk_accesses": disk_accesses,
+            "remote_disk_accesses": remote_disk_accesses,
             "data_coverage": data_coverage,
             "similarity": similarity,
             "sorensen_similarity": sorensen_similarity,
@@ -179,7 +190,8 @@ for result in sorted_by_throughput:
     print(f"Details: Servers={result['details']['num_servers']}, Clients={result['details']['num_clients']}, Clients/Thread={result['details']['num_clients_per_thread']}, Threads={result['details']['num_threads']}")
     print(f"Total tx_mps: {result['throughput']}")
     print(f"Avg average_latency_us: {result['average_latency_us']}")
-    print(f"Avg p99_latency_us: {result['p99_latency_us']}")
+    print(f"Avg p99_latency_us: {result['p99_latency']}")
+    print(f"Avg p50_latency_us: {result['p50_latency']}")
     print(f"Miss Rate: {result['miss_rate']}")
     print(f"Remote Hit Rate: {result['remote_hit_rate']}")
     print(f"Local Hit Rate: {result['local_hit_rate']}")
