@@ -277,7 +277,7 @@ void server_worker(
   }
 
   auto& rdma_node = std::begin(rdma_nodes)->second;
-  if (thread_index == 0)
+  if (false && thread_index == 0)
   {
     // Handle if singletons exist on other servers
     block_cache->get_cache()->add_callback_on_write([=, server = server_, &rdma_nodes](const std::string& key, const std::string& value){
