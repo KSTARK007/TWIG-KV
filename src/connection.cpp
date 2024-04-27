@@ -158,7 +158,7 @@ void Connection::put(int index, int thread_index, std::string_view key, std::str
       auto p = data.getPutResponse();
       LOG_STATE("[{}-{}:{}] Put response", machine_index, index, remote_port);
     } else {
-      panic("Unexpected response");
+      info("Unexpected response");
     }
   });
 }
@@ -189,7 +189,7 @@ std::string Connection::get(int index, int thread_index, std::string_view key)
       LOG_STATE("[{}-{}:{}] Get response [key = {}, value = {}]", machine_index,
             index, remote_port, key, value);
     } else {
-      panic("Unexpected response");
+      info("Unexpected response");
     }
   });
   return value;
