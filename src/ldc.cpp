@@ -998,13 +998,13 @@ int main(int argc, char *argv[])
     block_cache->get_cache()->add_callback_on_clear_frequency([&](std::vector<std::pair<std::string, uint64_t>>& keys)
     {
       info("callback_on_clear_frequency");
-      block_cache->get_cache()->print_all_stats();
-      auto print_data = get_and_sort_freq(block_cache);
-      for (auto& [key, freq] : print_data)
-      {
-        info("key {} freq {}", key, freq);
-      }
-      g_stop.store(true);
+      // block_cache->get_cache()->print_all_stats();
+      // auto print_data = get_and_sort_freq(block_cache);
+      // for (auto& [key, freq] : print_data)
+      // {
+      //   info("key {} freq {}", key, freq);
+      // }
+      // g_stop.store(true);
     });
   }
 
