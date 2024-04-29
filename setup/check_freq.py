@@ -62,4 +62,5 @@ def plot_cdf_graph(directory):
     plt.savefig(f'{directory}/cdf_graph.png')
 
 if __name__ == "__main__":
-    plot_cdf_graph("/mydata/ycsb_traces/zipfian_80")
+    # plot_cdf_graph('/mydata/ycsb_workloads/hotspot_95_5/')
+    plot_cdf_graph('/mydata/ycsb/hotspot_95_5/')
