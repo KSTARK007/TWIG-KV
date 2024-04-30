@@ -88,35 +88,40 @@ iterate_and_execute() {
     done
 }
 
-CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
-SYSTEM_NAMES=("A" "B" "C")
-POLICY_TYPES=("thread_safe_lru" "nchance" "access_rate")
-ACCESS_RATE=(100 250 500 750 1000 1500 2000 2500 3000 4000)
+# CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
+# SYSTEM_NAMES=("A" "B" "C")
+# POLICY_TYPES=("thread_safe_lru" "nchance" "access_rate")
+# ACCESS_RATE=(100 250 500 750 1000 1500 2000 2500 3000 4000)
 
-WORKLOAD="SINGLE_NODE_HOT_KEYS"
-# Execute with specified ranges and steps
-for system_name in "${SYSTEM_NAMES[@]}"; do
-    if [[ $system_name == "C" ]]; then
-        for policy in "${POLICY_TYPES[@]}"; do
-            if [[ $policy == "access_rate" ]]; then
-                for access_rate in "${ACCESS_RATE[@]}"; do
-                    echo "Access Rate: $access_rate"
-                    iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
-                done
-            else
-                access_rate=4000
-                iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
-            fi
-        done
-    else
-        iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name "thread_safe_lru" 0
-    fi
-done
+# WORKLOAD="SINGLE_NODE_HOT_KEYS"
+# # Execute with specified ranges and steps
+# for system_name in "${SYSTEM_NAMES[@]}"; do
+#     if [[ $system_name == "C" ]]; then
+#         for policy in "${POLICY_TYPES[@]}"; do
+#             if [[ $policy == "access_rate" ]]; then
+#                 for access_rate in "${ACCESS_RATE[@]}"; do
+#                     echo "Access Rate: $access_rate"
+#                     iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
+#                 done
+#             else
+#                 access_rate=4000
+#                 iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
+#             fi
+#         done
+#     else
+#         iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name "thread_safe_lru" 0
+#     fi
+# done
 
-CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
+# CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
+# SYSTEM_NAMES=("C")
+# POLICY_TYPES=("access_rate")
+# ACCESS_RATE=(100 250 500 750 1000 1500 2000 2500 3000 4000)
+CACHE_SIZE=(0.334)
 SYSTEM_NAMES=("C")
-POLICY_TYPES=("access_rate")
-ACCESS_RATE=(100 250 500 750 1000 1500 2000 2500 3000 4000)
+# POLICY_TYPES=("access_rate")
+POLICY_TYPES=("access_rate_dynamic")
+ACCESS_RATE=(100)
 
 WORKLOAD="YCSB"
 # Execute with specified ranges and steps

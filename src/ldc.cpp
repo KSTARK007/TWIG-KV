@@ -587,19 +587,26 @@ int main(int argc, char *argv[])
   {
     block_cache =
         std::make_shared<BlockCache<std::string, std::string>>(config);
-    block_cache->get_cache()->add_callback_on_clear_frequency([&](std::vector<std::pair<std::string, uint64_t>>& keys)
-    {
-      info("callback_on_clear_frequency");
-      // block_cache->get_cache()->print_all_stats();
-      // auto print_data = get_and_sort_freq(block_cache);
-      // for (auto& [key, freq] : print_data)
-      // {
-      //   info("key {} freq {}", key, freq);
-      // }
-      // g_stop.store(true);
-    });
 
     snapshot = std::make_shared<Snapshot>(config, ops_config);
+
+    if(config.policy_type == "access_rate_dynamic"){
+      static std::thread access_rate_thread([&, block_cache]()
+      {
+        while (!g_stop)
+        {
+          if(block_cache->get_cache()->is_ready()){
+            std::this_thread::sleep_for(std::chrono::seconds(30));
+            info("Access rate check triggered");
+            // block_cache->get_cache()->print_all_stats();
+            // info("Access rate check completed");
+          } else {
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+          }
+        }
+      });
+      access_rate_thread.detach();
+    }
 
     // Load the database and operations
     // load the cache with part of database
@@ -903,6 +910,8 @@ int main(int argc, char *argv[])
       }
     });
     background_monitoring_thread.detach();
+
+    
 
     for (auto i = 0; i < FLAGS_threads; i++)
     {
