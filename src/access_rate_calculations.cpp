@@ -144,8 +144,17 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     cache->get_cache()->set_access_rate(best_access_rate);
 }
 
+void print_cdf(std::vector<std::pair<uint64_t,std::string>> cdf) {
+    std::ofstream file;
+    file.open("cdf.txt");
+    for (auto &it : cdf) {
+        std::cout << it.first << " " << it.second << std::endl;
+    }
+}
+
 void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>>& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg) {
     info("Calculating best access rates");
+    print_cdf(cdf);
     auto [initial_water_mark_local, initial_water_mark_remote, _] = cache->get_cache()->get_water_marks();
     info("Initial water mark local: {}, Initial water mark remote: {}", std::to_string(initial_water_mark_local), std::to_string(initial_water_mark_remote));
     uint64_t cache_size = cache->get_cache()->get_cache_size();
