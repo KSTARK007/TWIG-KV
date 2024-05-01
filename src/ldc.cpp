@@ -602,9 +602,6 @@ int main(int argc, char *argv[])
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency_and_return_freq();
             freq = get_and_sort_freq(block_cache);
-            for (auto& [key, value] : freq){
-              info("key {} value {}", key, value);
-            }
 
             // g_stop.store(true);
           } else {
