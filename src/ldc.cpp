@@ -465,7 +465,7 @@ void server_worker(
                           delete tmp_data;
                         }
                       }
-                      if(config.policy_type == "access_rate"){
+                      if(config.policy_type == "access_rate" or config.policy_type == "access_rate_dynamic"){
                         auto key = std::to_string(key_index);
                         if(block_cache->get_cache()->put_access_rate_match(key, value)){
                           block_cache->cache_freq_addition++;
