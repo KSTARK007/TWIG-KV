@@ -148,13 +148,14 @@ void print_cdf(std::vector<std::pair<uint64_t,std::string>> cdf) {
     std::ofstream file;
     file.open("cdf.txt");
     for (auto &it : cdf) {
-        std::cout << it.first << " " << it.second << std::endl;
+        file << it.first << " " << it.second << std::endl;
     }
 }
 
 void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>>& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg) {
     info("Calculating best access rates");
     print_cdf(cdf);
+    info("cache_ns_avg: {}, disk_ns_avg: {}, rdma_ns_avg: {}", std::to_string(cache_ns_avg), std::to_string(disk_ns_avg), std::to_string(rdma_ns_avg));
     auto [initial_water_mark_local, initial_water_mark_remote, _] = cache->get_cache()->get_water_marks();
     info("Initial water mark local: {}, Initial water mark remote: {}", std::to_string(initial_water_mark_local), std::to_string(initial_water_mark_remote));
     uint64_t cache_size = cache->get_cache()->get_cache_size();
