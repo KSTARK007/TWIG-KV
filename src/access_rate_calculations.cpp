@@ -66,22 +66,6 @@ uint64_t get_sum_freq_till_index(std::vector<std::pair<uint64_t,std::string>> cd
     return sum;
 }
 
-std::tuple<uint64_t, uint64_t, uint64_t> get_watermark_and_convert_to_index(std::shared_ptr<BlockCache<std::string, std::string>> cache)
-{
-    info("Getting water marks");
-    std::tuple<float, float, float> key_freq = cache->get_cache()->get_water_marks();
-    info("Key freq: {}, {}, {}", std::get<0>(key_freq), std::get<1>(key_freq), std::get<2>(key_freq));
-    uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
-    info("Total keys: {}", std::to_string(total_keys));
-    uint64_t cache_size = cache->get_cache()->get_cache_size();
-    info("Cache size: {}", std::to_string(cache_size));
-    uint64_t water_mark_local = std::get<0>(key_freq) * total_keys;
-    uint64_t water_mark_remote = std::get<1>(key_freq) * total_keys;
-    uint64_t water_mark_disk = total_keys;
-    info("Water mark local: {}, Water mark remote: {}, Water mark disk: {}", std::to_string(water_mark_local), std::to_string(water_mark_remote), std::to_string(water_mark_disk));
-    return std::make_tuple(water_mark_local, water_mark_remote, water_mark_disk);
-}
-
 void set_water_marks(std::shared_ptr<BlockCache<std::string, std::string>> cache, uint64_t water_mark_local, uint64_t water_mark_remote)
 {
     cache->get_cache()->set_water_marks(water_mark_local, water_mark_remote);
@@ -119,7 +103,7 @@ void log_performance_state(uint64_t iteration, uint64_t L, uint64_t remote, uint
 
 void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>> cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg)
 {
-    std::tuple<uint64_t, uint64_t, uint64_t> water_marks = get_watermark_and_convert_to_index(cache);
+    std::tuple<uint64_t, uint64_t, uint64_t> water_marks = cache->get_cache()->get_water_marks();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
     uint64_t water_mark_local = std::get<0>(water_marks);
     uint64_t water_mark_remote = std::get<1>(water_marks);
@@ -158,7 +142,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
 
 void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>>& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg) {
     info("Calculating best access rates");
-    auto [initial_water_mark_local, initial_water_mark_remote, _] = get_watermark_and_convert_to_index(cache);
+    auto [initial_water_mark_local, initial_water_mark_remote, _] = cache->get_cache()->get_water_marks();
     info("Initial water mark local: {}, Initial water mark remote: {}", std::to_string(initial_water_mark_local), std::to_string(initial_water_mark_remote));
     uint64_t cache_size = cache->get_cache()->get_cache_size();
     info("Cache size: {}", std::to_string(cache_size));
