@@ -72,10 +72,13 @@ std::tuple<uint64_t, uint64_t, uint64_t> get_watermark_and_convert_to_index(std:
     std::tuple<float, float, float> key_freq = cache->get_cache()->get_water_marks();
     info("Key freq: {}, {}, {}", std::get<0>(key_freq), std::get<1>(key_freq), std::get<2>(key_freq));
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
+    info("Total keys: {}", std::to_string(total_keys));
     uint64_t cache_size = cache->get_cache()->get_cache_size();
+    info("Cache size: {}", std::to_string(cache_size));
     uint64_t water_mark_local = std::get<0>(key_freq) * total_keys;
     uint64_t water_mark_remote = std::get<1>(key_freq) * total_keys;
     uint64_t water_mark_disk = total_keys;
+    info("Water mark local: {}, Water mark remote: {}, Water mark disk: {}", std::to_string(water_mark_local), std::to_string(water_mark_remote), std::to_string(water_mark_disk));
 }
 
 void set_water_marks(std::shared_ptr<BlockCache<std::string, std::string>> cache, uint64_t water_mark_local, uint64_t water_mark_remote)
