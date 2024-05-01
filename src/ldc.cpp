@@ -600,8 +600,10 @@ int main(int argc, char *argv[])
           if(block_cache->get_cache()->is_ready()){
             std::this_thread::sleep_for(std::chrono::seconds(30));
             info("Access rate check triggered");
-            block_cache->get_cache()->clear_frequency_and_return_freq();
+            block_cache->get_cache()->clear_frequency();
             freq = get_and_sort_freq(block_cache);
+            get_best_access_rates(block_cache, freq, 1000, 100000, 15000);
+
 
             // g_stop.store(true);
           } else {
