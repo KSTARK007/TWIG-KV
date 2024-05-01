@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
       static std::thread access_rate_thread([&, block_cache]()
       {
 
-        std::this_thread::sleep_for(std::chrono::seconds(60));
+        std::this_thread::sleep_for(std::chrono::seconds(45));
         std::vector<std::pair<uint64_t,std::string>> freq;
         while (!g_stop)
         {
@@ -604,12 +604,12 @@ int main(int argc, char *argv[])
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency();
             freq = get_and_sort_freq(block_cache);
-            for (const auto& [key, value] : freq)
-            {
-              if(key != 0){
-                info("key {} value {}", key, value);
-              }
-            }
+            // for (const auto& [key, value] : freq)
+            // {
+            //   if(key != 0){
+            //     info("key {} value {}", key, value);
+            //   }
+            // }
             get_best_access_rates(block_cache, freq, 1000, 100000, 15000);
 
             // g_stop.store(true);

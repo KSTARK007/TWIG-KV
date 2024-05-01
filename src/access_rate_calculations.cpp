@@ -68,7 +68,9 @@ uint64_t get_sum_freq_till_index(std::vector<std::pair<uint64_t,std::string>> cd
 
 std::tuple<uint64_t, uint64_t, uint64_t> get_watermark_and_convert_to_index(std::shared_ptr<BlockCache<std::string, std::string>> cache)
 {
+    info("Getting water marks");
     std::tuple<float, float, float> key_freq = cache->get_cache()->get_water_marks();
+    info("Key freq: {}, {}, {}", std::get<0>(key_freq), std::get<1>(key_freq), std::get<2>(key_freq));
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
     uint64_t water_mark_local = std::get<0>(key_freq) * total_keys;
