@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
       static std::thread access_rate_thread([&, block_cache]()
       {
 
-        std::this_thread::sleep_for(std::chrono::seconds(120));
+        std::this_thread::sleep_for(std::chrono::seconds(60));
         std::vector<std::pair<uint64_t,std::string>> freq;
         while (!g_stop)
         {
