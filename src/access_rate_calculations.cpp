@@ -103,11 +103,12 @@ size_t percentage_to_index(size_t total_size, float percent) {
 }
 
 void log_performance_state(uint64_t iteration, uint64_t L, uint64_t remote, uint64_t performance, const std::string& message) {
-    std::cout << "Iteration: " << iteration
-              << ", L: " << L
-              << ", Remote: " << remote
-              << ", Performance: " << performance
-              << ", Message: " << message << std::endl << std::endl;
+    // std::cout << "Iteration: " << iteration
+    //           << ", L: " << L
+    //           << ", Remote: " << remote
+    //           << ", Performance: " << performance
+    //           << ", Message: " << message << std::endl << std::endl;
+    info("Iteration: {}, L: {}, Remote: {}, Performance: {}, Message: {}", std::to_string(iteration), std::to_string(L), std::to_string(remote), std::to_string(performance), message);
 }
 
 void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>> cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg)
@@ -186,15 +187,15 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
             
             if (new_performance > best_performance * (1 + performance__delta_threshold)) {
-                std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
-                std::cout << "old performance: " << best_performance << std::endl;
+                // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
+                // std::cout << "old performance: " << best_performance << std::endl;
                 best_performance = new_performance;
                 best_local = new_local;
                 best_remote = new_remote;
                 improved_increasing = true;
                 improved = true;
-                std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
-                std::cout << "best performance: " << best_performance << std::endl;
+                // std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
+                // std::cout << "best performance: " << best_performance << std::endl;
             }
             else {
                 if(new_performance < best_performance * (1 - performance__delta_threshold)){
@@ -217,15 +218,15 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                 log_performance_state(iteration++, new_local, new_remote, new_performance, message);
 
                 if (new_performance > best_performance * (1 + performance__delta_threshold)) {
-                    std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
-                    std::cout << "old performance: " << best_performance << std::endl;
+                    // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
+                    // std::cout << "old performance: " << best_performance << std::endl;
                     best_performance = new_performance;
                     best_local = new_local;
                     best_remote = new_remote;
                     improved_decreasing = true;
                     improved = true;
-                    std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
-                    std::cout << "best performance: " << best_performance << std::endl;
+                    // std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
+                    // std::cout << "best performance: " << best_performance << std::endl;
                 }
                 else {
                     if(new_performance < best_performance * (1 - performance__delta_threshold)){
@@ -241,7 +242,8 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     // std::cout<<"improved_increasing: "<<improved_increasing<<std::endl;
     // std::cout<<"reduced_perf_increasing: "<<improved_decreasing<<std::endl;
     if (!improved) {
-        std::cout << "No improvement in either round" << std::endl;
+        // std::cout << "No improvement in either round" << std::endl;
+        info("No improvement in either round");
         uint64_t new_remote = cache_size - (best_local * 3);
         uint64_t new_local = best_local;
         
@@ -260,20 +262,21 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
             std::string message = "Increased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
             if (new_performance > best_performance * (1 + performance__delta_threshold) ) {
-                std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
-                std::cout << "old performance: " << best_performance << std::endl;
+                // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
+                // std::cout << "old performance: " << best_performance << std::endl;
                 best_performance = new_performance;
                 best_local = new_local;
                 best_remote = new_remote;
                 improved_increasing = true;
-                std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
-                std::cout << "best performance: " << best_performance << std::endl;
+                // std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
+                // std::cout << "best performance: " << best_performance << std::endl;
             } else {
                 if(new_performance < best_performance * (1 - performance__delta_threshold)) {
                     reduced_perf_increasing = true;
                 }
             }
-            std::cout<<"new_remote: "<<new_remote<<std::endl;
+            // std::cout<<"new_remote: "<<new_remote<<std::endl;
+            info("new_local: {} , new_remote: {} , best_performance: {}", std::to_string(new_local), std::to_string(new_remote), std::to_string(best_performance));
         }
         
         // If no improvement, test decreasing L by 1%
@@ -304,10 +307,12 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                 
                 new_local -= percentage_to_index(cdf.size(), 1.0);
             }
-            std::cout<<"new_local: "<<new_local<<std::endl;
+            // std::cout<<"new_local: "<<new_local<<std::endl;
+            info("new_local: {}, new_remote: {}, best_performance: {} ", std::to_string(new_local), std::to_string(new_remote), std::to_string(best_performance));
         }
     }
-    std::cout << "Best local: " << best_local << ", Best remote: " << best_remote << ", Best performance: " << best_performance << std::endl;
+    // std::cout << "Best local: " << best_local << ", Best remote: " << best_remote << ", Best performance: " << best_performance << std::endl;
+    info("Best local: {} , Best remote: {} , Best performance: {}", std::to_string(best_local), std::to_string(best_remote), std::to_string(best_performance));
     
     // Set new optimized water marks and access rate
     set_water_marks(cache, best_local, best_remote);
