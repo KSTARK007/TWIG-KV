@@ -82,11 +82,10 @@ uint64_t calculate_performance(std::vector<std::pair<uint64_t,std::string>> cdf,
     uint64_t remote_latency = total_remote_accesses * rdma_ns_avg;
     uint64_t disk_latency = total_disk_accesses * disk_ns_avg;
     uint64_t perf_mul = -1;
+    uint64_t performance = 0;
     if (local_latency + remote_latency + disk_latency != 0)
     {
-        perf_mul = total_keys / (local_latency + remote_latency + disk_latency);
-    } else {
-        perf_mul = 0;
+        performance = total_keys / (local_latency + remote_latency + disk_latency);
     }
     std::cout << "Local latency: " << local_latency << ", Remote latency: " << remote_latency << ", Disk latency: " << disk_latency << ", Performance: " << performance << std::endl;
     std::cout << "Total keys: " << total_keys << ", Total local accesses: " << total_local_accesses << ", Total remote accesses: " << total_remote_accesses << ", Total disk accesses: " << total_disk_accesses << std::endl;
