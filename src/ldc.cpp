@@ -593,14 +593,15 @@ int main(int argc, char *argv[])
     if(config.policy_type == "access_rate_dynamic"){
       static std::thread access_rate_thread([&, block_cache]()
       {
-
+        std::vector<std::pair<std::string, uint64_t>> freq;
         while (!g_stop)
         {
-          std::vector<std::pair<std::string, uint64_t>> freq;
+          info("block_cache->get_cache()->is_ready() {}", block_cache->get_cache()->is_ready());
           if(block_cache->get_cache()->is_ready()){
             std::this_thread::sleep_for(std::chrono::seconds(30));
             info("Access rate check triggered");
             freq = block_cache->get_cache()->clear_frequency_and_return_freq();
+            info("printing freq");
             for (const auto& [key, value] : freq)
             {
               info("Key {} freq {}", key, value);
