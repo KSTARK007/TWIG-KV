@@ -13,7 +13,7 @@ std::vector<std::pair<uint64_t,std::string>> get_and_sort_freq(std::shared_ptr<B
     }
 
     // Sort by frequency (first element of pair), as per std::pair's default sort behavior
-    std::sort(sorted_key_freq.begin(), sorted_key_freq.end());
+    std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
 
     // Resize the vector if it has more entries than total_keys
     if (sorted_key_freq.size() > total_keys)
