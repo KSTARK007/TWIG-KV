@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
             {
               info("Key {} freq {}", key, value);
             }
-            g_stop.store(true);
+            // g_stop.store(true);
           } else {
             std::this_thread::sleep_for(std::chrono::seconds(5));
           }
