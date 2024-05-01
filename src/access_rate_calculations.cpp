@@ -151,9 +151,13 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
 }
 
 void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>>& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg) {
+    info("Calculating best access rates");
     auto [initial_water_mark_local, initial_water_mark_remote, _] = get_watermark_and_convert_to_index(cache);
+    info("Initial water mark local: {}, Initial water mark remote: {}", std::to_string(initial_water_mark_local), std::to_string(initial_water_mark_remote));
     uint64_t cache_size = cache->get_cache()->get_cache_size();
+    info("Cache size: {}", std::to_string(cache_size));
     uint64_t best_performance = calculate_performance(cdf, initial_water_mark_local, initial_water_mark_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+    info("Initial performance: {}", std::to_string(best_performance));
     uint64_t iteration = 0;
     uint64_t best_local = initial_water_mark_local;
     uint64_t best_remote = initial_water_mark_remote;
