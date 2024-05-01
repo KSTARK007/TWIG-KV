@@ -602,8 +602,13 @@ int main(int argc, char *argv[])
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency();
             freq = get_and_sort_freq(block_cache);
+            for (const auto& [key, value] : freq)
+            {
+              if(key != 0){
+                info("key {} value {}", key, value);
+              }
+            }
             get_best_access_rates(block_cache, freq, 1000, 100000, 15000);
-
 
             // g_stop.store(true);
           } else {
