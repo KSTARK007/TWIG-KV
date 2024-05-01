@@ -39,8 +39,9 @@ std::vector<std::pair<uint64_t,std::string>> get_and_sort_freq(std::shared_ptr<B
             }
         }
 
-        // Sort again to maintain order after adding missing keys
-        std::sort(sorted_key_freq.begin(), sorted_key_freq.end());
+        // Sort in decending order
+        std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
+        // std::sort(sorted_key_freq.begin(), sorted_key_freq.end());
     }
 
     return sorted_key_freq;
