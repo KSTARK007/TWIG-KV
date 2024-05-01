@@ -257,7 +257,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
             new_remote = cache_size - (new_local * 3);;
             if (new_remote >= cache_size) break;
             uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
-            std::string message = "Increased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
+            std::string message = "increasing 1% Increased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
             if (new_performance > best_performance * (1 + performance__delta_threshold) ) {
                 // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
@@ -317,6 +317,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     // uint64_t best_access_rate = (cdf[best_local].first) * 0.90;
     // cache->get_cache()->set_access_rate(best_access_rate);
     cache->get_cache()->set_keys_from_past(cdf);
+    cache->get_cache()->print_all_stats();
     
     // // Get and set keys under L
     // std::vector<std::string> keys_under_l = get_keys_under_l(cdf, best_local);
