@@ -610,7 +610,7 @@ int main(int argc, char *argv[])
             //     info("key {} value {}", key, value);
             //   }
             // }
-            get_best_access_rates(block_cache, freq, cache_ns, rdma_ns, disk_ns);
+            get_best_access_rates(block_cache, freq, cache_ns, disk_ns, rdma_ns);
 
             // g_stop.store(true);
           } else {
