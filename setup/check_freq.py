@@ -63,4 +63,4 @@ def plot_cdf_graph(directory):
 
 if __name__ == "__main__":
     # plot_cdf_graph('/mydata/ycsb_workloads/hotspot_95_5/')
-    plot_cdf_graph('/mydata/ycsb/hotspot_95_5/')
+    plot_cdf_graph('/mydata/workload/zipfian_default')

@@ -116,7 +116,7 @@ iterate_and_execute() {
 # CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
 # SYSTEM_NAMES=("A" "B" "C")
 # POLICY_TYPES=("thread_safe_lru" "nchance" "access_rate")
-# ACCESS_RATE=(50 5000)
+# ACCESS_RATE=(50)
 
 # CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
 # SYSTEM_NAMES=("A")
@@ -126,7 +126,7 @@ iterate_and_execute() {
 CACHE_SIZE=(0.334)
 SYSTEM_NAMES=("C")
 POLICY_TYPES=("access_rate_dynamic")
-ACCESS_RATE=(50)
+ACCESS_RATE=(300000)
 
 WORKLOAD="YCSB"
 # Execute with specified ranges and steps
@@ -135,15 +135,15 @@ for system_name in "${SYSTEM_NAMES[@]}"; do
         for policy in "${POLICY_TYPES[@]}"; do
             if [[ $policy == "access_rate" ]]; then
                 for access_rate in "${ACCESS_RATE[@]}"; do
-                    iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
+                    iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name $policy $access_rate
                 done
             else
-                access_rate=4000
-                iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
+                access_rate=30000000
+                iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name $policy $access_rate
             fi
         done
     else
-        iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name "thread_safe_lru" 0
+        iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name "thread_safe_lru" 0
     fi
 done
 

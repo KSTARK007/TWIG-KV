@@ -7,7 +7,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Run code on cloudlab machines from xml config of cluster')
 parser.add_argument("-c", "--char", choices=["A", "B", "C"], default="C", help="Key distribution type (default: 'uniform')")
-parser.add_argument("-s", "--system", choices=["thread_safe_lru", "access_rate", "nchance"], default="thread_safe_lru", help="Key distribution type (default: 'uniform')")
+parser.add_argument("-s", "--system", choices=["thread_safe_lru", "access_rate", "nchance", "access_rate_dynamic"], default="thread_safe_lru", help="Key distribution type (default: 'uniform')")
 parser.add_argument("-d", "--distribution", choices=['uniform', 'zipfian', 'hotspot'], default="none", help="Key distribution type (default: 'uniform')")
 args = parser.parse_args()
 
