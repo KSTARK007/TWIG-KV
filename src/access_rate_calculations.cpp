@@ -327,6 +327,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     if (best_local != 0) {
         best_access_rate = (cdf[best_local].first);
     }
+    cache->get_cache()->check_and_set_total_cache_duplication();
     cache->get_cache()->set_access_rate(best_access_rate);
     cache->get_cache()->set_perf_stats(best_local, best_remote, best_performance);
     cache->get_cache()->set_keys_from_past(cdf);
