@@ -66,6 +66,13 @@ execute_cmd() {
     done
 }
 
+function scp_ycsb_workload {
+    for i in {1..6}
+    do
+        scp -r $1/* 10.10.1.$i:/mnt/sda4/LDC/build
+    done
+}
+
 # Function to iterate through ranges and execute commands
 iterate_and_execute() {
     local num_clients_start=$1

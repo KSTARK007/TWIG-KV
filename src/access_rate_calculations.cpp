@@ -323,8 +323,12 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     
     // Set new optimized water marks and access rate
     set_water_marks(cache, best_local, best_remote);
-    uint64_t best_access_rate = (cdf[best_local].first);
+    uint64_t best_access_rate = -1;
+    if (best_local != 0) {
+        best_access_rate = (cdf[best_local].first);
+    }
     cache->get_cache()->set_access_rate(best_access_rate);
+    cache->get_cache()->set_perf_stats(best_local, best_remote, best_performance);
     cache->get_cache()->set_keys_from_past(cdf);
     cache->get_cache()->print_all_stats();
     
