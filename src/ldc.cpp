@@ -595,7 +595,7 @@ int main(int argc, char *argv[])
       {
 
         std::this_thread::sleep_for(std::chrono::seconds(45));
-        std::vector<std::pair<uint64_t,std::string>> freq;
+        CDFType freq;
         while (!g_stop)
         {
           info("block_cache->get_cache()->is_ready() {}", block_cache->get_cache()->is_ready());

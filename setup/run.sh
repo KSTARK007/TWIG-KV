@@ -67,7 +67,7 @@ execute_cmd() {
 }
 
 function scp_ycsb_workload {
-    for i in {1..6}
+    for i in {1..3}
     do
         scp -r $1/* 10.10.1.$i:/mnt/sda4/LDC/build
     done
@@ -130,51 +130,169 @@ iterate_and_execute() {
 # POLICY_TYPES=("thread_safe_lru")
 # ACCESS_RATE=(50)
 
-CACHE_SIZE=(0.334)
+function zipfian {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/zipfian_0.99"
+    WORKLOAD_TYPE="zipfian"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/zipfian_0.99
+    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/zipfian_0.99
+}
+
+function hotspot_80_20 {
+    WORKLOAD="YCSB"
+    # scp_ycsb_workload "/mydata/ycsb/hotspot_80_20"
+    WORKLOAD_TYPE="hotspot"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_80_20
+    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/hotspot_80_20
+}
+
+function hotspot_90_10 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/hotspot_90_10"
+    WORKLOAD_TYPE="hotspot"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_90_10
+    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/hotspot_90_10
+}
+
+function hotspot_95_5 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/hotspot_95_5"
+    WORKLOAD_TYPE="hotspot"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_95_5
+    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/hotspot_95_5
+}
+
+function uniform {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/uniform"
+    WORKLOAD_TYPE="uniform"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/uniform
+    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/uniform
+}
+function SINGLE_NODE_HOT_KEYS {
+    WORKLOAD="SINGLE_NODE_HOT_KEYS"
+    # scp_ycsb_workload "/mydata/ycsb/uniform"
+    WORKLOAD_TYPE="uniform"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/SINGLE_NODE_HOT_KEYS
+    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/SINGLE_NODE_HOT_KEYS
+}
+
+CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
+# CACHE_SIZE=(0.334)
 SYSTEM_NAMES=("C")
 POLICY_TYPES=("access_rate_dynamic")
-ACCESS_RATE=(300000)
+ACCESS_RATE=(5000)
 
+# WORKLOAD="SINGLE_NODE_HOT_KEYS"
+# SINGLE_NODE_HOT_KEYS
+
+# WORKLOAD="SINGLE_NODE_HOT_KEYS"
 WORKLOAD="YCSB"
-# Execute with specified ranges and steps
-for system_name in "${SYSTEM_NAMES[@]}"; do
-    if [[ $system_name == "C" ]]; then
-        for policy in "${POLICY_TYPES[@]}"; do
-            if [[ $policy == "access_rate" ]]; then
-                for access_rate in "${ACCESS_RATE[@]}"; do
-                    iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name $policy $access_rate
-                done
-            else
-                access_rate=30000000
-                iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name $policy $access_rate
-            fi
-        done
-    else
-        iterate_and_execute 3 3 8 8 2 2 "zipfian" $system_name "thread_safe_lru" 0
-    fi
-done
 
-# CACHE_SIZE=(0.15 0.20 0.25 0.30)
-# # SYSTEM_NAMES=("A" "B" "C")
-# SYSTEM_NAMES=("B" "C")
-# POLICY_TYPES=("thread_safe_lru" "nchance" "access_rate")
-# ACCESS_RATE=(50 5000)
+hotspot_80_20
+hotspot_90_10
+hotspot_95_5
 
-# WORKLOAD="YCSB"
-# # Execute with specified ranges and steps
-# for system_name in "${SYSTEM_NAMES[@]}"; do
-#     if [[ $system_name == "C" ]]; then
-#         for policy in "${POLICY_TYPES[@]}"; do
-#             if [[ $policy == "access_rate" ]]; then
-#                 for access_rate in "${ACCESS_RATE[@]}"; do
-#                     iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
-#                 done
-#             else
-#                 access_rate=4000
-#                 iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name $policy $access_rate
-#             fi
-#         done
-#     else
-#         iterate_and_execute 3 3 8 8 2 2 "hotspot" $system_name "thread_safe_lru" 0
-#     fi
-# done
+

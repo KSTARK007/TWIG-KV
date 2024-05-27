@@ -24,22 +24,108 @@ std::vector<uint64_t> extract_keys(const std::string& filename) {
     return keys;
 }
 
+// std::vector<std::pair<uint64_t, std::string>> sort_keys_by_frequency(const std::vector<uint64_t>& keys) {
+//     std::map<uint64_t, uint64_t> frequency;
+//     for (uint64_t key : keys) {
+//         frequency[key]++;
+//     }
+
+//     std::vector<std::pair<uint64_t, std::string>> freq_vector;
+//     for (auto& kv : frequency) {
+//         freq_vector.emplace_back(static_cast<uint64_t>(kv.second), std::to_string(kv.first));
+//     }
+
+//     std::sort(freq_vector.begin(), freq_vector.end(), [](const std::pair<uint64_t, std::string>& a, const std::pair<uint64_t, std::string>& b) {
+//         return a.first > b.first; // Sort in descending order by frequency
+//     });
+
+//     return freq_vector;
+// }
+
+void write_vector_to_file(const std::vector<std::pair<uint64_t, std::string>>& vec, const std::string& filename) {
+    std::ofstream file(filename);
+    for (const auto& kv : vec) {
+        file << kv.first << " " << kv.second << std::endl;
+    }
+    file.close();
+}
+
+// Function to write buckets to a file for debugging
+void write_buckets_to_file(const std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>>& buckets, const std::string& filename) {
+    std::ofstream file(filename);
+    for (const auto& bucket : buckets) {
+        file << "Percentile: " << bucket.first << std::endl;
+        for (const auto& kv : bucket.second) {
+            file << kv.first << " " << kv.second << std::endl;
+        }
+        file << std::endl;
+    }
+    file.close();
+}
+
+void write_vectors_to_file(const std::vector<std::tuple<uint64_t, std::string, uint64_t>>& vec, const std::string& filename) {
+    std::ofstream file(filename);
+    for (const auto& kv : vec) {
+        file << std::get<0>(kv) << " " << std::get<1>(kv) << " " << std::get<2>(kv) << std::endl;
+    }
+    file.close();
+}
+
 std::vector<std::pair<uint64_t, std::string>> sort_keys_by_frequency(const std::vector<uint64_t>& keys) {
+    // Calculate the frequency of each key
     std::map<uint64_t, uint64_t> frequency;
     for (uint64_t key : keys) {
         frequency[key]++;
     }
 
+    // Create a vector of frequencies
     std::vector<std::pair<uint64_t, std::string>> freq_vector;
     for (auto& kv : frequency) {
         freq_vector.emplace_back(static_cast<uint64_t>(kv.second), std::to_string(kv.first));
     }
 
+    // Sort the frequencies in descending order
     std::sort(freq_vector.begin(), freq_vector.end(), [](const std::pair<uint64_t, std::string>& a, const std::pair<uint64_t, std::string>& b) {
         return a.first > b.first; // Sort in descending order by frequency
     });
 
-    return freq_vector;
+    // Create buckets at each percentile
+    std::vector<std::pair<uint64_t, std::string>> sorted_key_freq;
+    std::vector<std::tuple<uint64_t, std::string, uint64_t>> sorted_key_freqs;
+    std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
+    uint64_t total_freq = 0;
+
+    for (const auto& kv : freq_vector) {
+        total_freq += kv.first;
+    }
+
+    uint64_t cumulative_freq = 0;
+    for (const auto& kv : freq_vector) {
+        cumulative_freq += kv.first;
+        uint64_t percentile = (cumulative_freq * 100) / total_freq;
+        cdf_buckets[percentile].push_back(kv);
+    }
+
+    // Sort keys within each bucket in descending order
+    for (auto& bucket : cdf_buckets) {
+        auto& bucket_keys = bucket.second;
+        std::sort(bucket_keys.begin(), bucket_keys.end(), [](const auto& a, const auto& b) {
+            return std::stoi(a.second) > std::stoi(b.second);
+        });
+
+        for (const auto& it : bucket_keys) {
+            sorted_key_freq.push_back(it);
+            sorted_key_freqs.push_back(std::make_tuple(it.first, it.second, bucket.first));
+        }
+    }
+
+    // Write the frequency vector and buckets to files for debugging
+    write_vector_to_file(freq_vector, "freq_vector.txt");
+    write_buckets_to_file(cdf_buckets, "buckets.txt");
+    write_vector_to_file(sorted_key_freq, "sorted_key_freq.txt");
+    write_vectors_to_file(sorted_key_freqs, "sorted_key_freqs.txt");
+
+    return sorted_key_freq;
 }
 
 void write_cdf_to_file(const std::vector<std::pair<uint64_t, std::string>>& freq_vector, const std::string& filename) {
@@ -75,7 +161,7 @@ std::vector<std::pair<uint64_t, std::string>> uniform_workload() {
 }
 
 std::vector<std::pair<uint64_t, std::string>> hotspot_workload() {
-    auto keys = extract_keys("/mydata/ycsb_traces/hotspot/all_data.txt");
+    auto keys = extract_keys("/mydata/ycsb/hotspot_80_20/all_data.txt");
     std::cout << "Total keys: " << keys.size() << std::endl;
     auto freq_vector = sort_keys_by_frequency(keys);
     write_cdf_to_file(freq_vector, "hotspot_cdf.txt");
@@ -339,39 +425,40 @@ int main() {
     auto cache_size = 30000;
 
     // auto zipfian_cdf = zipfian_workload();
-    std::ifstream filez("zipfian_cdf.txt");
+    // std::ifstream filez("zipfian_cdf.txt");
     uint64_t freq;
     uint64_t key;
     uint64_t sum;
     uint64_t data_size;
-    std::vector<std::pair<uint64_t, std::string>> zipfian_cdf;
+    // std::vector<std::pair<uint64_t, std::string>> zipfian_cdf;
 
-    while (filez >> freq >> key >> sum >> data_size){
-        zipfian_cdf.push_back(std::make_pair(freq, std::to_string(key)));
-    }
-    filez.close();
-    
-    std::cout << "Zipfian" << std::endl<<std::endl;
-    // get_best_access_rates(zipfian_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
-    // itr_through_all_the_perf_values_to_find_optimal(zipfian_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
-    // std::cout << get_sum_freq_till_index(zipfian_cdf, 14400, 16800) << std::endl;
-    // for( auto i = 0; i < 100; i++)
-    // {
-    //     std::cout << zipfian_cdf[i].first << " " << zipfian_cdf[i].second << std::endl;
+    // while (filez >> freq >> key >> sum >> data_size){
+    //     zipfian_cdf.push_back(std::make_pair(freq, std::to_string(key)));
     // }
-
-    std::ifstream fileu("uniform_cdf.txt");
-    std::vector<std::pair<uint64_t, std::string>> uniform_cdf;
-
-    while (fileu >> freq >> key >> sum >> data_size){
-        uniform_cdf.push_back(std::make_pair(freq, std::to_string(key)));
-    }
-    fileu.close();
+    // filez.close();
     
-    std::cout << "Uniform" << std::endl<<std::endl;
+    // std::cout << "Zipfian" << std::endl<<std::endl;
+    // // get_best_access_rates(zipfian_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
+    // // itr_through_all_the_perf_values_to_find_optimal(zipfian_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
+    // // std::cout << get_sum_freq_till_index(zipfian_cdf, 14400, 16800) << std::endl;
+    // // for( auto i = 0; i < 100; i++)
+    // // {
+    // //     std::cout << zipfian_cdf[i].first << " " << zipfian_cdf[i].second << std::endl;
+    // // }
+
+    // std::ifstream fileu("uniform_cdf.txt");
+    // std::vector<std::pair<uint64_t, std::string>> uniform_cdf;
+
+    // while (fileu >> freq >> key >> sum >> data_size){
+    //     uniform_cdf.push_back(std::make_pair(freq, std::to_string(key)));
+    // }
+    // fileu.close();
+    
+    // std::cout << "Uniform" << std::endl<<std::endl;
     // get_best_access_rates(uniform_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
     // itr_through_all_the_perf_values_to_find_optimal(uniform_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
 
+    auto hotspot_cdfs = hotspot_workload();
     std::ifstream fileh("hotspot_cdf.txt");
     std::vector<std::pair<uint64_t, std::string>> hotspot_cdf;
 
@@ -381,7 +468,7 @@ int main() {
     fileh.close();
 
     std::cout << "Hotspot" << std::endl<<std::endl;
-    get_best_access_rates(hotspot_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
+    // get_best_access_rates(hotspot_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
     // itr_through_all_the_perf_values_to_find_optimal(hotspot_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
     return 0;
 }
