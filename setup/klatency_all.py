@@ -96,6 +96,10 @@ def read_integers(file_path):
 
 # base_directory = Path('backup/full_runs_backup')
 base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
+# base_directory = Path('results/hotspot_80_20')
+# base_directory = Path('results/zipfian_0.99')
+# base_directory = Path('results/uniform')
+# base_directory = Path('results')
 
 def average(lst):
     return sum(lst) / len(lst) if lst else 0
@@ -180,7 +184,7 @@ for subdirectory in base_directory.iterdir():
             if access_rate_file.exists():
                 access_rate_details[f'node_{i + details["num_servers"]}'] = extract_access_rate_from_filename(access_rate_file)
         # print(access_rate_details['node_3'])
-        plot_data(access_rate_details['node_3'], f'{subdirectory}/data_series_plot')
+        # plot_data(access_rate_details['node_3'], f'{subdirectory}/data_series_plot')
 
         # Calculate averages
         average_latency_us = average(average_latency)
@@ -236,18 +240,18 @@ write_to_csv(sorted_by_throughput, filename='metrics_summary_throughput_sorted.c
 
 
 # Print the sorted results
-# for result in sorted_by_throughput:
-    # print(f"Folder: {result['folder']}")
-    # print(f"Details: Servers={result['details']['num_servers']}, Clients={result['details']['num_clients']}, Clients/Thread={result['details']['num_clients_per_thread']}, Threads={result['details']['num_threads']}")
-    # print(f"Total tx_mps: {result['throughput']}")
-    # print(f"Avg average_latency_us: {result['average_latency_us']}")
-    # print(f"Avg p99_latency_us: {result['p99_latency']}")
-    # print(f"Avg p50_latency_us: {result['p50_latency']}")
-    # print(f"Miss Rate: {result['miss_rate']}")
-    # print(f"Remote Hit Rate: {result['remote_hit_rate']}")
-    # print(f"Local Hit Rate: {result['local_hit_rate']}")
-    # print(f"Data Coverage: {result['data_coverage']}")
-    # print(f"Similarity: {result['similarity']}")
-    # print(f"Sorensen Similarity: {result['sorensen_similarity']}")
-    # print(f"Freq Addition: {result['freq_addition']} \n")
+for result in sorted_by_throughput:
+    print(f"Folder: {result['folder']}")
+    print(f"Details: Servers={result['details']['num_servers']}, Clients={result['details']['num_clients']}, Clients/Thread={result['details']['num_clients_per_thread']}, Threads={result['details']['num_threads']}")
+    print(f"Total tx_mps: {result['throughput']}")
+    print(f"Avg average_latency_us: {result['average_latency_us']}")
+    print(f"Avg p99_latency_us: {result['p99_latency']}")
+    print(f"Avg p50_latency_us: {result['p50_latency']}")
+    print(f"Miss Rate: {result['miss_rate']}")
+    print(f"Remote Hit Rate: {result['remote_hit_rate']}")
+    print(f"Local Hit Rate: {result['local_hit_rate']}")
+    print(f"Data Coverage: {result['data_coverage']}")
+    print(f"Similarity: {result['similarity']}")
+    print(f"Sorensen Similarity: {result['sorensen_similarity']}")
+    print(f"Freq Addition: {result['freq_addition']} \n")
 

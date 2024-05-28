@@ -157,7 +157,7 @@ function zipfian {
 
 function hotspot_80_20 {
     WORKLOAD="YCSB"
-    # scp_ycsb_workload "/mydata/ycsb/hotspot_80_20"
+    scp_ycsb_workload "/mydata/ycsb/hotspot_80_20"
     WORKLOAD_TYPE="hotspot"
 
     for system_name in "${SYSTEM_NAMES[@]}"; do
@@ -254,9 +254,9 @@ function uniform {
     sudo mkdir -p /mnt/sda4/LDC/setup/results/uniform
     sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/uniform
 }
+
 function SINGLE_NODE_HOT_KEYS {
     WORKLOAD="SINGLE_NODE_HOT_KEYS"
-    # scp_ycsb_workload "/mydata/ycsb/uniform"
     WORKLOAD_TYPE="uniform"
 
     for system_name in "${SYSTEM_NAMES[@]}"; do
@@ -279,20 +279,40 @@ function SINGLE_NODE_HOT_KEYS {
     sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/SINGLE_NODE_HOT_KEYS
 }
 
-CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
-# CACHE_SIZE=(0.334)
-SYSTEM_NAMES=("C")
-POLICY_TYPES=("access_rate_dynamic")
-ACCESS_RATE=(5000)
+# CACHE_SIZE=(0.10 0.20 0.30 0.334)
+# # CACHE_SIZE=(0.20)
+# SYSTEM_NAMES=("C")
+# POLICY_TYPES=("access_rate_dynamic")
+# ACCESS_RATE=(50000)
 
 # WORKLOAD="SINGLE_NODE_HOT_KEYS"
 # SINGLE_NODE_HOT_KEYS
 
-# WORKLOAD="SINGLE_NODE_HOT_KEYS"
-WORKLOAD="YCSB"
+# # WORKLOAD="SINGLE_NODE_HOT_KEYS"
+# WORKLOAD="YCSB"
 
-hotspot_80_20
-hotspot_90_10
-hotspot_95_5
+# hotspot_80_20
+# zipfian
+# uniform
+# hotspot_95_5
+# hotspot_90_10
 
 
+CACHE_SIZE=(0.15)
+# CACHE_SIZE=(0.20)
+SYSTEM_NAMES=("C")
+POLICY_TYPES=("access_rate")
+# ACCESS_RATE=(50000 500000 1000000 30000000)
+ACCESS_RATE=(10 1000)
+
+WORKLOAD="SINGLE_NODE_HOT_KEYS"
+SINGLE_NODE_HOT_KEYS
+
+# # WORKLOAD="SINGLE_NODE_HOT_KEYS"
+# WORKLOAD="YCSB"
+
+# hotspot_80_20
+# zipfian
+# uniform
+# hotspot_95_5
+# hotspot_90_10
