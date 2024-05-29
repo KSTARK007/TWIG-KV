@@ -95,8 +95,9 @@ def read_integers(file_path):
     return integers
 
 # base_directory = Path('backup/full_runs_backup')
-base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
+# base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
 # base_directory = Path('results/hotspot_80_20')
+base_directory = Path('results/hotspot_95_5')
 # base_directory = Path('results/zipfian_0.99')
 # base_directory = Path('results/uniform')
 # base_directory = Path('results')
@@ -184,7 +185,9 @@ for subdirectory in base_directory.iterdir():
             if access_rate_file.exists():
                 access_rate_details[f'node_{i + details["num_servers"]}'] = extract_access_rate_from_filename(access_rate_file)
         # print(access_rate_details['node_3'])
-        # plot_data(access_rate_details['node_3'], f'{subdirectory}/data_series_plot')
+        access_rate_file = subdirectory / f'access_rate_{i + details["num_servers"]}.txt'
+        if access_rate_file.exists():
+            plot_data(access_rate_details['node_3'], f'{subdirectory}/data_series_plot')
 
         # Calculate averages
         average_latency_us = average(average_latency)
