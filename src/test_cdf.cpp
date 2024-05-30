@@ -128,6 +128,7 @@ std::vector<std::pair<uint64_t, std::string>> sort_keys_by_frequency(const std::
     return sorted_key_freq;
 }
 
+
 void write_cdf_to_file(const std::vector<std::pair<uint64_t, std::string>>& freq_vector, const std::string& filename) {
     std::ofstream file(filename);
     uint64_t total = 0;
@@ -419,9 +420,9 @@ void itr_through_all_the_perf_values_to_find_optimal(std::vector<std::pair<uint6
 
 int main() {
     
-    auto disk_latency = 100 * 1000;
+    auto disk_latency = 220 * 1000;
     auto cache_latency = 1 * 1000;
-    auto rdma_latency = 25 * 1000;
+    auto rdma_latency = 6 * 1000;
     auto cache_size = 30000;
 
     // auto zipfian_cdf = zipfian_workload();
@@ -458,17 +459,21 @@ int main() {
     // get_best_access_rates(uniform_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
     // itr_through_all_the_perf_values_to_find_optimal(uniform_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
 
-    auto hotspot_cdfs = hotspot_workload();
-    std::ifstream fileh("hotspot_cdf.txt");
+    // auto hotspot_cdfs = hotspot_workload();
+    // std::ifstream fileh("hotspot_cdf.txt");
+    std::ifstream fileh("cdf_5.txt");
     std::vector<std::pair<uint64_t, std::string>> hotspot_cdf;
 
-    while (fileh >> freq >> key >> sum >> data_size){
+    // while (fileh >> freq >> key >> sum >> data_size){
+    //     hotspot_cdf.push_back(std::make_pair(freq, std::to_string(key)));
+    // }
+    while (fileh >> freq >> key >> sum){
         hotspot_cdf.push_back(std::make_pair(freq, std::to_string(key)));
     }
     fileh.close();
 
     std::cout << "Hotspot" << std::endl<<std::endl;
-    // get_best_access_rates(hotspot_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
+    get_best_access_rates(hotspot_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
     // itr_through_all_the_perf_values_to_find_optimal(hotspot_cdf, cache_latency, disk_latency, rdma_latency, cache_size);
     return 0;
 }

@@ -55,6 +55,7 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
     std::vector<std::pair<std::string, uint64_t>> key_freq = cache->get_cache()->get_key_freq_map();
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
     std::vector<std::pair<uint64_t,std::string>> sorted_key_freq;
+    std::map<uint64_t, uint64_t> bucket_cumilative_freq;
 
     // Insert key frequency pairs, swapping key and value for sorting purposes.
     for (auto &it : key_freq)
@@ -113,7 +114,9 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
     }
 
     // Sort keys within each bucket in descending order
+    uint64_t total_cum_sum = 0;
     for (auto& bucket : cdf_buckets) {
+        uint64_t bucket_freq_sum = 0;
         auto& bucket_keys = bucket.second;
         std::sort(bucket_keys.begin(), bucket_keys.end(), [](const auto& a, const auto& b) {
             return std::stoi(a.second) > std::stoi(b.second);
@@ -122,11 +125,12 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
         for (const auto& it : bucket_keys) {
             sorted_key_freq_with_buckets.push_back(it);
             sorted_key_freqs.push_back(std::make_tuple(it.first, it.second, bucket.first));
-            key_freq_bucket_map[it.second] = std::make_pair(it.first, bucket.first);
+            total_cum_sum += it.first;
+            key_freq_bucket_map[it.second] = std::make_pair(total_cum_sum, bucket.first);
         }
     }
+    
     cdf_result = std::make_pair(sorted_key_freqs, key_freq_bucket_map);
-
     return cdf_result;
 }
 
@@ -224,16 +228,20 @@ std::vector<std::string> get_keys_under_l(const std::vector<std::pair<uint64_t, 
     return keys;
 }
 
-uint64_t get_sum_freq_till_index(CDFType cdf, uint64_t start, uint64_t end)
+uint64_t get_sum_freq_till_index(CDFType cdf, uint64_t start, uint64_t end, std::map<uint64_t, uint64_t> bucket_cumilative_freq)
 {
     uint64_t sum = 0;
     std::tuple<uint64_t, std::string, uint64_t> tmp;
-    for (uint64_t i = start; i < end; i++)
-    {
-        tmp = std::get<0>(cdf)[i];
-        sum += std::get<0>(tmp);
-    }
-    return sum;
+    std::map<std::string, std::pair<uint64_t, uint64_t>> key_freq_bucket_map = std::get<1>(cdf);
+    uint64_t start_key_freq_sum = key_freq_bucket_map[std::get<1>(std::get<0>(cdf)[start])].first;
+    uint64_t end_key_freq_sum = key_freq_bucket_map[std::get<1>(std::get<0>(cdf)[end])].first;
+    // for (uint64_t i = start; i < end; i++)
+    // {
+    //     tmp = std::get<0>(cdf)[i];
+    //     sum += std::get<0>(tmp);
+    // }
+    // return sum;
+    return end_key_freq_sum - start_key_freq_sum;
 }
 
 void set_water_marks(std::shared_ptr<BlockCache<std::string, std::string>> cache, uint64_t water_mark_local, uint64_t water_mark_remote)
@@ -241,12 +249,12 @@ void set_water_marks(std::shared_ptr<BlockCache<std::string, std::string>> cache
     cache->get_cache()->set_water_marks(water_mark_local, water_mark_remote);
 }
 
-uint64_t calculate_performance(CDFType cdf, uint64_t water_mark_local, uint64_t water_mark_remote, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg)
+uint64_t calculate_performance(CDFType cdf, uint64_t water_mark_local, uint64_t water_mark_remote, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg, std::map<uint64_t, uint64_t> bucket_cumilative_freq)
 {
     uint64_t total_keys = std::get<0>(cdf).size();
-    uint64_t total_local_accesses = get_sum_freq_till_index(cdf, 0, water_mark_local);
-    uint64_t total_remote_accesses = get_sum_freq_till_index(cdf, water_mark_local, water_mark_local + water_mark_remote);
-    uint64_t total_disk_accesses = get_sum_freq_till_index(cdf, water_mark_local + water_mark_remote, total_keys);
+    uint64_t total_local_accesses = get_sum_freq_till_index(cdf, 0, water_mark_local, bucket_cumilative_freq);
+    uint64_t total_remote_accesses = get_sum_freq_till_index(cdf, water_mark_local, water_mark_local + water_mark_remote, bucket_cumilative_freq);
+    uint64_t total_disk_accesses = get_sum_freq_till_index(cdf, water_mark_local + water_mark_remote, total_keys, bucket_cumilative_freq);
     uint64_t local_latency = total_local_accesses * cache_ns_avg;
     // uint64_t remote_latency = (((2 / 3) * total_remote_accesses) * rdma_ns_avg) + (((1/3)*(total_remote_accesses)) * local_latency);
     uint64_t remote_latency = total_remote_accesses * rdma_ns_avg;
@@ -279,9 +287,10 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
 {
     std::tuple<uint64_t, uint64_t, uint64_t> water_marks = cache->get_cache()->get_water_marks();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
+    std::map<uint64_t, uint64_t> bucket_cumilative_freq = cache->get_cache()->get_bucket_cumulative_sum();
     uint64_t water_mark_local = std::get<0>(water_marks);
     uint64_t water_mark_remote = std::get<1>(water_marks);
-    uint64_t performance = calculate_performance(cdf, water_mark_local, water_mark_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+    uint64_t performance = calculate_performance(cdf, water_mark_local, water_mark_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
     uint64_t best_performance = performance;
     uint64_t best_water_mark_local = water_mark_local;
     uint64_t best_water_mark_remote = water_mark_remote;
@@ -299,7 +308,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
         {
             break;
         }
-        uint64_t new_performance = calculate_performance(cdf, local, remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+        uint64_t new_performance = calculate_performance(cdf, local, remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
         if (new_performance > best_performance)
         {
             best_performance = new_performance;
@@ -330,8 +339,9 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     auto [initial_water_mark_local, initial_water_mark_remote, _] = cache->get_cache()->get_water_marks();
     info("Initial water mark local: {}, Initial water mark remote: {}", std::to_string(initial_water_mark_local), std::to_string(initial_water_mark_remote));
     uint64_t cache_size = cache->get_cache()->get_cache_size();
+    std::map<uint64_t, uint64_t> bucket_cumilative_freq = cache->get_cache()->get_bucket_cumulative_sum();
     info("Cache size: {}", std::to_string(cache_size));
-    uint64_t best_performance = calculate_performance(cdf, initial_water_mark_local, initial_water_mark_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+    uint64_t best_performance = calculate_performance(cdf, initial_water_mark_local, initial_water_mark_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
     info("Initial performance: {}", std::to_string(best_performance));
     uint64_t iteration = 0;
     uint64_t best_local = initial_water_mark_local;
@@ -345,6 +355,8 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     bool reduced_perf_decreasing;
     bool improved = false;
     float performance__delta_threshold = 0.000; // 0.5%
+
+    
     
     do {
         improved_increasing = false;
@@ -361,7 +373,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
             if(new_local > cache_size/3) break;
             if (new_remote >= cache_size) break;
             
-            uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+            uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
             std::string message = "Increased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
             
@@ -392,7 +404,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                 int new_remote = cache_size - (new_local * 3);
                 if (new_local < 0) break;
                 if (new_remote >= cache_size) break;
-                uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+                uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
                 std::string message = "Decreased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
                 log_performance_state(iteration++, new_local, new_remote, new_performance, message);
 
@@ -437,7 +449,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
             new_local = new_local + percentage_to_index(std::get<0>(cdf).size(), 1.0);
             new_remote = cache_size - (new_local * 3);;
             if (new_remote >= cache_size) break;
-            uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+            uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
             std::string message = "increasing 1% Increased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
             if (new_performance > best_performance * (1 + performance__delta_threshold) ) {
@@ -464,7 +476,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
             
             while (new_local > 0 && reduced_perf_decreasing) {
                 new_remote = cache_size - (new_local * 3);;
-                uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg);
+                uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
                 std::string message = "Decreased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
                 log_performance_state(iteration++, new_local, new_remote, new_performance, message);
 
