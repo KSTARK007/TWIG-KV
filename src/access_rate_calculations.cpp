@@ -354,7 +354,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     bool reduced_perf_increasing;
     bool reduced_perf_decreasing;
     bool improved = false;
-    float performance__delta_threshold = 0.050; //5%
+    float performance__delta_threshold = 0.00; // 0.5%
 
     
     
