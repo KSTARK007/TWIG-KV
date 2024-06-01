@@ -233,8 +233,14 @@ uint64_t get_sum_freq_till_index(CDFType cdf, uint64_t start, uint64_t end, std:
     uint64_t sum = 0;
     std::tuple<uint64_t, std::string, uint64_t> tmp;
     std::map<std::string, std::pair<uint64_t, uint64_t>> key_freq_bucket_map = std::get<1>(cdf);
+    if(start >= std::get<0>(cdf).size())
+    {
+        info("Start index is greater than the size of CDF");
+        start = std::get<0>(cdf).size() - 1;
+    }
     if(end >= std::get<0>(cdf).size())
     {
+        info("End index is greater than the size of CDF");
         end = std::get<0>(cdf).size() - 1;
     }
 
