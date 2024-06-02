@@ -36,8 +36,14 @@ def calculate_sorensen_similarity(integer_sets):
     keys_intersect = set().intersection(*integer_sets)
     total_size = sum(len(s) for s in integer_sets)
     nunique = len(keys_union)
-    scale = nsets / (nsets - 1)
-    sorensen_similarity = scale * (1 - (nunique / total_size))
+    if(nsets == 1):
+        scale = 1
+    else:
+        scale = nsets / (nsets - 1)
+    if (nunique / total_size) == 1:
+        sorensen_similarity = 1
+    else:
+        sorensen_similarity = scale * (1 - (nunique / total_size))
     return sorensen_similarity
 
 def extract_access_rate_from_filename(filename):
@@ -95,12 +101,13 @@ def read_integers(file_path):
     return integers
 
 # base_directory = Path('backup/full_runs_backup')
-# base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
+base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
 # base_directory = Path('results/hotspot_80_20')
-base_directory = Path('results/hotspot_95_5')
-# base_directory = Path('results/zipfian_0.99')
+# base_directory = Path('results/hotspot_95_5')
+# base_directory = Path('results/zipfian_0.999')
 # base_directory = Path('results/uniform')
 # base_directory = Path('results')
+# base_directory = Path('backup')
 
 def average(lst):
     return sum(lst) / len(lst) if lst else 0
