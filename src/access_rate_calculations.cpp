@@ -226,11 +226,11 @@ uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
     std::tuple<uint64_t, std::string, uint64_t> tmp;
     std::map<std::string, std::pair<uint64_t, uint64_t>> key_freq_bucket_map = std::get<1>(cdf);
     if (start >= std::get<0>(cdf).size()) {
-        info("Start index is greater than the size of CDF");
+        // info("Start index is greater than the size of CDF");
         start = std::get<0>(cdf).size() - 1;
     }
     if (end >= std::get<0>(cdf).size()) {
-        info("End index is greater than the size of CDF");
+        // info("End index is greater than the size of CDF");
         end = std::get<0>(cdf).size() - 1;
     }
 
@@ -269,11 +269,11 @@ uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t
     if (local_latency + remote_latency + disk_latency != 0) {
         performance = perf_mul / (local_latency + remote_latency + disk_latency);
     }
-    std::cout << "Local latency: " << local_latency << ", Remote latency: " << remote_latency
-              << ", Disk latency: " << disk_latency << ", Performance: " << performance << std::endl;
-    std::cout << "Total keys: " << total_keys << ", Total local accesses: " << total_local_accesses
-              << ", Total remote accesses: " << total_remote_accesses
-              << ", Total disk accesses: " << total_disk_accesses << std::endl;
+    // std::cout << "Local latency: " << local_latency << ", Remote latency: " << remote_latency
+    //           << ", Disk latency: " << disk_latency << ", Performance: " << performance << std::endl;
+    // std::cout << "Total keys: " << total_keys << ", Total local accesses: " << total_local_accesses
+    //           << ", Total remote accesses: " << total_remote_accesses
+    //           << ", Total disk accesses: " << total_disk_accesses << std::endl;
     return performance;
 }
 
@@ -295,6 +295,7 @@ void log_performance_state(uint64_t iteration, uint64_t L, uint64_t remote, uint
 void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<std::string, std::string>> cache,
                                                      CDFType& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg,
                                                      uint64_t rdma_ns_avg) {
+    std::cout << "Calculating best access rates" << std::endl;
     std::tuple<uint64_t, uint64_t, uint64_t> water_marks = cache->get_cache()->get_water_marks();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
     std::map<uint64_t, uint64_t> bucket_cumilative_freq = cache->get_cache()->get_bucket_cumulative_sum();
