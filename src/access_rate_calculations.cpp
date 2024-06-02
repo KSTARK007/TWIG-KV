@@ -323,7 +323,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
             best_water_mark_local = local;
             best_water_mark_remote = remote;
         }
-        log_performance_state(i, local, remote, new_performance, "");
+        // log_performance_state(i, local, remote, new_performance, "");
     }
     // uint64_t best_access_rate = (std::get<0>(std::get<0>(cdf)[best_water_mark_local])) * 0.90;
     std::cout << "Best local: " << best_water_mark_local << ", Best remote: " << best_water_mark_remote
