@@ -224,7 +224,7 @@ uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
                                  std::map<uint64_t, uint64_t>& bucket_cumilative_freq) {
     uint64_t sum = 0;
     std::tuple<uint64_t, std::string, uint64_t> tmp;
-    std::map<std::string, std::pair<uint64_t, uint64_t>> key_freq_bucket_map = std::get<1>(cdf);
+    std::map<std::string, std::pair<uint64_t, uint64_t>> *key_freq_bucket_map = &std::get<1>(cdf);
     if (start >= std::get<0>(cdf).size()) {
         // info("Start index is greater than the size of CDF");
         start = std::get<0>(cdf).size() - 1;
@@ -234,8 +234,8 @@ uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
         end = std::get<0>(cdf).size() - 1;
     }
 
-    uint64_t start_key_freq_sum = key_freq_bucket_map[std::get<1>(std::get<0>(cdf)[start])].first;
-    uint64_t end_key_freq_sum = key_freq_bucket_map[std::get<1>(std::get<0>(cdf)[end])].first;
+    uint64_t start_key_freq_sum = (*key_freq_bucket_map)[std::get<1>(std::get<0>(cdf)[start])].first;
+    uint64_t end_key_freq_sum = (*key_freq_bucket_map)[std::get<1>(std::get<0>(cdf)[end])].first;
     // for (uint64_t i = start; i < end; i++)
     // {
     //     tmp = std::get<0>(cdf)[i];
