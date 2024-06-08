@@ -43,6 +43,7 @@ execute_cmd_with_timeout() {
     --num_threads $num_threads --policy $policy --system_type $system_name --distribution $distribution --num_clients $num_clients \
     --num_clients_per_thread $num_clients_per_thread --git_branch LDC_DYNAMIC --cache_size $cache_size_for_this_run --access_rate $access_rate --workload $WORKLOAD"
     echo "Executing: $CMD"
+    # eval $CMD
 
     timeout 15m bash -c "eval $CMD" || (
         echo "Command timed out after 15 minutes. Restarting..."
@@ -130,7 +131,7 @@ iterate_and_execute() {
 # POLICY_TYPES=("thread_safe_lru")
 # ACCESS_RATE=(50)
 
-function zipfian {
+function zipfian_0.99 {
     WORKLOAD="YCSB"
     scp_ycsb_workload "/mydata/ycsb/zipfian_0.99"
     WORKLOAD_TYPE="zipfian"
@@ -152,7 +153,57 @@ function zipfian {
         fi
     done
     sudo mkdir -p /mnt/sda4/LDC/setup/results/zipfian_0.99
-    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/zipfian_0.99
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/zipfian_0.99
+}
+
+function zipfian_0.999 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/zipfian_0.999"
+    WORKLOAD_TYPE="zipfian"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/zipfian_0.999
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/zipfian_0.999
+}
+
+function zipfian_0.90 {
+    WORKLOAD="YCSB"
+    # scp_ycsb_workload "/mydata/ycsb/zipfian_0.90"
+    WORKLOAD_TYPE="zipfian"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/zipfian_0.90
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/zipfian_0.90
 }
 
 function hotspot_80_20 {
@@ -177,7 +228,7 @@ function hotspot_80_20 {
         fi
     done
     sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_80_20
-    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/hotspot_80_20
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/hotspot_80_20
 }
 
 function hotspot_90_10 {
@@ -202,7 +253,7 @@ function hotspot_90_10 {
         fi
     done
     sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_90_10
-    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/hotspot_90_10
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/hotspot_90_10
 }
 
 function hotspot_95_5 {
@@ -227,7 +278,32 @@ function hotspot_95_5 {
         fi
     done
     sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_95_5
-    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/hotspot_95_5
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/hotspot_95_5
+}
+
+function hotspot_99_30 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/hotspot_99_30"
+    WORKLOAD_TYPE="hotspot"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/hotspot_99_30
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/hotspot_99_30
 }
 
 function uniform {
@@ -252,7 +328,32 @@ function uniform {
         fi
     done
     sudo mkdir -p /mnt/sda4/LDC/setup/results/uniform
-    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/uniform
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/uniform
+}
+
+function mixed_10 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload "/mydata/ycsb/mixed_10"
+    WORKLOAD_TYPE="mixed_10"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/mixed_10
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/mixed_10
 }
 
 function SINGLE_NODE_HOT_KEYS {
@@ -276,43 +377,56 @@ function SINGLE_NODE_HOT_KEYS {
         fi
     done
     sudo mkdir -p /mnt/sda4/LDC/setup/results/SINGLE_NODE_HOT_KEYS
-    sudo mv /mnt/sda4/LDC/setup/results/a* /mnt/sda4/LDC/setup/results/SINGLE_NODE_HOT_KEYS
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/SINGLE_NODE_HOT_KEYS
 }
 
 # CACHE_SIZE=(0.10 0.20 0.30 0.334)
-# # CACHE_SIZE=(0.20)
-# SYSTEM_NAMES=("C")
-# POLICY_TYPES=("access_rate_dynamic")
-# ACCESS_RATE=(50000)
+CACHE_SIZE=(0.334)
+SYSTEM_NAMES=("C")
+POLICY_TYPES=("access_rate_dynamic")
+ACCESS_RATE=(50000)
 
+WORKLOAD="SINGLE_NODE_HOT_KEYS"
+# SINGLE_NODE_HOT_KEYS
+
+
+WORKLOAD="YCSB"
+# mixed_10
+
+# zipfian_0.999
+# zipfian_0.90
+# hotspot_80_20
+uniform
+# hotspot_95_5
+# hotspot_90_10
+# hotspot_99_30
+
+# CACHE_SIZE=(0.10 0.20)
+# uniform
+
+CACHE_SIZE=(0.10 0.20 0.30 0.334)
+# CACHE_SIZE=(0.30)
+# SYSTEM_NAMES=("A" "B" "C")
+SYSTEM_NAMES=("C")
+POLICY_TYPES=("thread_safe_lru" "nchance")
+# POLICY_TYPES=("thread_safe_lru")
+# POLICY_TYPES=("access_rate")
+# ACCESS_RATE=(10 1000)
+# ACCESS_RATE=(10)
+
+WORKLOAD="YCSB"
+# zipfian_0.90
+# zipfian_0.90
 # WORKLOAD="SINGLE_NODE_HOT_KEYS"
 # SINGLE_NODE_HOT_KEYS
 
-# # WORKLOAD="SINGLE_NODE_HOT_KEYS"
-# WORKLOAD="YCSB"
-
+# WORKLOAD="SINGLE_NODE_HOT_KEYS"
+SYSTEM_NAMES=("A" "B" "C")
+POLICY_TYPES=("thread_safe_lru" "nchance")
+# zipfian_0.999
+# hotspot_99_30
 # hotspot_80_20
-# zipfian
 # uniform
 # hotspot_95_5
 # hotspot_90_10
-
-
-CACHE_SIZE=(0.15)
-# CACHE_SIZE=(0.20)
-SYSTEM_NAMES=("C")
-POLICY_TYPES=("access_rate")
-# ACCESS_RATE=(50000 500000 1000000 30000000)
-ACCESS_RATE=(10 1000)
-
-WORKLOAD="SINGLE_NODE_HOT_KEYS"
-SINGLE_NODE_HOT_KEYS
-
-# # WORKLOAD="SINGLE_NODE_HOT_KEYS"
-# WORKLOAD="YCSB"
-
-# hotspot_80_20
-# zipfian
-# uniform
-# hotspot_95_5
-# hotspot_90_10
+# scp_ycsb_workload "/mydata/ycsb/mixed_10"

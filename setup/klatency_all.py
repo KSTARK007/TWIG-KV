@@ -104,7 +104,7 @@ def read_integers(file_path):
 base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
 # base_directory = Path('results/hotspot_80_20')
 # base_directory = Path('results/hotspot_95_5')
-# base_directory = Path('results/zipfian_0.999')
+# base_directory = Path('results/zipfian_0.90')
 # base_directory = Path('results/uniform')
 # base_directory = Path('results')
 # base_directory = Path('backup')

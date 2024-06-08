@@ -3,5 +3,6 @@ results
 backup
 __pycache__
 backup_pre_buckets
+backup_everything
 data_series_plot
 testing_data
