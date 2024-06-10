@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
       static std::thread access_rate_thread([&, block_cache]()
       {
 
-        std::this_thread::sleep_for(std::chrono::seconds(45));
+        std::this_thread::sleep_for(std::chrono::seconds(30));
         CDFType freq;
         while (!g_stop)
         {
@@ -603,7 +603,12 @@ int main(int argc, char *argv[])
             std::this_thread::sleep_for(std::chrono::seconds(30));
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency();
+            auto now_get_sort = std::chrono::high_resolution_clock::now();
             freq = get_and_sort_freq(block_cache);
+            auto now_get_sort_end = std::chrono::high_resolution_clock::now();
+            auto elapsed = now_get_sort_end - now_get_sort;
+            auto elapsed_seconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            info("get_and_sort_freq took {} microseconds", elapsed_seconds);
             // for (const auto& [key, value] : freq)
             // {
             //   if(key != 0){
@@ -611,11 +616,16 @@ int main(int argc, char *argv[])
             //   }
             // }
             // get_best_access_rates(block_cache, freq, cache_ns, disk_ns, rdma_ns);
+            auto now_itr_through_all_the_perf_values_to_find_optimal = std::chrono::high_resolution_clock::now();
             itr_through_all_the_perf_values_to_find_optimal(block_cache,freq, cache_ns, disk_ns, rdma_ns);
+            auto now_itr_through_all_the_perf_values_to_find_optimal_end = std::chrono::high_resolution_clock::now();
+            auto elapsed_itr_through_all_the_perf_values_to_find_optimal = now_itr_through_all_the_perf_values_to_find_optimal_end - now_itr_through_all_the_perf_values_to_find_optimal;
+            auto elapsed_itr_through_all_the_perf_values_to_find_optimal_seconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_itr_through_all_the_perf_values_to_find_optimal).count();
+            info("itr_through_all_the_perf_values_to_find_optimal took {} microseconds", elapsed_itr_through_all_the_perf_values_to_find_optimal_seconds);
 
             // g_stop.store(true);
           } else {
-            std::this_thread::sleep_for(std::chrono::seconds(5));
+            std::this_thread::sleep_for(std::chrono::seconds(10));
           }
         }
       });
