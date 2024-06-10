@@ -10,3 +10,5 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
 // void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::tuple<uint64_t, std::string, uint64_t>>& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg);
 void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg);
 // void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, std::vector<std::pair<uint64_t,std::string>>& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg);
+
+void write_latency_to_file(std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies);

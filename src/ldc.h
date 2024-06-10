@@ -1115,6 +1115,7 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
 void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<std::string, std::string>> cache,
                                                      CDFType& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg,
                                                      uint64_t rdma_ns_avg);
+void write_latency_to_file(std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies);
 
 void set_bucket_cumulative_sum(std::map<uint64_t, uint64_t>& cdf);
 std::map<uint64_t, uint64_t> get_bucket_cumulative_sum();
