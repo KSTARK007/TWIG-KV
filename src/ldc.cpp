@@ -601,11 +601,11 @@ int main(int argc, char *argv[])
         {
           info("block_cache->get_cache()->is_ready() {}", block_cache->get_cache()->is_ready());
           if(block_cache->get_cache()->is_ready()){
-            std::this_thread::sleep_for(std::chrono::seconds(30));
+            std::this_thread::sleep_for(std::chrono::seconds(240));
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency();
             auto now_get_sort = std::chrono::high_resolution_clock::now();
-            freq = get_and_sort_freq(block_cache);
+            get_and_sort_freq(block_cache, freq);
             auto now_get_sort_end = std::chrono::high_resolution_clock::now();
             auto elapsed = now_get_sort_end - now_get_sort;
             auto elapsed_seconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();

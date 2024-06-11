@@ -51,8 +51,8 @@ cache)
 }
 */
 
-CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache) {
-    std::vector<std::pair<std::string, uint64_t>> key_freq = cache->get_cache()->get_key_freq_map();
+void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf_result) {
+    std::vector<std::pair<std::string, uint64_t>> &key_freq = cache->get_cache()->get_key_freq_map();
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
     std::vector<std::pair<uint64_t, std::string>> sorted_key_freq;
     std::map<uint64_t, uint64_t> bucket_cumilative_freq;
@@ -93,7 +93,6 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
     std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
     std::map<std::string, std::pair<uint64_t, uint64_t>> key_freq_bucket_map;
     uint64_t total_freq = 0;
-    CDFType cdf_result;
 
     for (const auto& kv : sorted_key_freq) {
         total_freq += kv.first;
@@ -112,7 +111,7 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
         uint64_t bucket_freq_sum = 0;
         auto& bucket_keys = bucket.second;
         std::sort(bucket_keys.begin(), bucket_keys.end(),
-                  [](const auto& a, const auto& b) { return std::stoi(a.second) > std::stoi(b.second); });
+                  [](const auto& a, const auto& b) { return std::stoull(a.second) > std::stoull(b.second); });
 
         for (const auto& it : bucket_keys) {
             sorted_key_freq_with_buckets.push_back(it);
@@ -123,7 +122,6 @@ CDFType get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> 
     }
 
     cdf_result = std::make_pair(sorted_key_freqs, key_freq_bucket_map);
-    return cdf_result;
 }
 
 /*
