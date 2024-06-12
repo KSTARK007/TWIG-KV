@@ -52,24 +52,44 @@ cache)
 */
 
 void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf_result) {
+    auto get_time = std::chrono::high_resolution_clock::now();
     std::vector<std::pair<std::string, uint64_t>> &key_freq = cache->get_cache()->get_key_freq_map();
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - get_time).count();
+
+    auto get_num = std::chrono::high_resolution_clock::now();
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
+    auto get_num_end_time = std::chrono::high_resolution_clock::now();
+    auto get_num_duration = std::chrono::duration_cast<std::chrono::microseconds>(get_num_end_time - get_num).count();
+
     std::vector<std::pair<uint64_t, std::string>> sorted_key_freq;
     std::map<uint64_t, uint64_t> bucket_cumilative_freq;
 
     // Insert key frequency pairs, swapping key and value for sorting purposes.
+    auto insert_time = std::chrono::high_resolution_clock::now();
     for (auto& it : key_freq) {
         sorted_key_freq.push_back(std::make_pair(it.second, it.first));
     }
+    auto insert_end_time = std::chrono::high_resolution_clock::now();
+    auto insert_duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(insert_end_time - insert_time).count();
 
     // Sort by frequency (first element of pair), as per std::pair's default sort behavior
+    auto sort_start = std::chrono::high_resolution_clock::now();
     std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
+    auto sort_end = std::chrono::high_resolution_clock::now();
+    auto sort_duration = std::chrono::duration_cast<std::chrono::microseconds>(sort_end - sort_start).count();
 
+    auto total_freq_start = std::chrono::high_resolution_clock::now();
     // Resize the vector if it has more entries than total_keys
     if (sorted_key_freq.size() > total_keys) {
         sorted_key_freq.resize(total_keys);
     }
+    auto total_freq_end = std::chrono::high_resolution_clock::now();
+    auto total_freq_duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(total_freq_end - total_freq_start).count();
 
+    auto missing_keys_start = std::chrono::high_resolution_clock::now();
     // Add missing keys with frequency 0 if the vector has fewer entries than total_keys
     if (sorted_key_freq.size() < total_keys) {
         std::set<std::string> existing_keys;
@@ -85,8 +105,15 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
         }
 
         // Sort in decending order
+        auto missing_keys_sort_start = std::chrono::high_resolution_clock::now();
         std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
+        auto missing_keys_sort_end = std::chrono::high_resolution_clock::now();
+        auto missing_keys_sort_duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_sort_end - missing_keys_sort_start).count();
     }
+    auto missing_keys_end = std::chrono::high_resolution_clock::now();
+    auto missing_keys_duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_end - missing_keys_start).count();
 
     std::vector<std::pair<uint64_t, std::string>> sorted_key_freq_with_buckets;
     std::vector<std::tuple<uint64_t, std::string, uint64_t>> sorted_key_freqs;
@@ -106,6 +133,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     }
 
     // Sort keys within each bucket in descending order
+    auto total_cum_sum_start = std::chrono::high_resolution_clock::now();
     uint64_t total_cum_sum = 0;
     for (auto& bucket : cdf_buckets) {
         uint64_t bucket_freq_sum = 0;
@@ -120,8 +148,23 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
             key_freq_bucket_map[it.second] = std::make_pair(total_cum_sum, bucket.first);
         }
     }
-
+    auto total_cum_sum_end = std::chrono::high_resolution_clock::now();
+    auto total_cum_sum_duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(total_cum_sum_end - total_cum_sum_start).count();
+    auto make_pair_time = std::chrono::high_resolution_clock::now();
     cdf_result = std::make_pair(sorted_key_freqs, key_freq_bucket_map);
+    auto make_pair_end_time = std::chrono::high_resolution_clock::now();
+    auto make_pair_duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(make_pair_end_time - make_pair_time).count();
+    
+    info("Get key freq map time: {} microseconds", duration);
+    info("Get num entries time: {} microseconds", get_num_duration);
+    info("Insert time: {} microseconds", insert_duration);
+    info("Sort time: {} microseconds", sort_duration);
+    info("Total freq time: {} microseconds", total_freq_duration);
+    info("Missing keys time: {} microseconds", missing_keys_duration);
+    info("Total cum sum time: {} microseconds", total_cum_sum_duration);
+    info("Make pair time: {} microseconds", make_pair_duration);
 }
 
 /*
@@ -254,9 +297,9 @@ uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t
     uint64_t total_keys = std::get<0>(cdf).size();
     uint64_t total_local_accesses = get_sum_freq_till_index(cdf, 0, water_mark_local, bucket_cumilative_freq);
     uint64_t total_remote_accesses =
-        get_sum_freq_till_index(cdf, water_mark_local, water_mark_local + water_mark_remote, bucket_cumilative_freq);
+        get_sum_freq_till_index(cdf, water_mark_local, water_mark_remote, bucket_cumilative_freq);
     uint64_t total_disk_accesses =
-        get_sum_freq_till_index(cdf, water_mark_local + water_mark_remote, total_keys, bucket_cumilative_freq);
+        get_sum_freq_till_index(cdf, water_mark_remote, total_keys, bucket_cumilative_freq);
     uint64_t local_latency = total_local_accesses * cache_ns_avg;
     // uint64_t remote_latency = (((2 / 3) * total_remote_accesses) * rdma_ns_avg) + (((1/3)*(total_remote_accesses)) *
     // local_latency);
