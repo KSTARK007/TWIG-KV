@@ -51,6 +51,8 @@ cache)
 }
 */
 
+static bool *key_map = NULL;
+
 void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf_result) {
     auto get_time = std::chrono::high_resolution_clock::now();
     std::vector<std::pair<std::string, uint64_t>> &key_freq = cache->get_cache()->get_key_freq_map();
@@ -61,6 +63,9 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
     auto get_num_end_time = std::chrono::high_resolution_clock::now();
     auto get_num_duration = std::chrono::duration_cast<std::chrono::microseconds>(get_num_end_time - get_num).count();
+    if (key_map == NULL) {
+        key_map = new bool[total_keys + 1];
+    }
 
     std::vector<std::pair<uint64_t, std::string>> sorted_key_freq;
     std::map<uint64_t, uint64_t> bucket_cumilative_freq;
@@ -90,26 +95,37 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
         std::chrono::duration_cast<std::chrono::microseconds>(total_freq_end - total_freq_start).count();
 
     auto missing_keys_start = std::chrono::high_resolution_clock::now();
-    // Add missing keys with frequency 0 if the vector has fewer entries than total_keys
-    if (sorted_key_freq.size() < total_keys) {
-        std::set<std::string> existing_keys;
-        for (auto& it : sorted_key_freq) {
-            existing_keys.insert(it.second);
-        }
+    // // Add missing keys with frequency 0 if the vector has fewer entries than total_keys
+    // if (sorted_key_freq.size() < total_keys) {
+    //     std::set<std::string> existing_keys;
+    //     for (auto& it : sorted_key_freq) {
+    //         existing_keys.insert(it.second);
+    //     }
 
-        for (uint64_t i = 1; i <= total_keys; i++) {
-            std::string key = std::to_string(i);
-            if (existing_keys.find(key) == existing_keys.end()) {
-                sorted_key_freq.push_back(std::make_pair(0, key));
-            }
-        }
+    //     for (uint64_t i = 1; i <= total_keys; i++) {
+    //         std::string key = std::to_string(i);
+    //         if (existing_keys.find(key) == existing_keys.end()) {
+    //             sorted_key_freq.push_back(std::make_pair(0, key));
+    //         }
+    //     }
 
-        // Sort in decending order
-        auto missing_keys_sort_start = std::chrono::high_resolution_clock::now();
-        std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
-        auto missing_keys_sort_end = std::chrono::high_resolution_clock::now();
-        auto missing_keys_sort_duration =
-            std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_sort_end - missing_keys_sort_start).count();
+    //     // Sort in decending order
+    //     auto missing_keys_sort_start = std::chrono::high_resolution_clock::now();
+    //     std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
+    //     auto missing_keys_sort_end = std::chrono::high_resolution_clock::now();
+    //     auto missing_keys_sort_duration =
+    //         std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_sort_end - missing_keys_sort_start).count();
+    // }
+    for (uint64_t i = 1; i <= total_keys; i++) {
+        key_map[i] = false;
+    }
+    for (auto &e: sorted_key_freq) {
+        key_map[std::stoi(e.second)] = true;
+    }
+    for (uint64_t i = 1; i <= total_keys; i++) {
+        if (!key_map[i]) {
+            sorted_key_freq.push_back(std::make_pair(1, std::to_string(i)));
+        }
     }
     auto missing_keys_end = std::chrono::high_resolution_clock::now();
     auto missing_keys_duration =
