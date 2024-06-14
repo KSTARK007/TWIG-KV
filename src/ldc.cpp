@@ -396,9 +396,12 @@ void server_worker(
                   LOG_STATE("Fetching from disk {} {}", skey, value);
                   if (ops_config.DISK_ASYNC) {
                     LDCTimer disk_timer;
-                    block_cache->get_db()->get_async(skey, [server, remote_index, remote_port, skey, disk_timer](auto value) {
+                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer](auto value) {
                       disk_ns = disk_timer.time_elapsed();
                       
+                      if(std::stoull(skey) >= key_min && std::stoull(skey) < key_max){
+                        block_cache->get_cache()->put(skey, value);
+                      }
                       // Send the response
                       server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
@@ -653,6 +656,8 @@ int main(int argc, char *argv[])
     auto server_index = FLAGS_machine_index - start_client_index;
     auto start_keys = server_index * (static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / ops_config.NUM_NODES);
     auto end_keys = (server_index + 1) * (static_cast<float>(ops_config.NUM_KEY_VALUE_PAIRS) / ops_config.NUM_NODES);
+    key_min = start_keys;
+    key_max = end_keys;
 
     info("[{}] Loading database for server index {} starting at key {} and ending at {}", machine_index, server_index, start_keys, end_keys);
     std::vector<std::string> keys = readKeysFromFile(ops_config.DATASET_FILE);
