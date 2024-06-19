@@ -605,7 +605,7 @@ int main(int argc, char *argv[])
           info("block_cache->get_cache()->is_ready() {}", block_cache->get_cache()->is_ready());
           if(block_cache->get_cache()->is_ready()){
             // std::this_thread::sleep_for(std::chrono::seconds(60));
-            std::this_thread::sleep_for(std::chrono::seconds(120));
+            std::this_thread::sleep_for(std::chrono::seconds(240));
             // std::this_thread::sleep_for(std::chrono::seconds(180));
             // std::this_thread::sleep_for(std::chrono::seconds(240));
             info("Access rate check triggered");
