@@ -605,8 +605,8 @@ int main(int argc, char *argv[])
           info("block_cache->get_cache()->is_ready() {}", block_cache->get_cache()->is_ready());
           if(block_cache->get_cache()->is_ready()){
             // std::this_thread::sleep_for(std::chrono::seconds(60));
-            std::this_thread::sleep_for(std::chrono::seconds(240));
-            // std::this_thread::sleep_for(std::chrono::seconds(180));
+            // std::this_thread::sleep_for(std::chrono::seconds(120));
+            std::this_thread::sleep_for(std::chrono::seconds(180));
             // std::this_thread::sleep_for(std::chrono::seconds(240));
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency();
@@ -669,18 +669,19 @@ int main(int argc, char *argv[])
     auto value = default_value;
   
     if(!config.baseline.one_sided_rdma_enabled){
-      for (const auto &k : keys)
-      {
-        auto key_index = std::stoi(k);
-        if (key_index >= start_keys && key_index < end_keys)
-        {
-          block_cache->put(k, value);
-        }
-        else
-        {
-          block_cache->get_db()->put(k, value);
-        }
-      }
+      // for (const auto &k : keys)
+      // {
+      //   auto key_index = std::stoi(k);
+      //   if (key_index >= start_keys && key_index < end_keys)
+      //   {
+      //     block_cache->put(k, value);
+      //   }
+      //   else
+      //   {
+      //     block_cache->get_db()->put(k, value);
+      //   }
+      // }
+      ;
     }
 
     // Connect to one sided RDMA
@@ -748,34 +749,34 @@ int main(int argc, char *argv[])
         auto& rdma_node = std::begin(rdma_nodes)->second;
         auto count_expected = 0;
         auto count_finished = 0;
-        std::thread t([&](){
-          while (!finished_running_keys)
-          {
-            rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
-            {
-              const auto& [kv, _, remote_index, __] = v;
-              auto key_index = kv->key_index;
-              auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
-              info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
-            }, [&](){
-            });
-          }
-        });
+        // std::thread t([&](){
+        //   while (!finished_running_keys)
+        //   {
+        //     rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
+        //     {
+        //       const auto& [kv, _, remote_index, __] = v;
+        //       auto key_index = kv->key_index;
+        //       auto value = std::string_view((const char*)kv->data, ops_config.VALUE_SIZE);
+        //       info("[Execute pending for RDMA] [{}] key {} value {}", remote_index, key_index, value);
+        //     }, [&](){
+        //     });
+        //   }
+        // });
 
         info("adding keys to the blockcache");
-        for (const auto &k : keys)
-        {
-          auto key_index = std::stoi(k);
-          if (key_index >= start_keys && key_index < end_keys && config.policy_type == "thread_safe_lru")
-          {
-            block_cache->put(k, value);
-            count_expected++;
-          }
-          else
-          {
-            block_cache->get_db()->put(k, value);
-          }
-        }
+        // for (const auto &k : keys)
+        // {
+        //   auto key_index = std::stoi(k);
+        //   if (key_index >= start_keys && key_index < end_keys && config.policy_type == "thread_safe_lru")
+        //   {
+        //     block_cache->put(k, value);
+        //     count_expected++;
+        //   }
+        //   else
+        //   {
+        //     block_cache->get_db()->put(k, value);
+        //   }
+        // }
 
         if (0)
         {
@@ -799,14 +800,14 @@ int main(int argc, char *argv[])
           }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        while (count_expected >count_finished)
-        {
-          count_finished = rdma_node.rdma_key_value_cache->get_writes();
-          std::this_thread::yield();
-        }
-        finished_running_keys = true;
-        t.join();
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // while (count_expected >count_finished)
+        // {
+        //   count_finished = rdma_node.rdma_key_value_cache->get_writes();
+        //   std::this_thread::yield();
+        // }
+        // finished_running_keys = true;
+        // t.join();
       }
       else
       {
