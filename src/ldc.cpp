@@ -321,6 +321,7 @@ void server_worker(
           {
             auto p = data.getPutRequest();
             block_cache->put(p.getKey().cStr(), p.getValue().cStr());
+            block_cache->get_cache()->update_frequency(p.getKey().cStr());
 
             server.put_response(remote_index, ResponseType::OK);
           }
@@ -345,6 +346,8 @@ void server_worker(
             auto key = key_.cStr();
             auto key_index = std::stoi(key);
             auto exists_in_cache = block_cache->exists_in_cache(key);
+            block_cache->get_cache()->update_frequency(key);
+
             if (exists_in_cache)
             {
               snapshot->update_cache_hits(key_index);
