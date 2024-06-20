@@ -101,12 +101,15 @@ def read_integers(file_path):
     return integers
 
 # base_directory = Path('backup/full_runs_backup')
-base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
+# base_directory = Path('results/SINGLE_NODE_HOT_KEYS')
 # base_directory = Path('results/hotspot_80_20')
 # base_directory = Path('results/hotspot_95_5')
 # base_directory = Path('results/zipfian_0.90')
+# base_directory = Path('results/mixed_uniform_to_zipfian')
+# base_directory = Path('results/mixed_uniform_to_hotspot')
+# base_directory = Path('results/mixed_zipfian_to_hotspot')
 # base_directory = Path('results/uniform')
-# base_directory = Path('results')
+base_directory = Path('results')
 # base_directory = Path('backup')
 
 def average(lst):

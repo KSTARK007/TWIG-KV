@@ -204,9 +204,9 @@ uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t
     uint64_t total_keys = std::get<0>(cdf).size();
     uint64_t total_local_accesses = get_sum_freq_till_index(cdf, 0, water_mark_local, bucket_cumilative_freq);
     uint64_t total_remote_accesses =
-        get_sum_freq_till_index(cdf, water_mark_local, water_mark_remote, bucket_cumilative_freq);
+        get_sum_freq_till_index(cdf, water_mark_local, water_mark_local + water_mark_remote, bucket_cumilative_freq);
     uint64_t total_disk_accesses =
-        get_sum_freq_till_index(cdf, water_mark_remote, total_keys, bucket_cumilative_freq);
+        get_sum_freq_till_index(cdf, water_mark_remote + water_mark_local, total_keys, bucket_cumilative_freq);
     uint64_t local_latency = total_local_accesses * cache_ns_avg;
     // uint64_t remote_latency = (((2 / 3) * total_remote_accesses) * rdma_ns_avg) + (((1/3)*(total_remote_accesses)) *
     // local_latency);

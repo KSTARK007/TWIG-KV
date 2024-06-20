@@ -1,31 +1,34 @@
 {
     "ingest_block_index": true,
-    "policy_type": "thread_safe_lru",
+    "policy_type": "access_rate_dynamic",
     "db_type": "block_db",
     "rdma_port": 50000,
     "db": {
         "block_db": {
             "filename": "database.db",
             "num_entries": 10000000,
-            "block_size": 4096
+            "block_size": 4096,
+            "async": true,
+            "io_uring_ring_size": 256,
+            "io_uring_worker_threads": 16
         }
     },
     "cache": {
         "lru": {
-            "cache_size": 34000
+            "cache_size": 3340000
         },
         "random": {
-            "cache_size": 34000
+            "cache_size": 3340000
         },
         "split": {
-            "cache_size": 34000,
+            "cache_size": 3340000,
             "owning_ratio": 0.75,
             "nonowning_ratio": 0.25,
             "owning_cache_type": "lru",
             "nonowning_cache_type": "lru"
         },
         "thread_safe_lru": {
-            "cache_size": 34000
+            "cache_size": 3340000
         },
         "paged": true,
         "rdma": {
@@ -37,7 +40,8 @@
         "client_aware": {},
         "ldc": {},
         "selected": "client_aware",
-        "one_sided_rdma_enabled": true
+        "one_sided_rdma_enabled": true,
+        "use_cache_indexing": true
     },
     "remote_machines": [
         {
@@ -76,5 +80,7 @@
             "port": 8000,
             "server": true
         }
-    ]
+    ],
+    "access_rate": 30000000,
+    "access_per_itr": 1000000000
 }
