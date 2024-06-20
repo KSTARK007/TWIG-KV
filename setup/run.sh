@@ -45,7 +45,7 @@ execute_cmd_with_timeout() {
     echo "Executing: $CMD"
     # eval $CMD
 
-    timeout 45m bash -c "eval $CMD" || (
+    timeout 75m bash -c "eval $CMD" || (
         echo "Command timed out after 15 minutes. Restarting..."
         execute_cmd_with_timeout $num_clients $num_threads $num_clients_per_thread $step $distribution $system_name $policy $cache_size_for_this_run $access_rate $WORKLOAD
     )
@@ -106,7 +106,7 @@ iterate_and_execute() {
 function run {
     WORKLOAD="YCSB"
     # echo "/mydata/changing_distribution/$1" ; ls "/mydata/changing_distribution/$1" | wc -l
-    # scp_ycsb_workload_mydata "/mydata/changing_distribution/$1"
+    scp_ycsb_workload_mydata "/mydata/changing_distribution/$1"
     WORKLOAD_TYPE="uniform"
 
     for system_name in "${SYSTEM_NAMES[@]}"; do
@@ -129,12 +129,64 @@ function run {
     sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/$1
 }
 
+function zipfian_0.99 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload_mydata "/mydata/ycsb/zipfian_0.99"
+    WORKLOAD_TYPE="zipfian"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/zipfian_0.99
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/zipfian_0.99
+}
+
+function uniform {
+    WORKLOAD="YCSB"
+    # scp_ycsb_workload_mydata "/mydata/ycsb/uniform"
+    WORKLOAD_TYPE="uniform"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mnt/sda4/LDC/setup/results/uniform
+    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/uniform
+}
+
 # CACHE_SIZE=(0.30 0.334)
 CACHE_SIZE=(0.30)
 SYSTEM_NAMES=("C")
 POLICY_TYPES=("access_rate_dynamic")
 ACCESS_RATE=(1 10)
 
-run mixed_uniform_to_zipfian
+uniform
+# zipfian_0.99
+# run mixed_uniform_to_zipfian
 # run mixed_zipfian_uniform
 # run mixed_uniform_zipfian_uniform

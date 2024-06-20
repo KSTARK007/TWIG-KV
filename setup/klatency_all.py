@@ -108,8 +108,8 @@ def read_integers(file_path):
 # base_directory = Path('results/mixed_uniform_to_zipfian')
 # base_directory = Path('results/mixed_uniform_to_hotspot')
 # base_directory = Path('results/mixed_zipfian_to_hotspot')
-# base_directory = Path('results/uniform')
-base_directory = Path('results')
+base_directory = Path('results/uniform')
+# base_directory = Path('results')
 # base_directory = Path('backup')
 
 def average(lst):
