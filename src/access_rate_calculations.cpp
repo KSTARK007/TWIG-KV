@@ -202,7 +202,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     std::map<uint64_t, uint64_t> bucket_cumilative_freq = cache->get_cache()->get_bucket_cumulative_sum();
     uint64_t best_performance = 0;
     uint64_t best_water_mark_local = 0;
-    uint64_t best_water_mark_remote = 0;
+    uint64_t best_water_mark_remote = cache_size;
 
     for (uint64_t i = 0; i < std::get<0>(cdf).size(); i++) {
         uint64_t local = i;
