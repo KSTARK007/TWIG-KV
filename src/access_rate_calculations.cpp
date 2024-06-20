@@ -112,7 +112,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     auto missing_keys_duration =
         std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_end - missing_keys_start).count();
 
-    std::vector<std::pair<uint64_t, std::string>> sorted_key_freq_with_buckets;
+    // std::vector<std::pair<uint64_t, std::string>> sorted_key_freq_with_buckets;
     auto &sorted_key_freqs = cdf_result.first;
     std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
     auto &key_freq_bucket_map = cdf_result.second;
@@ -139,7 +139,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
                   [](const auto& a, const auto& b) { return std::stoull(a.second) > std::stoull(b.second); });
 
         for (const auto& it : bucket_keys) {
-            sorted_key_freq_with_buckets.push_back(it);
+            // sorted_key_freq_with_buckets.push_back(it);
             sorted_key_freqs.push_back(std::make_tuple(it.first, it.second, bucket.first));
             total_cum_sum += it.first;
             key_freq_bucket_map[it.second] = std::make_pair(total_cum_sum, bucket.first);
