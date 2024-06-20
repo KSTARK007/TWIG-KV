@@ -244,6 +244,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
                                                      CDFType& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg,
                                                      uint64_t rdma_ns_avg) {
     std::cout << "Calculating best access rates" << std::endl;
+    auto start_time = std::chrono::high_resolution_clock::now();
     std::tuple<uint64_t, uint64_t, uint64_t> water_marks = cache->get_cache()->get_water_marks();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
     std::map<uint64_t, uint64_t> bucket_cumilative_freq = cache->get_cache()->get_bucket_cumulative_sum();
@@ -290,13 +291,32 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
         best_bucket = std::get<2>(std::get<0>(cdf)[best_water_mark_local]);
         cutoff_key_id = std::stoi(std::get<1>(std::get<0>(cdf)[best_water_mark_local]));
     }
+    auto mid_time = std::chrono::high_resolution_clock::now();
     cache->get_cache()->set_access_rate(best_access_rate);
     cache->get_cache()->set_bucket_id(best_bucket);
     cache->get_cache()->set_key_id_cutoff(cutoff_key_id);
-    cache->get_cache()->check_and_set_total_cache_duplication();
-    cache->get_cache()->set_perf_stats(best_water_mark_local, best_water_mark_remote, best_performance);
+    auto mid_time_1 = std::chrono::high_resolution_clock::now();
     cache->get_cache()->set_keys_from_past(std::get<0>(cdf));
+    auto end_time = std::chrono::high_resolution_clock::now();
+    cache->get_cache()->check_and_set_total_cache_duplication();
+    auto end_time_1 = std::chrono::high_resolution_clock::now();
+    cache->get_cache()->set_perf_stats(best_water_mark_local, best_water_mark_remote, best_performance);
+    auto end_time_2 = std::chrono::high_resolution_clock::now();
     cache->get_cache()->print_all_stats();
+    auto end_time_3 = std::chrono::high_resolution_clock::now();
+    
+    info("Time taken to calculate best access rates: {} microseconds",
+         std::chrono::duration_cast<std::chrono::microseconds>(mid_time - start_time).count());
+    info("Time taken to set access rate: {} microseconds",
+            std::chrono::duration_cast<std::chrono::microseconds>(mid_time_1 - mid_time).count());
+    info("Time taken to set keys from past: {} microseconds",
+            std::chrono::duration_cast<std::chrono::microseconds>(end_time - mid_time_1).count());
+    info("Time taken to check and set total cache duplication: {} microseconds",    
+            std::chrono::duration_cast<std::chrono::microseconds>(end_time_1 - end_time).count());
+    info("Time taken to set perf stats: {} microseconds",
+            std::chrono::duration_cast<std::chrono::microseconds>(end_time_2 - end_time_1).count());    
+    info("Time taken to print all stats: {} microseconds",
+            std::chrono::duration_cast<std::chrono::microseconds>(end_time_3 - end_time_2).count());    
 }
 
 void print_cdf(CDFType& cdf) {
