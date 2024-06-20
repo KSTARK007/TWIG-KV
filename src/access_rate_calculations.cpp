@@ -208,9 +208,9 @@ uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t
     uint64_t total_disk_accesses =
         get_sum_freq_till_index(cdf, water_mark_remote + water_mark_local, total_keys, bucket_cumilative_freq);
     uint64_t local_latency = total_local_accesses * cache_ns_avg;
-    // uint64_t remote_latency = (((2 / 3) * total_remote_accesses) * rdma_ns_avg) + (((1/3)*(total_remote_accesses)) *
-    // local_latency);
-    uint64_t remote_latency = total_remote_accesses * rdma_ns_avg;
+    uint64_t remote_latency = ((((2 * total_remote_accesses) / 3) * rdma_ns_avg) + ((total_remote_accesses / 3) *
+    cache_ns_avg));
+    // uint64_t remote_latency = total_remote_accesses * rdma_ns_avg;
     uint64_t disk_latency = total_disk_accesses * disk_ns_avg;
     uint64_t perf_mul = -1;
     uint64_t performance = 0;
