@@ -54,6 +54,7 @@ cache)
 static bool *key_map = NULL;
 
 void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf_result) {
+    
     auto get_time = std::chrono::high_resolution_clock::now();
     std::vector<std::pair<std::string, uint64_t>> &key_freq = cache->get_cache()->get_key_freq_map();
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -95,27 +96,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
         std::chrono::duration_cast<std::chrono::microseconds>(total_freq_end - total_freq_start).count();
 
     auto missing_keys_start = std::chrono::high_resolution_clock::now();
-    // // Add missing keys with frequency 0 if the vector has fewer entries than total_keys
-    // if (sorted_key_freq.size() < total_keys) {
-    //     std::set<std::string> existing_keys;
-    //     for (auto& it : sorted_key_freq) {
-    //         existing_keys.insert(it.second);
-    //     }
-
-    //     for (uint64_t i = 1; i <= total_keys; i++) {
-    //         std::string key = std::to_string(i);
-    //         if (existing_keys.find(key) == existing_keys.end()) {
-    //             sorted_key_freq.push_back(std::make_pair(0, key));
-    //         }
-    //     }
-
-    //     // Sort in decending order
-    //     auto missing_keys_sort_start = std::chrono::high_resolution_clock::now();
-    //     std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
-    //     auto missing_keys_sort_end = std::chrono::high_resolution_clock::now();
-    //     auto missing_keys_sort_duration =
-    //         std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_sort_end - missing_keys_sort_start).count();
-    // }
+   
     for (uint64_t i = 1; i <= total_keys; i++) {
         key_map[i] = false;
     }
@@ -132,9 +113,9 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
         std::chrono::duration_cast<std::chrono::microseconds>(missing_keys_end - missing_keys_start).count();
 
     std::vector<std::pair<uint64_t, std::string>> sorted_key_freq_with_buckets;
-    std::vector<std::tuple<uint64_t, std::string, uint64_t>> sorted_key_freqs;
+    auto &sorted_key_freqs = cdf_result.first;
     std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
-    std::map<std::string, std::pair<uint64_t, uint64_t>> key_freq_bucket_map;
+    auto &key_freq_bucket_map = cdf_result.second;
     uint64_t total_freq = 0;
 
     for (const auto& kv : sorted_key_freq) {
@@ -167,11 +148,6 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     auto total_cum_sum_end = std::chrono::high_resolution_clock::now();
     auto total_cum_sum_duration =
         std::chrono::duration_cast<std::chrono::microseconds>(total_cum_sum_end - total_cum_sum_start).count();
-    auto make_pair_time = std::chrono::high_resolution_clock::now();
-    cdf_result = std::make_pair(sorted_key_freqs, key_freq_bucket_map);
-    auto make_pair_end_time = std::chrono::high_resolution_clock::now();
-    auto make_pair_duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(make_pair_end_time - make_pair_time).count();
     
     info("Get key freq map time: {} microseconds", duration);
     info("Get num entries time: {} microseconds", get_num_duration);
@@ -180,94 +156,9 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     info("Total freq time: {} microseconds", total_freq_duration);
     info("Missing keys time: {} microseconds", missing_keys_duration);
     info("Total cum sum time: {} microseconds", total_cum_sum_duration);
-    info("Make pair time: {} microseconds", make_pair_duration);
+
 }
 
-/*
-std::vector<std::pair<uint64_t,std::string>> get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>>
-cache)
-{
-    std::vector<std::pair<std::string, uint64_t>> key_freq = cache->get_cache()->get_key_freq_map();
-    uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
-    uint64_t total_freq = 0;
-
-    // Calculate the total frequency
-    for (auto &it : key_freq)
-    {
-        total_freq += it.second;
-    }
-
-    hdr_histogram *histogram;
-    hdr_init(1, total_freq, 3, &histogram);
-
-    // Insert key frequency pairs, swapping key and value for sorting purposes.
-    for (auto &it : key_freq)
-    {
-        hdr_record_values(histogram, it.second, 1);
-    }
-
-
-    // Sort by frequency in descending order
-    std::sort(key_freq.begin(), key_freq.end(), [](const auto &a, const auto &b) {
-        return b.second < a.second;
-    });
-
-    // Calculate cumulative frequency and create CDF buckets
-    std::vector<std::pair<uint64_t, std::string>> sorted_key_freq;
-    std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
-    uint64_t cumulative_freq = 0;
-
-    for (auto &it : key_freq)
-    {
-        cumulative_freq += it.second;
-        cdf_buckets[cumulative_freq].push_back(std::make_pair(it.second, it.first));
-    }
-
-    // Sort keys within each bucket in the desired order (alphabetically here as an example)
-    for (auto &bucket : cdf_buckets)
-    {
-        auto &bucket_keys = bucket.second;
-        std::sort(bucket_keys.begin(), bucket_keys.end(), [](const auto &a, const auto &b) {
-            return a.second < b.second; // Change this to any desired sorting order
-        });
-
-        for (auto &it : bucket_keys)
-        {
-            sorted_key_freq.push_back(it);
-        }
-    }
-
-    // Resize the vector if it has more entries than total_keys
-    if (sorted_key_freq.size() > total_keys)
-    {
-        sorted_key_freq.resize(total_keys);
-    }
-
-    // Add missing keys with frequency 0 if the vector has fewer entries than total_keys
-    if (sorted_key_freq.size() < total_keys)
-    {
-        std::set<std::string> existing_keys;
-        for (auto &it : sorted_key_freq)
-        {
-            existing_keys.insert(it.second);
-        }
-
-        for (uint64_t i = 1; i <= total_keys; i++)
-        {
-            std::string key = std::to_string(i);
-            if (existing_keys.find(key) == existing_keys.end())
-            {
-                sorted_key_freq.push_back(std::make_pair(0, key));
-            }
-        }
-
-        // Sort in descending order again to maintain order after adding missing keys
-        std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
-    }
-
-    return sorted_key_freq;
-}
-*/
 // Function to get and maintain keys under L
 std::vector<std::string> get_keys_under_l(const std::vector<std::pair<uint64_t, std::string>>& cdf, uint64_t L) {
     std::vector<std::string> keys;
@@ -399,10 +290,10 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
         best_bucket = std::get<2>(std::get<0>(cdf)[best_water_mark_local]);
         cutoff_key_id = std::stoi(std::get<1>(std::get<0>(cdf)[best_water_mark_local]));
     }
-    cache->get_cache()->check_and_set_total_cache_duplication();
     cache->get_cache()->set_access_rate(best_access_rate);
     cache->get_cache()->set_bucket_id(best_bucket);
     cache->get_cache()->set_key_id_cutoff(cutoff_key_id);
+    cache->get_cache()->check_and_set_total_cache_duplication();
     cache->get_cache()->set_perf_stats(best_water_mark_local, best_water_mark_remote, best_performance);
     cache->get_cache()->set_keys_from_past(std::get<0>(cdf));
     cache->get_cache()->print_all_stats();
