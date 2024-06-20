@@ -67,6 +67,8 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     auto &sorted_key_freqs = cdf_result.first;
     std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
     auto &key_freq_bucket_map = cdf_result.second;
+    sorted_key_freq.clear();
+    key_freq_bucket_map.clear();
     uint64_t total_freq = 0;
 
     for (const auto& kv : sorted_key_freq) {
@@ -196,21 +198,15 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
                                                      uint64_t rdma_ns_avg) {
     std::cout << "Calculating best access rates" << std::endl;
     auto start_time = std::chrono::high_resolution_clock::now();
-    std::tuple<uint64_t, uint64_t, uint64_t> water_marks = cache->get_cache()->get_water_marks();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
     std::map<uint64_t, uint64_t> bucket_cumilative_freq = cache->get_cache()->get_bucket_cumulative_sum();
-    uint64_t water_mark_local = std::get<0>(water_marks);
-    uint64_t water_mark_remote = std::get<1>(water_marks);
-    uint64_t performance = calculate_performance(cdf, water_mark_local, water_mark_remote, cache_ns_avg, disk_ns_avg,
-                                                 rdma_ns_avg, bucket_cumilative_freq);
-    uint64_t best_performance = performance;
-    uint64_t best_water_mark_local = water_mark_local;
-    uint64_t best_water_mark_remote = water_mark_remote;
-    int remote = cache_size - (3 * water_mark_local);
+    uint64_t best_performance = 0;
+    uint64_t best_water_mark_local = 0;
+    uint64_t best_water_mark_remote = 0;
 
     for (uint64_t i = 0; i < std::get<0>(cdf).size(); i++) {
         uint64_t local = i;
-        remote = cache_size - (3 * local);
+        uint64_t remote = cache_size - (3 * local);
         if (remote < 0) {
             break;
         }
