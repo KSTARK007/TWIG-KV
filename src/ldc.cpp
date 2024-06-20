@@ -599,10 +599,12 @@ int main(int argc, char *argv[])
 
         std::this_thread::sleep_for(std::chrono::seconds(30));
         CDFType freq;
+        auto total_itrs = 0;
         auto time_to_sleep = std::chrono::seconds(240);
         std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies;
         while (!g_stop)
         {
+          total_itrs++;
           info("block_cache->get_cache()->is_ready() {}", block_cache->get_cache()->is_ready());
           if(block_cache->get_cache()->is_ready()){
             // std::this_thread::sleep_for(std::chrono::seconds(60));
@@ -636,6 +638,12 @@ int main(int argc, char *argv[])
             auto process_end = std::chrono::high_resolution_clock::now();
             auto process_elapsed = process_end - current_time;
             time_to_sleep = std::chrono::seconds(240) - std::chrono::duration_cast<std::chrono::seconds>(process_elapsed);
+            if(time_to_sleep.count() < 0){
+              time_to_sleep = std::chrono::seconds(0);
+            }
+            if(total_itrs == 2){
+              g_stop.store(true);
+            }
 
             // g_stop.store(true);
           } else {
