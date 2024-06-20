@@ -67,7 +67,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     auto &sorted_key_freqs = cdf_result.first;
     std::map<uint64_t, std::vector<std::pair<uint64_t, std::string>>> cdf_buckets;
     auto &key_freq_bucket_map = cdf_result.second;
-    sorted_key_freq.clear();
+    sorted_key_freqs.clear();
     key_freq_bucket_map.clear();
     uint64_t total_freq = 0;
 
