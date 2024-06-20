@@ -396,12 +396,14 @@ void server_worker(
                   LOG_STATE("Fetching from disk {} {}", skey, value);
                   if (ops_config.DISK_ASYNC) {
                     LDCTimer disk_timer;
-                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer](auto value) {
+                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer, add_to_cache](auto value) {
                       disk_ns = disk_timer.time_elapsed();
                       
+                    if (add_to_cache) {
                       if(std::stoull(skey) >= key_min && std::stoull(skey) < key_max){
                         block_cache->get_cache()->put(skey, value);
                       }
+                    }
                       // Send the response
                       server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
                     });
@@ -413,11 +415,6 @@ void server_worker(
                     }
                   }
                 }
-
-                // if (config.baseline.one_sided_rdma_enabled)
-                // {
-                //   panic("One sided rdma should have found the value by now for key {} from {} to my index {}", key, remote_machine_index_to_rdma, base_index);
-                // }
 
                 total_disk_ops_executed.fetch_add(1, std::memory_order::relaxed);
                 if (!ops_config.DISK_ASYNC)
