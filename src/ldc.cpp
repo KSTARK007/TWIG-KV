@@ -599,6 +599,7 @@ int main(int argc, char *argv[])
 
         std::this_thread::sleep_for(std::chrono::seconds(30));
         CDFType freq;
+        auto time_to_sleep = std::chrono::seconds(240);
         std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies;
         while (!g_stop)
         {
@@ -607,7 +608,8 @@ int main(int argc, char *argv[])
             // std::this_thread::sleep_for(std::chrono::seconds(60));
             // std::this_thread::sleep_for(std::chrono::seconds(120));
             // std::this_thread::sleep_for(std::chrono::seconds(180));
-            std::this_thread::sleep_for(std::chrono::seconds(240));
+            std::this_thread::sleep_for(time_to_sleep);
+            auto current_time = std::chrono::high_resolution_clock::now();
             info("Access rate check triggered");
             block_cache->get_cache()->clear_frequency();
             auto now_get_sort = std::chrono::high_resolution_clock::now();
@@ -630,7 +632,10 @@ int main(int argc, char *argv[])
             auto elapsed_itr_through_all_the_perf_values_to_find_optimal = now_itr_through_all_the_perf_values_to_find_optimal_end - now_itr_through_all_the_perf_values_to_find_optimal;
             auto elapsed_itr_through_all_the_perf_values_to_find_optimal_seconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_itr_through_all_the_perf_values_to_find_optimal).count();
             info("itr_through_all_the_perf_values_to_find_optimal took {} microseconds", elapsed_itr_through_all_the_perf_values_to_find_optimal_seconds);
-            write_latency_to_file(latencies);
+            // write_latency_to_file(latencies);
+            auto process_end = std::chrono::high_resolution_clock::now();
+            auto process_elapsed = process_end - current_time;
+            time_to_sleep = std::chrono::seconds(240) - std::chrono::duration_cast<std::chrono::seconds>(process_elapsed);
 
             // g_stop.store(true);
           } else {
