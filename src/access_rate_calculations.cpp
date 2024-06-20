@@ -1,55 +1,6 @@
 #include "access_rate_calculations.h"
 
 #include <map>
-/*
-std::vector<std::pair<uint64_t,std::string>> get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>>
-cache)
-{
-   std::vector<std::pair<std::string, uint64_t>> key_freq = cache->get_cache()->get_key_freq_map();
-   uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
-   std::vector<std::pair<uint64_t,std::string>> sorted_key_freq;
-
-   // Insert key frequency pairs, swapping key and value for sorting purposes.
-   for (auto &it : key_freq)
-   {
-       sorted_key_freq.push_back(std::make_pair(it.second, it.first));
-   }
-
-   // Sort by frequency (first element of pair), as per std::pair's default sort behavior
-   std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
-
-   // Resize the vector if it has more entries than total_keys
-   if (sorted_key_freq.size() > total_keys)
-   {
-       sorted_key_freq.resize(total_keys);
-   }
-
-   // Add missing keys with frequency 0 if the vector has fewer entries than total_keys
-   if (sorted_key_freq.size() < total_keys)
-   {
-       std::set<std::string> existing_keys;
-       for (auto &it : sorted_key_freq)
-       {
-           existing_keys.insert(it.second);
-       }
-
-       for (uint64_t i = 1; i <= total_keys; i++)
-       {
-           std::string key = std::to_string(i);
-           if (existing_keys.find(key) == existing_keys.end())
-           {
-               sorted_key_freq.push_back(std::make_pair(0, key));
-           }
-       }
-
-       // Sort in decending order
-       std::sort(sorted_key_freq.begin(), sorted_key_freq.end(), std::greater<std::pair<uint64_t, std::string>>());
-       // std::sort(sorted_key_freq.begin(), sorted_key_freq.end());
-   }
-
-   return sorted_key_freq;
-}
-*/
 
 static bool *key_map = NULL;
 
@@ -133,7 +84,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     auto total_cum_sum_start = std::chrono::high_resolution_clock::now();
     uint64_t total_cum_sum = 0;
     for (auto& bucket : cdf_buckets) {
-        uint64_t bucket_freq_sum = 0;
+        // uint64_t bucket_freq_sum = 0;
         auto& bucket_keys = bucket.second;
         std::sort(bucket_keys.begin(), bucket_keys.end(),
                   [](const auto& a, const auto& b) { return std::stoull(a.second) > std::stoull(b.second); });
@@ -171,8 +122,8 @@ std::vector<std::string> get_keys_under_l(const std::vector<std::pair<uint64_t, 
 uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
                                  std::map<uint64_t, uint64_t>& bucket_cumilative_freq) {
     uint64_t sum = 0;
-    std::tuple<uint64_t, std::string, uint64_t> tmp;
-    std::map<std::string, std::pair<uint64_t, uint64_t>> *key_freq_bucket_map = &std::get<1>(cdf);
+    // std::tuple<uint64_t, std::string, uint64_t> tmp;
+    std::map<std::string, std::pair<uint64_t, uint64_t>> &key_freq_bucket_map = std::get<1>(cdf);
     if (start >= std::get<0>(cdf).size()) {
         // info("Start index is greater than the size of CDF");
         start = std::get<0>(cdf).size() - 1;
@@ -182,8 +133,8 @@ uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
         end = std::get<0>(cdf).size() - 1;
     }
 
-    uint64_t start_key_freq_sum = (*key_freq_bucket_map)[std::get<1>(std::get<0>(cdf)[start])].first;
-    uint64_t end_key_freq_sum = (*key_freq_bucket_map)[std::get<1>(std::get<0>(cdf)[end])].first;
+    uint64_t start_key_freq_sum = (key_freq_bucket_map)[std::get<1>(std::get<0>(cdf)[start])].first;
+    uint64_t end_key_freq_sum = (key_freq_bucket_map)[std::get<1>(std::get<0>(cdf)[end])].first;
     // for (uint64_t i = start; i < end; i++)
     // {
     //     tmp = std::get<0>(cdf)[i];
@@ -303,6 +254,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     cache->get_cache()->set_perf_stats(best_water_mark_local, best_water_mark_remote, best_performance);
     auto end_time_2 = std::chrono::high_resolution_clock::now();
     cache->get_cache()->print_all_stats();
+    print_cdf(cdf);
     auto end_time_3 = std::chrono::high_resolution_clock::now();
     
     info("Time taken to calculate best access rates: {} microseconds",
@@ -325,6 +277,14 @@ void print_cdf(CDFType& cdf) {
     for (auto& it : std::get<0>(cdf)) {
         file << std::get<0>(it) << " " << std::get<1>(it) << " " << std::get<2>(it) << std::endl;
     }
+    file.close();
+
+    std::ofstream file_1;
+    file_1.open("key_freq_bucket_map.txt");
+    for (auto& it : std::get<1>(cdf)) {
+        file_1 << it.first << " " << it.second.first << " " << it.second.second << std::endl;
+    }
+    file_1.close();
 }
 
 void write_latency_to_file(std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies) {
