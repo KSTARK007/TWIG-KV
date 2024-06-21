@@ -250,7 +250,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     cache->get_cache()->set_perf_stats(best_water_mark_local, best_water_mark_remote, best_performance);
     auto end_time_2 = std::chrono::high_resolution_clock::now();
     cache->get_cache()->print_all_stats();
-    print_cdf(cdf);
+    // print_cdf(cdf);
     auto end_time_3 = std::chrono::high_resolution_clock::now();
     
     info("Time taken to calculate best access rates: {} microseconds",
