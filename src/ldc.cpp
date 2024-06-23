@@ -141,8 +141,8 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
   auto op_start = std::chrono::high_resolution_clock::now();
   auto now = std::chrono::high_resolution_clock::now();
   auto op_end = now - op_start;
-  do
-  {
+  // do
+  // {
     auto io_start = std::chrono::high_resolution_clock::now();
     for (const auto &operation : operation_set)
     {
@@ -174,14 +174,14 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
       if(!dump_latency && run_time >= WARMUP_TIME_IN_SECONDS){
         dump_latency = true;
       }
-      if(run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS + WARMUP_TIME_IN_SECONDS){
-        break;
-      }
+      // if(run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS + WARMUP_TIME_IN_SECONDS){
+      //   break;
+      // }
     }
     now = std::chrono::high_resolution_clock::now();
     op_end = now - op_start;
     run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
-  } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
+  // } while (run_time < ops_config.TOTAL_RUNTIME_IN_SECONDS);
   info("[{}] [{}] Client done executing {}", machine_index, client_index, timeStamps.size());
   dump_per_thread_latency_to_file(timeStamps, client_index_per_thread, machine_index, thread_index);
   info("wrong_values till now {}", wrong_value);
