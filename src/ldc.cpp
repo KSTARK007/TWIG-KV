@@ -600,7 +600,7 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::seconds(30));
         CDFType freq;
         auto total_itrs = 0;
-        auto time_to_sleep_in_sec = 180;
+        auto time_to_sleep_in_sec = 240;
         auto time_to_sleep = std::chrono::seconds(time_to_sleep_in_sec);
         std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies;
         while (!g_stop)
