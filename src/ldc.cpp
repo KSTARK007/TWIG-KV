@@ -600,7 +600,8 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::seconds(30));
         CDFType freq;
         auto total_itrs = 0;
-        auto time_to_sleep = std::chrono::seconds(240);
+        auto time_to_sleep_in_sec = 180;
+        auto time_to_sleep = std::chrono::seconds(time_to_sleep_in_sec);
         std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies;
         while (!g_stop)
         {
@@ -636,14 +637,14 @@ int main(int argc, char *argv[])
             write_latency_to_file(latencies);
             auto process_end = std::chrono::high_resolution_clock::now();
             auto process_elapsed = process_end - current_time;
-            time_to_sleep = std::chrono::seconds(240) - std::chrono::duration_cast<std::chrono::seconds>(process_elapsed);
+            time_to_sleep = std::chrono::seconds(time_to_sleep_in_sec) - std::chrono::duration_cast<std::chrono::seconds>(process_elapsed);
             if(time_to_sleep.count() < 0){
               time_to_sleep = std::chrono::seconds(0);
             }
 
             // g_stop.store(true);
           } else {
-            std::this_thread::sleep_for(std::chrono::seconds(10));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
           }
         }
       });

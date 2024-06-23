@@ -7,6 +7,7 @@ static bool *key_map = NULL;
 void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf_result) {
     
     auto get_time = std::chrono::high_resolution_clock::now();
+    info("Getting key freq map");
     std::vector<std::pair<std::string, uint64_t>> &key_freq = cache->get_cache()->get_key_freq_map();
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - get_time).count();
