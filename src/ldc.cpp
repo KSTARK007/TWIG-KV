@@ -147,7 +147,7 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
     for (const auto &operation : operation_set)
     {
       io_start = std::chrono::high_resolution_clock::now();
-      const auto& [key, index, op] = operation;
+      const auto &[key, index, op] = operation;
       if (index > ops_config.NUM_NODES)
       {
         panic("Invalid node number {}", index);
@@ -163,7 +163,8 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
       auto now = std::chrono::high_resolution_clock::now();
       auto elapsed = now - io_start;
       long long nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count();
-      if(dump_latency){
+      if (dump_latency)
+      {
         timeStamps.push_back(nanoseconds);
       }
       total_ops_executed.fetch_add(1, std::memory_order::relaxed);
@@ -171,10 +172,12 @@ void execute_operations(Client &client, const Operations &operation_set, int cli
       now = std::chrono::high_resolution_clock::now();
       op_end = now - op_start;
       run_time = std::chrono::duration_cast<std::chrono::seconds>(op_end).count();
-      if(!dump_latency && run_time >= WARMUP_TIME_IN_SECONDS){
+      if (!dump_latency && run_time >= WARMUP_TIME_IN_SECONDS)
+      {
         dump_latency = true;
       }
-      if(run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS + WARMUP_TIME_IN_SECONDS){
+      if (run_time >= ops_config.TOTAL_RUNTIME_IN_SECONDS + WARMUP_TIME_IN_SECONDS)
+      {
         break;
       }
     }
@@ -225,9 +228,12 @@ void client_worker(std::shared_ptr<Client> client_, BlockCacheConfig config, Con
 
   auto client_index = (thread_index * FLAGS_clients_per_threads) + client_index_per_thread;
   Operations ops_chunk;
-  if (ops_config.DISTRIBUTION_TYPE != DistributionType::YCSB) {
+  if (ops_config.DISTRIBUTION_TYPE != DistributionType::YCSB)
+  {
     ops_chunk = get_chunk(ops, FLAGS_threads * FLAGS_clients_per_threads, client_index);
-  } else {
+  }
+  else
+  {
     std::string file_name = "/mydata/client_" + std::to_string(machine_index) + "_thread_" + std::to_string(thread_index) + "_clientPerThread_" + std::to_string(client_index_per_thread) + ".txt";
     info("Using {} file for operations on client {} thread {} clientPerThread {}", file_name, machine_index, thread_index, client_index_per_thread);
     ops_chunk = loadOperationSetFromFile(file_name);
@@ -276,11 +282,12 @@ void server_worker(
     }
   }
 
-  auto& rdma_node = std::begin(rdma_nodes)->second;
+  auto &rdma_node = std::begin(rdma_nodes)->second;
   if (false && thread_index == 0)
   {
     // Handle if singletons exist on other servers
-    block_cache->get_cache()->add_callback_on_write([=, server = server_, &rdma_nodes](const std::string& key, const std::string& value){
+    block_cache->get_cache()->add_callback_on_write([=, server = server_, &rdma_nodes](const std::string &key, const std::string &value)
+                                                    {
       auto& rdma_node = std::begin(rdma_nodes)->second;
       auto key_index = std::stoi(key);
 
@@ -306,8 +313,7 @@ void server_worker(
             server->append_delete_request(i, port, key);
           }
         }
-      }
-    });
+      } });
   }
 
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -331,7 +337,8 @@ void server_worker(
             auto time_now = std::chrono::high_resolution_clock::now();
             auto elapsed = time_now - start_time;
             auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
-            if (elapsed_seconds == WARMUP_TIME_IN_SECONDS){
+            if (elapsed_seconds == WARMUP_TIME_IN_SECONDS)
+            {
               block_cache->reset_cache_info();
               local_disk_access.store(0);
               remote_disk_access.store(0);
@@ -370,25 +377,28 @@ void server_worker(
 
               auto base_index = machine_index - server_start_index;
 
-              auto fetch_from_disk = [=, skey=std::string(key), server=server_](bool add_to_cache)
+              auto fetch_from_disk = [=, skey = std::string(key), server = server_](bool add_to_cache)
               {
                 snapshot->update_disk_access(key_index);
                 std::string value;
                 if (ops_config.operations_pollute_cache && add_to_cache)
                 {
-                  if (ops_config.DISK_ASYNC) {
+                  if (ops_config.DISK_ASYNC)
+                  {
                     // Cache miss
                     LDCTimer disk_timer;
-                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer](auto value) {
+                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer](auto value)
+                                                     {
                       disk_ns = disk_timer.time_elapsed();
                       
                       // Add to cache
                       block_cache->get_cache()->put(skey, value);
 
                       // Send the response
-                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
-                    });
-                  } else {
+                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value); });
+                  }
+                  else
+                  {
                     LOG_STATE("Fetching from cache/disk {} {}", skey, value);
                     value = block_cache->get(skey);
                   }
@@ -397,9 +407,11 @@ void server_worker(
                 {
                   // Cache miss
                   LOG_STATE("Fetching from disk {} {}", skey, value);
-                  if (ops_config.DISK_ASYNC) {
+                  if (ops_config.DISK_ASYNC)
+                  {
                     LDCTimer disk_timer;
-                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer, add_to_cache](auto value) {
+                    block_cache->get_db()->get_async(skey, [block_cache, server, remote_index, remote_port, skey, disk_timer, add_to_cache](auto value)
+                                                     {
                       disk_ns = disk_timer.time_elapsed();
                       
                     if (add_to_cache) {
@@ -408,12 +420,16 @@ void server_worker(
                       }
                     }
                       // Send the response
-                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value);
-                    });
-                  } else {
-                    if (auto result_or_err = block_cache->get_db()->get(skey)) {
+                      server->append_to_rdma_block_cache_request_queue(remote_index, remote_port, ResponseType::OK, skey, value); });
+                  }
+                  else
+                  {
+                    if (auto result_or_err = block_cache->get_db()->get(skey))
+                    {
                       value = result_or_err.value();
-                    } else {
+                    }
+                    else
+                    {
                       panic("Failed to get value from db for key {}", skey);
                     }
                   }
@@ -437,8 +453,8 @@ void server_worker(
                 if (config.baseline.use_cache_indexing)
                 {
                   LDCTimer rdma_timer;
-                  found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key=key_index](const RDMACacheIndexKeyValue& kv)
-                  {
+                  found_in_rdma = rdma_node.rdma_key_value_cache->read_callback(key_index, [=, expected_key = key_index](const RDMACacheIndexKeyValue &kv)
+                                                                                {
                     auto& server = *server_;
                     total_rdma_executed.fetch_add(1, std::memory_order::relaxed);
 
@@ -484,8 +500,7 @@ void server_worker(
                       rdma_node.rdma_key_value_cache->update_local_key(expected_key, key_index, value);
                       LOG_RDMA_DATA("[Read RDMA Callback] Fetching from disk instead key {} != expected {}", key_index, expected_key);
                       fetch_from_disk(false);
-                    }
-                  });
+                    } });
                 }
                 else
                 {
@@ -528,13 +543,13 @@ void server_worker(
           else if (data.isSingletonPutRequest())
           {
             LOG_STATE("[{}-{}:{}] Put response [{}]", machine_index, remote_index, remote_port,
-              kj::str(data).cStr());
+                      kj::str(data).cStr());
             LOG_RDMA_DATA("[Server] Singleton put request");
             auto p = data.getSingletonPutRequest();
-            std::string keyStr = p.getKey().cStr();  // Convert capnp::Text::Reader to std::string
+            std::string keyStr = p.getKey().cStr(); // Convert capnp::Text::Reader to std::string
             std::string valueStr = p.getValue().cStr();
             LOG_RDMA_DATA("[Server] Singleton put request key = {} value = {} singleton = {} forward_count = {}",
-                 keyStr, valueStr, p.getSingleton(), p.getForwardCount());
+                          keyStr, valueStr, p.getSingleton(), p.getForwardCount());
             block_cache->get_cache()->put_singleton(p.getKey().cStr(), p.getValue().cStr(), p.getSingleton(), p.getForwardCount());
             LOG_RDMA_DATA("[Server] Singleton put request done");
             // server.singleton_put_response(remote_index, ResponseType::OK);
@@ -593,9 +608,10 @@ int main(int argc, char *argv[])
 
     snapshot = std::make_shared<Snapshot>(config, ops_config);
 
-    if(config.policy_type == "access_rate_dynamic"){
+    if (config.policy_type == "access_rate_dynamic")
+    {
       static std::thread access_rate_thread([&, block_cache]()
-      {
+                                            {
 
         std::this_thread::sleep_for(std::chrono::seconds(30));
         CDFType freq;
@@ -646,8 +662,7 @@ int main(int argc, char *argv[])
           } else {
             std::this_thread::sleep_for(std::chrono::seconds(1));
           }
-        }
-      });
+        } });
       access_rate_thread.detach();
     }
 
@@ -677,8 +692,9 @@ int main(int argc, char *argv[])
     }
     default_value = std::string(ops_config.VALUE_SIZE, 'A');
     auto value = default_value;
-  
-    if(!config.baseline.one_sided_rdma_enabled){
+
+    if (!config.baseline.one_sided_rdma_enabled)
+    {
       // for (const auto &k : keys)
       // {
       //   auto key_index = std::stoi(k);
@@ -719,8 +735,7 @@ int main(int argc, char *argv[])
       {
         printRDMAConnect(t.second);
       }
-      info("print RDMA Connect completed"); 
-
+      info("print RDMA Connect completed");
 
       if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
       {
@@ -750,13 +765,14 @@ int main(int argc, char *argv[])
         }
 
         auto rdma_key_value_cache = std::make_shared<RDMAKeyValueCache>(config, ops_config, machine_index - start_client_index, context1, qpf1,
-          block_cache->get_rdma_key_value_storage(), block_cache);
-        for (auto &[t, node] : rdma_nodes) {
+                                                                        block_cache->get_rdma_key_value_storage(), block_cache);
+        for (auto &[t, node] : rdma_nodes)
+        {
           node.rdma_key_value_cache = rdma_key_value_cache;
         }
 
         bool finished_running_keys = false;
-        auto& rdma_node = std::begin(rdma_nodes)->second;
+        auto &rdma_node = std::begin(rdma_nodes)->second;
         auto count_expected = 0;
         auto count_finished = 0;
         // std::thread t([&](){
@@ -774,19 +790,19 @@ int main(int argc, char *argv[])
         // });
 
         info("adding keys to the blockcache");
-        // for (const auto &k : keys)
-        // {
-        //   auto key_index = std::stoi(k);
-        //   if (key_index >= start_keys && key_index < end_keys && config.policy_type == "thread_safe_lru")
-        //   {
-        //     block_cache->put(k, value);
-        //     count_expected++;
-        //   }
-        //   else
-        //   {
-        //     block_cache->get_db()->put(k, value);
-        //   }
-        // }
+        for (const auto &k : keys)
+        {
+          auto key_index = std::stoi(k);
+          if (key_index >= start_keys && key_index < end_keys && config.policy_type == "thread_safe_lru")
+          {
+            block_cache->put(k, value);
+            count_expected++;
+          }
+          else
+          {
+            block_cache->get_db()->put(k, value);
+          }
+        }
 
         if (0)
         {
@@ -868,7 +884,6 @@ int main(int argc, char *argv[])
       // }
     }
     info("Running server");
-
   }
   else
   {
@@ -899,7 +914,7 @@ int main(int argc, char *argv[])
   if (is_server)
   {
     static std::thread background_monitoring_thread([&, block_cache]()
-    {
+                                                    {
       uint64_t last_ops_executed = 0;
       uint64_t last_rdma_executed = 0;
       uint64_t last_disk_executed = 0;
@@ -953,11 +968,8 @@ int main(int argc, char *argv[])
         last_local_disk_access = current_local_disk_access;
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
-      }
-    });
+      } });
     background_monitoring_thread.detach();
-
-    
 
     for (auto i = 0; i < FLAGS_threads; i++)
     {
@@ -969,7 +981,7 @@ int main(int argc, char *argv[])
   else
   {
     static std::thread background_monitoring_thread([&]()
-    {
+                                                    {
       uint64_t last_ops_executed = 0;
       auto ops_executed_same_time = 0;
       while (!g_stop)
@@ -996,8 +1008,7 @@ int main(int argc, char *argv[])
         }
         last_ops_executed = current_ops_executed;
         std::this_thread::sleep_for(std::chrono::seconds(1));
-      }
-    });
+      } });
     background_monitoring_thread.detach();
 
     client_thread_ops_executed.resize(FLAGS_threads * FLAGS_clients_per_threads);
@@ -1008,7 +1019,7 @@ int main(int argc, char *argv[])
       for (auto j = 0; j < FLAGS_clients_per_threads; j++)
       {
         client_futures.emplace_back(std::async(std::launch::async, [&config, &ops_config, machine_index, i]
-                                             { return std::make_shared<Client>(config, ops_config, FLAGS_machine_index, i); }));
+                                               { return std::make_shared<Client>(config, ops_config, FLAGS_machine_index, i); }));
       }
     }
     for (auto &f : client_futures)
@@ -1031,12 +1042,13 @@ int main(int argc, char *argv[])
   std::vector<std::thread> rdma_key_value_cache_workers;
   if (is_server)
   {
-    auto& rdma_node = std::begin(rdma_nodes)->second;
+    auto &rdma_node = std::begin(rdma_nodes)->second;
     if (config.baseline.one_sided_rdma_enabled && config.baseline.use_cache_indexing)
     {
       for (auto i = 0; i < 4; i++)
       {
-        std::thread t([&](){
+        std::thread t([&]()
+                      {
           while (!g_stop)
           {
             rdma_node.rdma_key_value_cache->execute_pending([&](const auto& v)
@@ -1056,13 +1068,10 @@ int main(int argc, char *argv[])
               //   server.append_to_rdma_get_response_queue(remote_index, remote_port, ResponseType::OK, value);
               // }
             }, [](){});
-          }
-        });
+          } });
         rdma_key_value_cache_workers.emplace_back(std::move(t));
       }
     }
-
-
   }
 
   for (auto i = 0; i < FLAGS_threads; i++)
@@ -1096,7 +1105,7 @@ int main(int argc, char *argv[])
     t.join();
   }
 
-  for (auto& t : rdma_key_value_cache_workers)
+  for (auto &t : rdma_key_value_cache_workers)
   {
     t.join();
   }
@@ -1116,7 +1125,8 @@ int main(int argc, char *argv[])
       j["total_reads"] = total_ops_executed.load();
     }
     std::ofstream ofs(FLAGS_cache_metrics_path, std::ios::out | std::ios::trunc);
-    if (!ofs) {
+    if (!ofs)
+    {
       panic("Unable to open file {}", FLAGS_cache_metrics_path);
     }
     ofs << j.dump(2);
