@@ -81,11 +81,13 @@ function scp_ycsb_workload {
     done
 }
 
-load_ycsb_workload
+# load_ycsb_workload
 
 create_ycsb_workload "uniform"
 # create_ycsb_workload "hotspot" 0.9 0.1
 create_ycsb_workload "hotspot" 0.8 0.2
-create_ycsb_workload "hotspot" 0.95 0.05
+# create_ycsb_workload "hotspot" 0.95 0.05
 # create_ycsb_workload "hotspot" 0.99 0.30
 create_ycsb_workload "zipfian" 0.99
+
+# scp_ycsb_workload /mydata/ycsb/uniform

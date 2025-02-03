@@ -150,13 +150,38 @@ function zipfian_0.99 {
             iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
         fi
     done
-    sudo mkdir -p /mnt/sda4/LDC/setup/results/zipfian_0.99
-    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/zipfian_0.99
+    sudo mkdir -p /mydata/LDC/setup/results/zipfian_0.99
+    sudo mv /mydata/LDC/setup/results/*::* /mydata/LDC/setup/results/zipfian_0.99
+}
+
+function hotspot_0.8_0.2 {
+    WORKLOAD="YCSB"
+    scp_ycsb_workload_mydata "/mydata/ycsb/hotspot_80_20"
+    WORKLOAD_TYPE="hotspot"
+
+    for system_name in "${SYSTEM_NAMES[@]}"; do
+        if [[ $system_name == "C" ]]; then
+            for policy in "${POLICY_TYPES[@]}"; do
+                if [[ $policy == "access_rate" ]]; then
+                    for access_rate in "${ACCESS_RATE[@]}"; do
+                        iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                    done
+                else
+                    access_rate=30000000
+                    iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name $policy $access_rate
+                fi
+            done
+        else
+            iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
+        fi
+    done
+    sudo mkdir -p /mydata/LDC/setup/results/hotspot_80_20
+    sudo mv /mydata/LDC/setup/results/*::* /mydata/LDC/setup/results/hotspot_80_20
 }
 
 function uniform {
     WORKLOAD="YCSB"
-    # scp_ycsb_workload_mydata "/mydata/ycsb/uniform"
+    scp_ycsb_workload_mydata "/mydata/ycsb/uniform"
     WORKLOAD_TYPE="uniform"
 
     for system_name in "${SYSTEM_NAMES[@]}"; do
@@ -175,17 +200,21 @@ function uniform {
             iterate_and_execute 3 3 8 8 2 2 $WORKLOAD_TYPE $system_name "thread_safe_lru" 0
         fi
     done
-    sudo mkdir -p /mnt/sda4/LDC/setup/results/uniform
-    sudo mv /mnt/sda4/LDC/setup/results/*::* /mnt/sda4/LDC/setup/results/uniform
+    sudo mkdir -p /mydata/LDC/setup/results/uniform
+    sudo mv /mydata/LDC/setup/results/*::* /mydata/LDC/setup/results/uniform
 }
 
 # CACHE_SIZE=(0.30 0.334)
-CACHE_SIZE=(0.30)
+CACHE_SIZE=(0.10 0.334)
+# SYSTEM_NAMES=("A" "C")
 SYSTEM_NAMES=("C")
-POLICY_TYPES=("access_rate_dynamic")
-ACCESS_RATE=(1 10)
+# POLICY_TYPES=("access_rate_dynamic" "thread_safe_lru")
+POLICY_TYPES=("thread_safe_lru")
+# ACCESS_RATE=(1 10)
+ACCESS_RATE=(1)
 
 uniform
+# hotspot_0.8_0.2
 # zipfian_0.99
 # run mixed_uniform_to_zipfian
 # run mixed_zipfian_uniform
