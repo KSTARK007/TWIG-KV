@@ -4,8 +4,9 @@
 
 static bool *key_map = NULL;
 
-void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf_result) {
-    
+void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType &cdf_result)
+{
+
     auto get_time = std::chrono::high_resolution_clock::now();
     info("Getting key freq map");
     std::vector<std::pair<std::string, uint64_t>> &key_freq = cache->get_cache()->get_key_freq_map();
@@ -16,7 +17,8 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     uint64_t total_keys = cache->get_cache()->get_block_db_num_entries();
     auto get_num_end_time = std::chrono::high_resolution_clock::now();
     auto get_num_duration = std::chrono::duration_cast<std::chrono::microseconds>(get_num_end_time - get_num).count();
-    if (key_map == NULL) {
+    if (key_map == NULL)
+    {
         key_map = new bool[total_keys + 1];
     }
 
@@ -25,7 +27,8 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
 
     // Insert key frequency pairs, swapping key and value for sorting purposes.
     auto insert_time = std::chrono::high_resolution_clock::now();
-    for (auto& it : key_freq) {
+    for (auto &it : key_freq)
+    {
         sorted_key_freq.push_back(std::make_pair(it.second, it.first));
     }
     auto insert_end_time = std::chrono::high_resolution_clock::now();
@@ -40,7 +43,8 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
 
     auto total_freq_start = std::chrono::high_resolution_clock::now();
     // Resize the vector if it has more entries than total_keys
-    if (sorted_key_freq.size() > total_keys) {
+    if (sorted_key_freq.size() > total_keys)
+    {
         sorted_key_freq.resize(total_keys);
     }
     auto total_freq_end = std::chrono::high_resolution_clock::now();
@@ -48,15 +52,19 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
         std::chrono::duration_cast<std::chrono::microseconds>(total_freq_end - total_freq_start).count();
 
     auto missing_keys_start = std::chrono::high_resolution_clock::now();
-   
-    for (uint64_t i = 1; i <= total_keys; i++) {
+
+    for (uint64_t i = 1; i <= total_keys; i++)
+    {
         key_map[i] = false;
     }
-    for (auto &e: sorted_key_freq) {
+    for (auto &e : sorted_key_freq)
+    {
         key_map[std::stoi(e.second)] = true;
     }
-    for (uint64_t i = 1; i <= total_keys; i++) {
-        if (!key_map[i]) {
+    for (uint64_t i = 1; i <= total_keys; i++)
+    {
+        if (!key_map[i])
+        {
             sorted_key_freq.push_back(std::make_pair(0, std::to_string(i)));
         }
     }
@@ -72,12 +80,14 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     key_freq_bucket_map.clear();
     uint64_t total_freq = 0;
 
-    for (const auto& kv : sorted_key_freq) {
+    for (const auto &kv : sorted_key_freq)
+    {
         total_freq += kv.first;
     }
 
     uint64_t cumulative_freq = 0;
-    for (const auto& kv : sorted_key_freq) {
+    for (const auto &kv : sorted_key_freq)
+    {
         cumulative_freq += kv.first;
         uint64_t percentile = (cumulative_freq * 100) / total_freq;
         cdf_buckets[percentile].push_back(kv);
@@ -86,13 +96,16 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     // Sort keys within each bucket in descending order
     auto total_cum_sum_start = std::chrono::high_resolution_clock::now();
     uint64_t total_cum_sum = 0;
-    for (auto& bucket : cdf_buckets) {
+    for (auto &bucket : cdf_buckets)
+    {
         // uint64_t bucket_freq_sum = 0;
-        auto& bucket_keys = bucket.second;
+        auto &bucket_keys = bucket.second;
         std::sort(bucket_keys.begin(), bucket_keys.end(),
-                  [](const auto& a, const auto& b) { return std::stoull(a.second) > std::stoull(b.second); });
+                  [](const auto &a, const auto &b)
+                  { return std::stoull(a.second) > std::stoull(b.second); });
 
-        for (const auto& it : bucket_keys) {
+        for (const auto &it : bucket_keys)
+        {
             // sorted_key_freq_with_buckets.push_back(it);
             sorted_key_freqs.push_back(std::make_tuple(it.first, it.second, bucket.first));
             total_cum_sum += it.first;
@@ -102,7 +115,7 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     auto total_cum_sum_end = std::chrono::high_resolution_clock::now();
     auto total_cum_sum_duration =
         std::chrono::duration_cast<std::chrono::microseconds>(total_cum_sum_end - total_cum_sum_start).count();
-    
+
     info("Get key freq map time: {} microseconds", duration);
     info("Get num entries time: {} microseconds", get_num_duration);
     info("Insert time: {} microseconds", insert_duration);
@@ -110,28 +123,32 @@ void get_and_sort_freq(std::shared_ptr<BlockCache<std::string, std::string>> cac
     info("Total freq time: {} microseconds", total_freq_duration);
     info("Missing keys time: {} microseconds", missing_keys_duration);
     info("Total cum sum time: {} microseconds", total_cum_sum_duration);
-
 }
 
 // Function to get and maintain keys under L
-std::vector<std::string> get_keys_under_l(const std::vector<std::pair<uint64_t, std::string>>& cdf, uint64_t L) {
+std::vector<std::string> get_keys_under_l(const std::vector<std::pair<uint64_t, std::string>> &cdf, uint64_t L)
+{
     std::vector<std::string> keys;
-    for (size_t i = 0; i < L && i < cdf.size(); i++) {
+    for (size_t i = 0; i < L && i < cdf.size(); i++)
+    {
         keys.push_back(cdf[i].second);
     }
     return keys;
 }
 
-uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
-                                 std::map<uint64_t, uint64_t>& bucket_cumilative_freq) {
+uint64_t get_sum_freq_till_index(CDFType &cdf, uint64_t start, uint64_t end,
+                                 std::map<uint64_t, uint64_t> &bucket_cumilative_freq)
+{
     uint64_t sum = 0;
     // std::tuple<uint64_t, std::string, uint64_t> tmp;
     std::map<std::string, std::pair<uint64_t, uint64_t>> &key_freq_bucket_map = std::get<1>(cdf);
-    if (start >= std::get<0>(cdf).size()) {
+    if (start >= std::get<0>(cdf).size())
+    {
         // info("Start index is greater than the size of CDF");
         start = std::get<0>(cdf).size() - 1;
     }
-    if (end >= std::get<0>(cdf).size()) {
+    if (end >= std::get<0>(cdf).size())
+    {
         // info("End index is greater than the size of CDF");
         end = std::get<0>(cdf).size() - 1;
     }
@@ -148,13 +165,15 @@ uint64_t get_sum_freq_till_index(CDFType& cdf, uint64_t start, uint64_t end,
 }
 
 void set_water_marks(std::shared_ptr<BlockCache<std::string, std::string>> cache, uint64_t water_mark_local,
-                     uint64_t water_mark_remote) {
+                     uint64_t water_mark_remote)
+{
     cache->get_cache()->set_water_marks(water_mark_local, water_mark_remote);
 }
 
-uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t water_mark_remote,
+uint64_t calculate_performance(CDFType &cdf, uint64_t water_mark_local, uint64_t water_mark_remote,
                                uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg,
-                               std::map<uint64_t, uint64_t>& bucket_cumilative_freq) {
+                               std::map<uint64_t, uint64_t> &bucket_cumilative_freq)
+{
     uint64_t total_keys = std::get<0>(cdf).size();
     uint64_t total_local_accesses = get_sum_freq_till_index(cdf, 0, water_mark_local, bucket_cumilative_freq);
     uint64_t total_remote_accesses =
@@ -163,12 +182,13 @@ uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t
         get_sum_freq_till_index(cdf, water_mark_remote + water_mark_local, total_keys, bucket_cumilative_freq);
     uint64_t local_latency = total_local_accesses * cache_ns_avg;
     uint64_t remote_latency = ((((2 * total_remote_accesses) / 3) * rdma_ns_avg) + ((total_remote_accesses / 3) *
-    cache_ns_avg));
+                                                                                    cache_ns_avg));
     // uint64_t remote_latency = total_remote_accesses * rdma_ns_avg;
     uint64_t disk_latency = total_disk_accesses * disk_ns_avg;
     uint64_t perf_mul = -1;
     uint64_t performance = 0;
-    if (local_latency + remote_latency + disk_latency != 0) {
+    if (local_latency + remote_latency + disk_latency != 0)
+    {
         performance = perf_mul / (local_latency + remote_latency + disk_latency);
     }
     // std::cout << "Local latency: " << local_latency << ", Remote latency: " << remote_latency
@@ -179,12 +199,14 @@ uint64_t calculate_performance(CDFType& cdf, uint64_t water_mark_local, uint64_t
     return performance;
 }
 
-size_t percentage_to_index(size_t total_size, float percent) {
+size_t percentage_to_index(size_t total_size, float percent)
+{
     return static_cast<size_t>(total_size * (percent / 100.0));
 }
 
 void log_performance_state(uint64_t iteration, uint64_t L, uint64_t remote, uint64_t performance,
-                           const std::string& message) {
+                           const std::string &message)
+{
     // std::cout << "Iteration: " << iteration
     //           << ", L: " << L
     //           << ", Remote: " << remote
@@ -195,8 +217,9 @@ void log_performance_state(uint64_t iteration, uint64_t L, uint64_t remote, uint
 }
 
 void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<std::string, std::string>> cache,
-                                                     CDFType& cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg,
-                                                     uint64_t rdma_ns_avg) {
+                                                     CDFType &cdf, uint64_t cache_ns_avg, uint64_t disk_ns_avg,
+                                                     uint64_t rdma_ns_avg)
+{
     std::cout << "Calculating best access rates" << std::endl;
     auto start_time = std::chrono::high_resolution_clock::now();
     uint64_t cache_size = cache->get_cache()->get_cache_size();
@@ -205,18 +228,22 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     uint64_t best_water_mark_local = 0;
     uint64_t best_water_mark_remote = cache_size;
 
-    for (uint64_t i = 0; i < std::get<0>(cdf).size(); i++) {
+    for (uint64_t i = 0; i < std::get<0>(cdf).size(); i++)
+    {
         uint64_t local = i;
         uint64_t remote = cache_size - (3 * local);
-        if (remote < 0) {
+        if (remote < 0)
+        {
             break;
         }
-        if (local > cache_size / 3) {
+        if (local > cache_size / 3)
+        {
             break;
         }
         uint64_t new_performance =
             calculate_performance(cdf, local, remote, cache_ns_avg, disk_ns_avg, rdma_ns_avg, bucket_cumilative_freq);
-        if (new_performance > best_performance) {
+        if (new_performance > best_performance)
+        {
             best_performance = new_performance;
             best_water_mark_local = local;
             best_water_mark_remote = remote;
@@ -226,7 +253,7 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     // uint64_t best_access_rate = (std::get<0>(std::get<0>(cdf)[best_water_mark_local])) * 0.90;
     std::cout << "Best local: " << best_water_mark_local << ", Best remote: " << best_water_mark_remote
               << ", Best performance: " << best_performance << std::endl;
-    
+
     // set_water_marks(cache, best_water_mark_local, best_water_mark_remote);
     // cache->get_cache()->set_access_rate(best_access_rate);
     set_water_marks(cache, best_water_mark_local, best_water_mark_remote);
@@ -234,7 +261,8 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     uint64_t best_bucket = -1;
     uint64_t cutoff_key_id = -1;
 
-    if (best_water_mark_local != 0) {
+    if (best_water_mark_local != 0)
+    {
         best_access_rate = std::get<0>(std::get<0>(cdf)[best_water_mark_local]);
         best_bucket = std::get<2>(std::get<0>(cdf)[best_water_mark_local]);
         cutoff_key_id = std::stoi(std::get<1>(std::get<0>(cdf)[best_water_mark_local]));
@@ -253,47 +281,55 @@ void itr_through_all_the_perf_values_to_find_optimal(std::shared_ptr<BlockCache<
     cache->get_cache()->print_all_stats();
     // print_cdf(cdf);
     auto end_time_3 = std::chrono::high_resolution_clock::now();
-    
+
     info("Time taken to calculate best access rates: {} microseconds",
          std::chrono::duration_cast<std::chrono::microseconds>(mid_time - start_time).count());
     info("Time taken to set access rate: {} microseconds",
-            std::chrono::duration_cast<std::chrono::microseconds>(mid_time_1 - mid_time).count());
+         std::chrono::duration_cast<std::chrono::microseconds>(mid_time_1 - mid_time).count());
     info("Time taken to set keys from past: {} microseconds",
-            std::chrono::duration_cast<std::chrono::microseconds>(end_time - mid_time_1).count());
-    info("Time taken to check and set total cache duplication: {} microseconds",    
-            std::chrono::duration_cast<std::chrono::microseconds>(end_time_1 - end_time).count());
+         std::chrono::duration_cast<std::chrono::microseconds>(end_time - mid_time_1).count());
+    info("Time taken to check and set total cache duplication: {} microseconds",
+         std::chrono::duration_cast<std::chrono::microseconds>(end_time_1 - end_time).count());
     info("Time taken to set perf stats: {} microseconds",
-            std::chrono::duration_cast<std::chrono::microseconds>(end_time_2 - end_time_1).count());    
+         std::chrono::duration_cast<std::chrono::microseconds>(end_time_2 - end_time_1).count());
     info("Time taken to print all stats: {} microseconds",
-            std::chrono::duration_cast<std::chrono::microseconds>(end_time_3 - end_time_2).count());    
+         std::chrono::duration_cast<std::chrono::microseconds>(end_time_3 - end_time_2).count());
+    info("Latency values are: cache_ns_avg: {}, disk_ns_avg: {}, rdma_ns_avg: {}", std::to_string(cache_ns_avg),
+         std::to_string(disk_ns_avg), std::to_string(rdma_ns_avg));
 }
 
-void print_cdf(CDFType& cdf) {
+void print_cdf(CDFType &cdf)
+{
     std::ofstream file;
     file.open("cdf.txt");
-    for (auto& it : std::get<0>(cdf)) {
+    for (auto &it : std::get<0>(cdf))
+    {
         file << std::get<0>(it) << " " << std::get<1>(it) << " " << std::get<2>(it) << std::endl;
     }
     file.close();
 
     std::ofstream file_1;
     file_1.open("key_freq_bucket_map.txt");
-    for (auto& it : std::get<1>(cdf)) {
+    for (auto &it : std::get<1>(cdf))
+    {
         file_1 << it.first << " " << it.second.first << " " << it.second.second << std::endl;
     }
     file_1.close();
 }
 
-void write_latency_to_file(std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies) {
+void write_latency_to_file(std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> latencies)
+{
     std::ofstream file;
     file.open("latencies.txt");
-    for (auto& it : latencies) {
+    for (auto &it : latencies)
+    {
         file << std::get<0>(it) << " " << std::get<1>(it) << " " << std::get<2>(it) << std::endl;
     }
 }
 
-void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType& cdf,
-                           uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg) {
+void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>> cache, CDFType &cdf,
+                           uint64_t cache_ns_avg, uint64_t disk_ns_avg, uint64_t rdma_ns_avg)
+{
     info("Calculating best access rates");
     print_cdf(cdf);
     info("cache_ns_avg: {}, disk_ns_avg: {}, rdma_ns_avg: {}", std::to_string(cache_ns_avg),
@@ -318,9 +354,10 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     bool reduced_perf_increasing;
     bool reduced_perf_decreasing;
     bool improved = false;
-    float performance__delta_threshold = 0.00;  // 0.5%
+    float performance__delta_threshold = 0.00; // 0.5%
 
-    do {
+    do
+    {
         improved_increasing = false;
         reduced_perf_increasing = false;
 
@@ -328,12 +365,16 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
         reduced_perf_decreasing = false;
 
         // Test increasing L
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 3; i++)
+        {
             int new_local = best_local + percentage_to_index(std::get<0>(cdf).size(), 0.01 * i);
             int new_remote = cache_size - (new_local * 3);
-            if (new_remote < 0) break;
-            if (new_local > cache_size / 3) break;
-            if (new_remote >= cache_size) break;
+            if (new_remote < 0)
+                break;
+            if (new_local > cache_size / 3)
+                break;
+            if (new_remote >= cache_size)
+                break;
 
             uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg,
                                                              rdma_ns_avg, bucket_cumilative_freq);
@@ -341,7 +382,8 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                 "Increased L to " + std::to_string(new_local) + ", new performance: " + std::to_string(new_performance);
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
 
-            if (new_performance > best_performance * (1 + performance__delta_threshold)) {
+            if (new_performance > best_performance * (1 + performance__delta_threshold))
+            {
                 // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
                 // std::cout << "old performance: " << best_performance << std::endl;
                 best_performance = new_performance;
@@ -351,27 +393,35 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                 improved = true;
                 // std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
                 // std::cout << "best performance: " << best_performance << std::endl;
-            } else {
-                if (new_performance < best_performance * (1 - performance__delta_threshold)) {
+            }
+            else
+            {
+                if (new_performance < best_performance * (1 - performance__delta_threshold))
+                {
                     reduced_perf_increasing = true;
                 }
             }
         }
         int new_local = best_local;
         // Test decreasing L
-        if (!improved_increasing) {
-            while (new_local > 0 && !reduced_perf_decreasing) {
+        if (!improved_increasing)
+        {
+            while (new_local > 0 && !reduced_perf_decreasing)
+            {
                 new_local = new_local - percentage_to_index(std::get<0>(cdf).size(), 0.01);
                 int new_remote = cache_size - (new_local * 3);
-                if (new_local < 0) break;
-                if (new_remote >= cache_size) break;
+                if (new_local < 0)
+                    break;
+                if (new_remote >= cache_size)
+                    break;
                 uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg,
                                                                  rdma_ns_avg, bucket_cumilative_freq);
                 std::string message = "Decreased L to " + std::to_string(new_local) +
                                       ", new performance: " + std::to_string(new_performance);
                 log_performance_state(iteration++, new_local, new_remote, new_performance, message);
 
-                if (new_performance > best_performance * (1 + performance__delta_threshold)) {
+                if (new_performance > best_performance * (1 + performance__delta_threshold))
+                {
                     // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
                     // std::cout << "old performance: " << best_performance << std::endl;
                     best_performance = new_performance;
@@ -381,8 +431,11 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                     improved = true;
                     // std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
                     // std::cout << "best performance: " << best_performance << std::endl;
-                } else {
-                    if (new_performance < best_performance * (1 - performance__delta_threshold)) {
+                }
+                else
+                {
+                    if (new_performance < best_performance * (1 - performance__delta_threshold))
+                    {
                         reduced_perf_decreasing = true;
                     }
                 }
@@ -394,7 +447,8 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     // If no improvement in either round, move by 1%
     // std::cout<<"improved_increasing: "<<improved_increasing<<std::endl;
     // std::cout<<"reduced_perf_increasing: "<<improved_decreasing<<std::endl;
-    if (!improved) {
+    if (!improved)
+    {
         // std::cout << "No improvement in either round" << std::endl;
         info("No improvement in either round");
         uint64_t new_remote = cache_size - (best_local * 3);
@@ -406,17 +460,20 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
         bool reduced_perf_decreasing = false;
         new_local = best_local + percentage_to_index(std::get<0>(cdf).size(), 1.0);
 
-        while (new_remote < cache_size && !reduced_perf_increasing) {
+        while (new_remote < cache_size && !reduced_perf_increasing)
+        {
             new_local = new_local + percentage_to_index(std::get<0>(cdf).size(), 1.0);
             new_remote = cache_size - (new_local * 3);
             ;
-            if (new_remote >= cache_size) break;
+            if (new_remote >= cache_size)
+                break;
             uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg,
                                                              rdma_ns_avg, bucket_cumilative_freq);
             std::string message = "increasing 1% Increased L to " + std::to_string(new_local) +
                                   ", new performance: " + std::to_string(new_performance);
             log_performance_state(iteration++, new_local, new_remote, new_performance, message);
-            if (new_performance > best_performance * (1 + performance__delta_threshold)) {
+            if (new_performance > best_performance * (1 + performance__delta_threshold))
+            {
                 // std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
                 // std::cout << "old performance: " << best_performance << std::endl;
                 best_performance = new_performance;
@@ -425,8 +482,11 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                 improved_increasing = true;
                 // std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
                 // std::cout << "best performance: " << best_performance << std::endl;
-            } else {
-                if (new_performance < best_performance * (1 - performance__delta_threshold)) {
+            }
+            else
+            {
+                if (new_performance < best_performance * (1 - performance__delta_threshold))
+                {
                     reduced_perf_increasing = true;
                 }
             }
@@ -436,10 +496,12 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
         }
 
         // If no improvement, test decreasing L by 1%
-        if (best_local == initial_water_mark_local) {
+        if (best_local == initial_water_mark_local)
+        {
             new_local = best_local - percentage_to_index(std::get<0>(cdf).size(), 1.0);
 
-            while (new_local > 0 && reduced_perf_decreasing) {
+            while (new_local > 0 && reduced_perf_decreasing)
+            {
                 new_remote = cache_size - (new_local * 3);
                 ;
                 uint64_t new_performance = calculate_performance(cdf, new_local, new_remote, cache_ns_avg, disk_ns_avg,
@@ -448,7 +510,8 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                                       ", new performance: " + std::to_string(new_performance);
                 log_performance_state(iteration++, new_local, new_remote, new_performance, message);
 
-                if (new_performance > best_performance * (1 + performance__delta_threshold)) {
+                if (new_performance > best_performance * (1 + performance__delta_threshold))
+                {
                     std::cout << "old local: " << best_local << ", old remote: " << best_remote << std::endl;
                     std::cout << "old performance: " << best_performance << std::endl;
                     best_performance = new_performance;
@@ -458,8 +521,11 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
                     std::cout << "best local: " << best_local << ", best remote: " << best_remote << std::endl;
                     std::cout << "best performance: " << best_performance << std::endl;
                     break;
-                } else {
-                    if (new_performance < best_performance * (1 - performance__delta_threshold)) {
+                }
+                else
+                {
+                    if (new_performance < best_performance * (1 - performance__delta_threshold))
+                    {
                         reduced_perf_decreasing = true;
                     }
                 }
@@ -481,7 +547,8 @@ void get_best_access_rates(std::shared_ptr<BlockCache<std::string, std::string>>
     uint64_t best_bucket = -1;
     uint64_t cutoff_key_id = -1;
 
-    if (best_local != 0) {
+    if (best_local != 0)
+    {
         best_access_rate = std::get<0>(std::get<0>(cdf)[best_local]);
         best_bucket = std::get<2>(std::get<0>(cdf)[best_local]);
         cutoff_key_id = std::stoi(std::get<1>(std::get<0>(cdf)[best_local]));
