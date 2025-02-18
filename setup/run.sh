@@ -41,7 +41,7 @@ execute_cmd_with_timeout() {
     echo "Executing for cache size: $cache_size_for_this_run and policy: $policy and system: $system_name and access rate: $access_rate and workload: $WORKLOAD"
     CMD="$PROGRAM_PATH $IDENTITY_FILE $USERNAME $GIT_SSH_KEY_PATH --step $step $NUM_SERVERS \
     --num_threads $num_threads --policy $policy --system_type $system_name --distribution $distribution --num_clients $num_clients \
-    --num_clients_per_thread $num_clients_per_thread --git_branch LDC_DYNAMIC --cache_size $cache_size_for_this_run --access_rate $access_rate --workload $WORKLOAD"
+    --num_clients_per_thread $num_clients_per_thread --git_branch LDC_DYNAMIC_5_7_SERVER_NODE --cache_size $cache_size_for_this_run --access_rate $access_rate --workload $WORKLOAD"
     echo "Executing: $CMD"
     # eval $CMD
 
@@ -181,7 +181,7 @@ function hotspot_0.8_0.2 {
 
 function uniform {
     WORKLOAD="YCSB"
-    scp_ycsb_workload_mydata "/mydata/ycsb/uniform"
+    # scp_ycsb_workload_mydata "/mydata/ycsb/uniform"
     WORKLOAD_TYPE="uniform"
 
     for system_name in "${SYSTEM_NAMES[@]}"; do
@@ -205,11 +205,11 @@ function uniform {
 }
 
 # CACHE_SIZE=(0.30 0.334)
-CACHE_SIZE=(0.10 0.334)
+CACHE_SIZE=(0.334)
 # SYSTEM_NAMES=("A" "C")
 SYSTEM_NAMES=("C")
 # POLICY_TYPES=("access_rate_dynamic" "thread_safe_lru")
-POLICY_TYPES=("thread_safe_lru")
+POLICY_TYPES=("access_rate_dynamic")
 # ACCESS_RATE=(1 10)
 ACCESS_RATE=(1)
 

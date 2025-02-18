@@ -109,7 +109,10 @@ def read_integers(file_path):
 # base_directory = Path('results/mixed_uniform_to_hotspot')
 # base_directory = Path('results/mixed_zipfian_to_hotspot')
 base_directory = Path('results/uniform')
-# base_directory = Path('results')
+# base_directory = Path('results/Non_sticky_session')
+# base_directory = Path('results_4min_5_servers/zipfian_0.99')
+# base_directory = Path('results_4min_5_servers/uniform')
+# base_directory = Path('results_4min_5_servers/hotspot_80_20')
 # base_directory = Path('backup')
 
 def average(lst):
@@ -145,7 +148,7 @@ for subdirectory in base_directory.iterdir():
             'access_rate': int(parts[-1][4:])
         }
 
-        num_clients = details['num_clients']
+        num_total_nodes = int(details['num_clients']) + int(details['num_servers'])
         
         # Variables to accumulate metrics
         throughput = 0
@@ -167,7 +170,7 @@ for subdirectory in base_directory.iterdir():
         
 
         # Read and aggregate metrics based on num_clients
-        for i in range(num_clients):
+        for i in range(num_total_nodes):
             metrics_file = subdirectory / f'latency_results_{i}.json'
             if metrics_file.exists():
                 with open(metrics_file, 'r') as file:
@@ -176,7 +179,7 @@ for subdirectory in base_directory.iterdir():
                     average_latency.append(data["total"].get("average_latency_us", 0))
                     p99_latencies.append(data["total"].get("p99", 0))
                     p50_latencies.append(data["total"].get("p50_latency_us", 0))
-            cache_metrics_file = subdirectory / f'cache_metrics_{i + details["num_servers"]}.json'
+            cache_metrics_file = subdirectory / f'cache_metrics_{i + details["num_clients"]}.json'
             if cache_metrics_file.exists():
                 with open(cache_metrics_file, 'r') as file:
                     cache_data = json.load(file)
@@ -188,16 +191,16 @@ for subdirectory in base_directory.iterdir():
                     freq_addition += cache_data["cache_freq_addition"]
                     disk_accesses += cache_data["local_disk_access"]
                     remote_disk_accesses += cache_data["remote_disk_access"]
-            cache_dump_file = subdirectory / f'cache_dump_{i + details["num_servers"]}.txt'
+            cache_dump_file = subdirectory / f'cache_dump_{i + details["num_clients"]}.txt'
             if cache_dump_file.exists():
                 integer_sets.append(read_integers(cache_dump_file))
-            access_rate_file = subdirectory / f'access_rate_{i + details["num_servers"]}.txt'
+            access_rate_file = subdirectory / f'access_rate_{i + details["num_clients"]}.txt'
             if access_rate_file.exists():
-                access_rate_details[f'node_{i + details["num_servers"]}'] = extract_access_rate_from_filename(access_rate_file)
+                access_rate_details[f'node_{i + details["num_clients"]}'] = extract_access_rate_from_filename(access_rate_file)
         # print(access_rate_details['node_3'])
-        access_rate_file = subdirectory / f'access_rate_{i + details["num_servers"]}.txt'
-        if access_rate_file.exists():
-            plot_data(access_rate_details['node_3'], f'{subdirectory}/data_series_plot')
+        access_rate_file = subdirectory / f'access_rate_{i + details["num_clients"]}.txt'
+        # if access_rate_file.exists():
+        #     plot_data(access_rate_details['node_3'], f'{subdirectory}/data_series_plot')
 
         # Calculate averages
         average_latency_us = average(average_latency)

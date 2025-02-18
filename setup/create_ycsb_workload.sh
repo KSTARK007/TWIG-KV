@@ -5,6 +5,7 @@ mkdir -p /mydata/
 mkdir -p /mydata/ycsb_traces
 mkdir -p /mydata/ycsb
 cd /mnt/sda4/LDC/third_party/YCSB
+NUMBER_OF_SERVERS=5
 
 function load_ycsb_workload {
     # Load YCSB workload
@@ -22,7 +23,7 @@ function uniform_ycsb_workload {
     DEST_DIR=/mydata/ycsb_traces/uniform
     mkdir -p $DEST_DIR
     mv /mnt/sda4/LDC/third_party/YCSB/client_traces/runc/* $DEST_DIR
-    python convert_keys_to_sequential.py -t 8 -c 3 -ct 2 -rtype uniform
+    python convert_keys_to_sequential.py -s $NUMBER_OF_SERVERS -t 8 -c 3 -ct 2 -rtype uniform
     mv /mydata/traces/uniform /mydata/ycsb/
     cd /mnt/sda4/LDC/setup
     python check_freq.py -d /mydata/ycsb/uniform
@@ -39,7 +40,7 @@ function hotspot_ycsb_workload {
     DEST_DIR=/mydata/ycsb_traces/hotspot_${hotspot_access_fraction}_${hotspot_data_fraction}
     mkdir -p $DEST_DIR
     mv /mnt/sda4/LDC/third_party/YCSB/client_traces/runc/* $DEST_DIR
-    python convert_keys_to_sequential.py -t 8 -c 3 -ct 2 -rtype hotspot_${hotspot_access_fraction}_${hotspot_data_fraction}
+    python convert_keys_to_sequential.py -s $NUMBER_OF_SERVERS -t 8 -c 3 -ct 2 -rtype hotspot_${hotspot_access_fraction}_${hotspot_data_fraction}
     mv /mydata/traces/hotspot_${hotspot_access_fraction}_${hotspot_data_fraction} /mydata/ycsb/
     cd /mnt/sda4/LDC/setup
     python check_freq.py -d /mydata/ycsb/hotspot_${hotspot_access_fraction}_${hotspot_data_fraction}
@@ -55,7 +56,7 @@ function zipfian_ycsb_workload {
     DEST_DIR=/mydata/ycsb_traces/zipfian_$1
     mkdir -p $DEST_DIR
     mv /mnt/sda4/LDC/third_party/YCSB/client_traces/runc/* $DEST_DIR
-    python convert_keys_to_sequential.py -t 8 -c 3 -ct 2 -rtype zipfian_$1
+    python convert_keys_to_sequential.py -s $NUMBER_OF_SERVERS -t 8 -c 3 -ct 2 -rtype zipfian_$1
     mv /mydata/traces/zipfian_$1 /mydata/ycsb/
     cd /mnt/sda4/LDC/setup
     python check_freq.py -d /mydata/ycsb/zipfian_$1
@@ -85,9 +86,9 @@ function scp_ycsb_workload {
 
 create_ycsb_workload "uniform"
 # create_ycsb_workload "hotspot" 0.9 0.1
-create_ycsb_workload "hotspot" 0.8 0.2
+# create_ycsb_workload "hotspot" 0.8 0.2
 # create_ycsb_workload "hotspot" 0.95 0.05
 # create_ycsb_workload "hotspot" 0.99 0.30
-create_ycsb_workload "zipfian" 0.99
+# create_ycsb_workload "zipfian" 0.99
 
 # scp_ycsb_workload /mydata/ycsb/uniform

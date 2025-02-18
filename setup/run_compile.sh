@@ -6,6 +6,7 @@ IDENTITY_FILE="--identity_file /users/Khombal2/.ssh/id_rsa"
 USERNAME="--username Khombal2"
 GIT_SSH_KEY_PATH="--git_ssh_key_path /users/Khombal2/.ssh/id_rsa"
 NUM_SERVERS="--num_servers 3"
+GIT_BRANCH="LDC_DYNAMIC_5_7_SERVER_NODE"
 # POLICY_TYPES=("thread_safe_lru" "nchance" "access_rate")
 # CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334 0.35)
 # CACHE_SIZE=(0.10 0.15 0.20 0.25 0.30 0.334)
@@ -42,7 +43,7 @@ execute_cmd_with_timeout() {
     echo "Executing for cache size: $cache_size_for_this_run and policy: $policy and system: $system_name and access rate: $access_rate and workload: $WORKLOAD"
     CMD="$PROGRAM_PATH $IDENTITY_FILE $USERNAME $GIT_SSH_KEY_PATH --step $step $NUM_SERVERS \
     --num_threads $num_threads --policy $policy --system_type $system_name --distribution $distribution --num_clients $num_clients \
-    --num_clients_per_thread $num_clients_per_thread --git_branch LDC_DYNAMIC --cache_size $cache_size_for_this_run --access_rate $access_rate --workload $WORKLOAD"
+    --num_clients_per_thread $num_clients_per_thread --git_branch $GIT_BRANCH --cache_size $cache_size_for_this_run --access_rate $access_rate --workload $WORKLOAD"
     echo "Executing: $CMD"
     eval $CMD
 
@@ -88,10 +89,10 @@ iterate_and_execute_setup() {
                 # execute_cmd $num_clients $num_threads $num_clients_per_thread 1 $distribution $system_name $policy $access_rate
                 # execute_cmd $num_clients $num_threads $num_clients_per_thread 2 $distribution $system_name $policy $access_rate
 
-                execute_cmd $num_clients $num_threads $num_clients_per_thread 3 $distribution $system_name $policy $access_rate
-                execute_cmd $num_clients $num_threads $num_clients_per_thread 4 $distribution $system_name $policy $access_rate
-                execute_cmd $num_clients $num_threads $num_clients_per_thread 6 $distribution $system_name $policy $access_rate
-                execute_cmd $num_clients $num_threads $num_clients_per_thread 7 $distribution $system_name $policy $access_rate
+                # execute_cmd $num_clients $num_threads $num_clients_per_thread 3 $distribution $system_name $policy $access_rate
+                # execute_cmd $num_clients $num_threads $num_clients_per_thread 4 $distribution $system_name $policy $access_rate
+                # execute_cmd $num_clients $num_threads $num_clients_per_thread 6 $distribution $system_name $policy $access_rate
+                # execute_cmd $num_clients $num_threads $num_clients_per_thread 7 $distribution $system_name $policy $access_rate
                 execute_cmd $num_clients $num_threads $num_clients_per_thread 11 $distribution $system_name $policy $access_rate
             done
         done
