@@ -695,19 +695,18 @@ int main(int argc, char *argv[])
 
     if (!config.baseline.one_sided_rdma_enabled)
     {
-      // for (const auto &k : keys)
-      // {
-      //   auto key_index = std::stoi(k);
-      //   if (key_index >= start_keys && key_index < end_keys)
-      //   {
-      //     block_cache->put(k, value);
-      //   }
-      //   else
-      //   {
-      //     block_cache->get_db()->put(k, value);
-      //   }
-      // }
-      ;
+      for (const auto &k : keys)
+      {
+        auto key_index = std::stoi(k);
+        if (key_index >= start_keys && key_index < end_keys)
+        {
+          block_cache->get_db()->put(k, value);
+        }
+        else
+        {
+          block_cache->get_db()->put(k, value);
+        }
+      }
     }
 
     // Connect to one sided RDMA
