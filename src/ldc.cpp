@@ -797,10 +797,10 @@ int main(int argc, char *argv[])
             block_cache->put(k, value);
             count_expected++;
           }
-          else
-          {
-            block_cache->get_db()->put(k, value);
-          }
+          // else
+          // {
+          //   block_cache->get_db()->put(k, value);
+          // }
         }
 
         if (0)
